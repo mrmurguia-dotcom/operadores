@@ -1,0 +1,407 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JDE - Validador y Sugeridor de Split de Líneas</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- SheetJS para leer y escribir Excel -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <!-- FontAwesome para iconos -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-blue-900 text-white shadow-md py-4 px-6">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+            <div>
+                <h1 class="text-2xl font-bold flex items-center gap-2">
+                    <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Validador de Split
+                </h1>
+                <p class="text-blue-200 text-sm mt-1">Prevención de errores de stock negativo al confirmar embarques</p>
+            </div>
+            <div class="mt-3 md:mt-0 text-sm bg-blue-800 px-3 py-1.5 rounded-lg border border-blue-700">
+                <i class="fa-solid fa-circle-info text-blue-300 mr-1"></i> Compatible con archivos Excel / CSV de JDE
+            </div>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-6">
+
+        <!-- Paso 1: Carga de Archivos -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <!-- Card Stock -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">1</span> 
+                        Bajada de Stock
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Columnas requeridas: DEP, Artículo, DISPONIBLE, Ubicación, Nº de lote/serie, Código de estado del lote.</p>
+                    
+                    <label class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition" id="drop-stock">
+                        <i class="fa-solid fa-file-excel text-3xl text-green-600 mb-2"></i>
+                        <span class="text-sm font-medium text-slate-700 id-stock-name">Seleccionar o arrastrar archivo de Stock</span>
+                        <span class="text-xs text-slate-400 mt-1">Excel (.xlsx, .xls) o CSV</span>
+                        <input type="file" id="file-stock" class="hidden" accept=".xlsx, .xls, .csv">
+                    </label>
+                </div>
+                <div id="status-stock" class="mt-4 text-xs font-semibold text-slate-500"></div>
+            </div>
+
+            <!-- Card Pedidos -->
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">2</span> 
+                        Bajada de Pedidos
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-4">Columnas requeridas: Número orden, Tp ord, Número línea, Venta, Nombre venta, 2º nº artículo, Cantidad.</p>
+                    
+                    <label class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition" id="drop-pedidos">
+                        <i class="fa-solid fa-file-excel text-3xl text-green-600 mb-2"></i>
+                        <span class="text-sm font-medium text-slate-700 id-pedidos-name">Seleccionar o arrastrar archivo de Pedidos</span>
+                        <span class="text-xs text-slate-400 mt-1">Excel (.xlsx, .xls) o CSV</span>
+                        <input type="file" id="file-pedidos" class="hidden" accept=".xlsx, .xlsx, .xls, .csv">
+                    </label>
+                </div>
+                <div id="status-pedidos" class="mt-4 text-xs font-semibold text-slate-500"></div>
+            </div>
+        </div>
+
+        <!-- Botón de Análisis -->
+        <div class="flex justify-center">
+            <button id="btn-procesar" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
+                <i class="fa-solid fa-gears"></i> Procesar Cruce y Analizar Splits
+            </button>
+        </div>
+
+        <!-- Resultados (Oculto inicialmente) -->
+        <div id="resultados-container" class="hidden space-y-6">
+            
+            <!-- Resumen KPIs -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-xs text-slate-500 font-medium uppercase">Total Líneas de Pedido</p>
+                    <p id="kpi-total" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-xs text-green-600 font-medium uppercase">Líneas OK (Sin Split)</p>
+                    <p id="kpi-ok" class="text-2xl font-bold text-green-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-xs text-amber-600 font-medium uppercase">Requieren Split de Línea</p>
+                    <p id="kpi-split" class="text-2xl font-bold text-amber-600 mt-1">0</p>
+                </div>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <p class="text-xs text-red-600 font-medium uppercase">Sin Stock Suficiente</p>
+                    <p id="kpi-faltantes" class="text-2xl font-bold text-red-600 mt-1">0</p>
+                </div>
+            </div>
+
+            <!-- Filtros y Acciones de Tabla -->
+            <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="flex flex-wrap gap-2">
+                    <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white" data-filter="all">Todas</button>
+                    <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="split">Requieren Split</button>
+                    <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="ok">OK</button>
+                    <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="missing">Falta Stock</button>
+                </div>
+                <div>
+                    <button id="btn-exportar" class="bg-green-600 hover:bg-green-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
+                        <i class="fa-solid fa-file-excel"></i> Descargar Reporte Consolidado
+                    </button>
+                </div>
+            </div>
+
+            <!-- Tabla Detallada -->
+            <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
+                <div class="overflow-x-auto max-h-[600px]">
+                    <table class="w-full text-left border-collapse text-xs">
+                        <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200">
+                            <tr>
+                                <th class="p-3">Pedido</th>
+                                <th class="p-3">Tipo</th>
+                                <th class="p-3">Línea</th>
+                                <th class="p-3">Cliente</th>
+                                <th class="p-3">SKU</th>
+                                <th class="p-3">Descripción</th>
+                                <th class="p-3 text-right">Cant. Pedida</th>
+                                <th class="p-3">Estado / Acción</th>
+                                <th class="p-3">Sugerencia de Split (Lotes / Ubicaciones)</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tabla-resultados" class="divide-y divide-slate-100">
+                            <!-- Inyectado por JS -->
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-800 text-slate-400 text-center py-4 text-xs mt-auto">
+        Herramienta de Automatización Logística JDE &copy; 2026 - Diseñada para GitHub Pages
+    </footer>
+
+    <!-- Script de Procesamiento -->
+    <script>
+        let stockData = [];
+        let pedidosData = [];
+        let resultadosAnalisis = [];
+
+        // Utilidad para normalizar nombres de columnas
+        function norm(str) {
+            if (!str) return '';
+            return str.toString().toLowerCase()
+                .normalize("NFD").replace(/[\u0300-\u036f]/g, "")
+                .trim();
+        }
+
+        // Manejadores de Carga de Archivos
+        function handleFile(e, type) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                const data = new Uint8Array(evt.target.result);
+                const workbook = XLSX.read(data, {type: 'array'});
+                const firstSheet = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheet];
+                const json = XLSX.utils.sheet_to_json(worksheet, {defval: ""});
+
+                if (type === 'stock') {
+                    stockData = json;
+                    document.querySelector('.id-stock-name').textContent = file.name;
+                    document.getElementById('status-stock').innerHTML = `<span class="text-green-600"><i class="fa-solid fa-check-circle"></i> ${json.length} filas cargadas correctamente.</span>`;
+                } else {
+                    pedidosData = json;
+                    document.querySelector('.id-pedidos-name').textContent = file.name;
+                    document.getElementById('status-pedidos').innerHTML = `<span class="text-green-600"><i class="fa-solid fa-check-circle"></i> ${json.length} filas cargadas correctamente.</span>`;
+                }
+
+                if (stockData.length > 0 && pedidosData.length > 0) {
+                    document.getElementById('btn-procesar').removeAttribute('disabled');
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        document.getElementById('file-stock').addEventListener('change', (e) => handleFile(e, 'stock'));
+        document.getElementById('file-pedidos').addEventListener('change', (e) => handleFile(e, 'pedidos'));
+
+        // Algoritmo Principal de Cruce y Split
+        document.getElementById('btn-procesar').addEventListener('click', () => {
+            if (stockData.length === 0 || pedidosData.length === 0) return;
+
+            // 1. Procesar y filtrar Stock (Solo lotes aprobados: Estado en blanco)
+            // Agrupar stock disponible por Artículo (SKU)
+            // Mapa: SKU -> Array de lotes {lote, ubicacion, disponible, dep}
+            const stockMap = {};
+
+            stockData.forEach(row => {
+                // Buscar claves normalizadas
+                let keys = Object.keys(row);
+                let kArticulo = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
+                let kDisponible = keys.find(k => norm(k).includes('disponible'));
+                let kEstado = keys.find(k => norm(k).includes('estado') || norm(k).includes('codigo'));
+                let kLote = keys.find(k => norm(k).includes('lote') || norm(k).includes('serie'));
+                let kUbicacion = keys.find(k => norm(k).includes('ubicacion'));
+                let kDep = keys.find(k => norm(k) === 'dep' || norm(k).includes('deposito'));
+
+                if (!kArticulo || !kDisponible) return;
+
+                let sku = String(row[kArticulo]).trim();
+                let disp = parseFloat(row[kDisponible]) || 0;
+                let estado = kEstado ? String(row[kEstado]).trim() : "";
+                let lote = kLote ? String(row[kLote]).trim() : "S/Lote";
+                let ubicacion = kUbicacion ? String(row[kUbicacion]).trim() : "S/Ubicación";
+                let dep = kDep ? String(row[kDep]).trim() : "";
+
+                // FILTRO CLAVE: Si el código de estado del lote tiene contenido (letra), está bloqueado. Solo aprobados (vacío).
+                if (estado !== "") return;
+                if (disp <= 0) return;
+
+                if (!stockMap[sku]) {
+                    stockMap[sku] = [];
+                }
+                stockMap[sku].push({
+                    lote: lote,
+                    ubicacion: ubicacion,
+                    disponible: disp,
+                    dep: dep
+                });
+            });
+
+            // 2. Procesar Pedidos y Evaluar Splits
+            resultadosAnalisis = [];
+            let countOk = 0, countSplit = 0, countMissing = 0;
+
+            pedidosData.forEach(row => {
+                let keys = Object.keys(row);
+                let kOrden = keys.find(k => norm(k).includes('numero orden') || norm(k).includes('orden') || norm(k).includes('do'));
+                let kTpOrd = keys.find(k => norm(k).includes('tp ord') || norm(k).includes('tipo'));
+                let kLinea = keys.find(k => norm(k).includes('numero linea') || norm(k).includes('linea') || norm(k).includes('ln'));
+                let kVenta = keys.find(k => norm(k).includes('venta') && !norm(k).includes('nombre'));
+                let kNomVenta = keys.find(k => norm(k).includes('nombre venta') || norm(k).includes('cliente'));
+                let kSku = keys.find(k => norm(k).includes('2') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion') || norm(k).includes('desc'));
+                let kCant = keys.find(k => norm(k).includes('cantidad') || norm(k).includes('uorg') || norm(k).includes('soqs'));
+
+                let orden = kOrden ? row[kOrden] : "";
+                let tpOrd = kTpOrd ? row[kTpOrd] : "";
+                let linea = kLinea ? row[kLinea] : "";
+                let venta = kVenta ? row[kVenta] : "";
+                let nomVenta = kNomVenta ? row[kNomVenta] : "";
+                let sku = kSku ? String(row[kSku]).trim() : "";
+                let desc = kDesc ? row[kDesc] : "";
+                let cantidadPedido = kCant ? parseFloat(row[kCant]) || 0 : 0;
+
+                if (!sku || cantidadPedido <= 0) return;
+
+                let lotesDisponibles = stockMap[sku] ? JSON.parse(JSON.stringify(stockMap[sku])) : [];
+                let stockTotalSku = lotesDisponibles.reduce((acc, l) => acc + l.disponible, 0);
+
+                let estadoItem = "";
+                let detalleSplit = [];
+
+                if (stockTotalSku < cantidadPedido) {
+                    estadoItem = "Falta Stock";
+                    countMissing++;
+                    detalleSplit.push({ texto: `Stock total insuficiente (${stockTotalSku} disp. vs ${cantidadPedido} ped.)`, clase: "text-red-600 font-semibold" });
+                } else {
+                    // Verificar si algún lote individual cubre toda la cantidad
+                    let loteUnicoSuficiente = lotesDisponibles.find(l => l.disponible >= cantidadPedido);
+
+                    if (loteUnicoSuficiente) {
+                        estadoItem = "OK";
+                        countOk++;
+                        detalleSplit.push({ texto: `Cubre en 1 solo lote (Lote: ${loteUnicoSuficiente.lote}, Ubic: ${loteUnicoSuficiente.ubicacion}, Disp: ${loteUnicoSuficiente.disponible})`, clase: "text-green-600" });
+                    } else {
+                        // Requiere Split! Simulamos asignación por lotes disponibles
+                        estadoItem = "Requiere Split";
+                        countSplit++;
+
+                        let restoASplit = cantidadPedido;
+                        let subL numeroSub = 1;
+
+                        for (let l of lotesDisponibles) {
+                            if (restoASplit <= 0) break;
+                            let tomar = Math.min(restoASplit, l.disponible);
+                            detalleSplit.push({
+                                texto: `Sublínea ${numeroSub}: Tomar <b>${tomar}</b> un. (Lote: ${l.lote} | Ubic: ${l.ubicacion})`,
+                                clase: "text-amber-700 font-medium"
+                            });
+                            restoASplit -= tomar;
+                            numeroSub++;
+                        }
+                    }
+                }
+
+                resultadosAnalisis.push({
+                    orden, tpOrd, linea, venta, nomVenta, sku, desc, cantidadPedido, estadoItem, detalleSplit
+                });
+            });
+
+            // 3. Actualizar KPIs en Interfaz
+            document.getElementById('kpi-total').textContent = resultadosAnalisis.length;
+            document.getElementById('kpi-ok').textContent = countOk;
+            document.getElementById('kpi-split').textContent = countSplit;
+            document.getElementById('kpi-faltantes').textContent = countMissing;
+
+            // Renderizar tabla
+            renderizarTabla(resultadosAnalisis);
+
+            document.getElementById('resultados-container').classList.remove('hidden');
+            document.getElementById('resultados-container').scrollIntoView({ behavior: 'smooth' });
+        });
+
+        // Renderizar Tabla de Resultados
+        function renderizarTabla(datos, filtro = 'all') {
+            const tbody = document.getElementById('tabla-resultados');
+            tbody.innerHTML = '';
+
+            let filtrados = datos.filter(item => {
+                if (filtro === 'split') return item.estadoItem === 'Requiere Split';
+                if (filtro === 'ok') return item.estadoItem === 'OK';
+                if (filtro === 'missing') return item.estadoItem === 'Falta Stock';
+                return true;
+            });
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">No se encontraron registros para este filtro.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach(item => {
+                let badgeClass = '';
+                if (item.estadoItem === 'OK') badgeClass = 'bg-green-100 text-green-800';
+                else if (item.estadoItem === 'Requiere Split') badgeClass = 'bg-amber-100 text-amber-800 font-bold';
+                else badgeClass = 'bg-red-100 text-red-800 font-bold';
+
+                let detalleHtml = item.detalleSplit.map(d => `<div class="${d.clase}">• ${d.texto}</div>`).join('');
+
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-700">${item.orden}</td>
+                    <td class="p-3">${item.tpOrd}</td>
+                    <td class="p-3">${item.linea}</td>
+                    <td class="p-3">${item.venta} <span class="text-slate-400 block">${item.nomVenta}</span></td>
+                    <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
+                    <td class="p-3">${item.desc}</td>
+                    <td class="p-3 text-right font-bold">${item.cantidadPedido}</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
+                    <td class="p-3 space-y-0.5">${detalleHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // Filtros de botones
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('bg-slate-200', 'text-slate-700');
+                });
+                e.target.classList.remove('bg-slate-200', 'text-slate-700');
+                e.target.classList.add('bg-blue-600', 'text-white');
+
+                let filtro = e.target.getAttribute('data-filter');
+                renderizarTabla(resultadosAnalisis, filtro);
+            });
+        });
+
+        // Exportar a Excel
+        document.getElementById('btn-exportar').addEventListener('click', () => {
+            if (resultadosAnalisis.length === 0) return;
+
+            let exportData = resultadosAnalisis.map(i => ({
+                "Número Orden": i.orden,
+                "Tipo Ord": i.tpOrd,
+                "Línea": i.linea,
+                "Cliente": i.venta,
+                "Nombre Cliente": i.nomVenta,
+                "SKU": i.sku,
+                "Descripción": i.desc,
+                "Cantidad Pedida": i.cantidadPedido,
+                "Estado": i.estadoItem,
+                "Sugerencia / Detalle Split": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
+            }));
+
+            let worksheet = XLSX.utils.json_to_sheet(exportData);
+            let workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Reporte Splits JDE");
+            XLSX.writeFile(workbook, "Reporte_Splits_JDE.xlsx");
+        });
+    </script>
+</body>
+</html>
