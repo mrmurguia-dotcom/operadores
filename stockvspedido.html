@@ -6,9 +6,9 @@
     <title>JDE - Validador y Sugeridor de Split de Líneas</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <!-- SheetJS (Librería para leer Excel) -->
+    <!-- SheetJS -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- FontAwesome para iconos -->
+    <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
@@ -20,7 +20,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Validador de Split
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Prevención de errores de stock negativo al confirmar embarques (R42050)</p>
+                <p class="text-blue-200 text-sm mt-1">Con detección automática de empaque (ej. 6X750 -> 6 un/caja) y conversión UN a CA</p>
             </div>
         </div>
     </header>
@@ -35,15 +35,15 @@
                 <div>
                     <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">1</span> 
-                        Bajada de Stock
+                        Bajada de Stock (Cajas - CA)
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Asegúrate de que la primera hoja contenga las columnas de Stock.</p>
+                    <p class="text-xs text-slate-500 mb-4">Stock disponible clasificado por Lote y Ubicación.</p>
                     
                     <input type="file" id="file-stock" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-stock" id="drop-stock" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
                         <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
                         <span id="stock-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Stock</span>
-                        <span class="text-xs text-slate-400 mt-1">Formatos soportados: .xlsx, .xls, .csv</span>
+                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
                 <div id="status-stock" class="mt-4 text-xs font-semibold"></div>
@@ -54,15 +54,15 @@
                 <div>
                     <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">2</span> 
-                        Bajada de Pedidos
+                        Bajada de Pedidos (CA / UN)
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Asegúrate de que la primera hoja contenga la lista de pedidos.</p>
+                    <p class="text-xs text-slate-500 mb-4">Maneja unidades expresadas en Cajas (CA) o Unidades (UN).</p>
                     
                     <input type="file" id="file-pedidos" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-pedidos" id="drop-pedidos" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
                         <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
                         <span id="pedidos-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Pedidos</span>
-                        <span class="text-xs text-slate-400 mt-1">Formatos soportados: .xlsx, .xls, .csv</span>
+                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
                 <div id="status-pedidos" class="mt-4 text-xs font-semibold"></div>
@@ -125,12 +125,12 @@
                                 <th class="p-3">SKU / Artículo</th>
                                 <th class="p-3">Descripción</th>
                                 <th class="p-3 text-right">Cant. Pedida</th>
+                                <th class="p-3 text-center">UM</th>
                                 <th class="p-3">Estado</th>
-                                <th class="p-3">Sugerencia de Split (Lotes / Ubicaciones)</th>
+                                <th class="p-3">Sugerencia de Split (Consumo Completo de Lotes)</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-resultados" class="divide-y divide-slate-100">
-                            <!-- Filas generadas dinámicamente -->
                         </tbody>
                     </table>
                 </div>
@@ -150,6 +150,16 @@
             return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
+        // Función para extraer las unidades por caja desde la descripción (ej: "6X750" -> 6)
+        function obtenerUnidadesPorCaja(descripcion) {
+            if (!descripcion) return 1;
+            const match = descripcion.toString().match(/(\d+)\s*X\s*\d+/i);
+            if (match && match[1]) {
+                return parseInt(match[1], 10);
+            }
+            return 1; // Si no encuentra el patrón "6X750", asume 1 unidad por caja
+        }
+
         function cargarExcel(file, tipo) {
             const statusElem = document.getElementById(`status-${tipo}`);
             const nameElem = document.getElementById(`${tipo}-name`);
@@ -167,9 +177,7 @@
                     const sheet = workbook.Sheets[sheetName];
                     const json = XLSX.utils.sheet_to_json(sheet, { defval: "" });
 
-                    if (json.length === 0) {
-                        throw new Error("El archivo está vacío o no tiene datos válidos.");
-                    }
+                    if (json.length === 0) throw new Error("El archivo está vacío.");
 
                     if (tipo === 'stock') {
                         stockData = json;
@@ -188,19 +196,13 @@
                     }
                 } catch (err) {
                     statusElem.className = "mt-4 text-xs font-semibold text-red-600";
-                    statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error al leer el archivo: ${err.message}`;
+                    statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${err.message}`;
                 }
-            };
-
-            reader.onerror = function() {
-                statusElem.className = "mt-4 text-xs font-semibold text-red-600";
-                statusElem.innerHTML = `<i class="fa-solid fa-circle-xmark"></i> No se pudo leer el archivo. Verifica los permisos de Windows.`;
             };
 
             reader.readAsArrayBuffer(file);
         }
 
-        // Listener para los input file
         document.getElementById('file-stock').addEventListener('change', function(e) {
             if (e.target.files.length > 0) cargarExcel(e.target.files[0], 'stock');
         });
@@ -209,13 +211,12 @@
             if (e.target.files.length > 0) cargarExcel(e.target.files[0], 'pedidos');
         });
 
-        // Evento de procesamiento
         document.getElementById('btn-procesar').addEventListener('click', function() {
             if (stockData.length === 0 || pedidosData.length === 0) return;
 
             const stockMap = {};
 
-            // Mapeo del stock
+            // Mapeo del stock (siempre expresado en Cajas - CA)
             stockData.forEach(row => {
                 let keys = Object.keys(row);
                 let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
@@ -227,23 +228,22 @@
                 if (!kArt || !kDisp) return;
 
                 let sku = String(row[kArt]).trim();
-                let disp = parseFloat(row[kDisp]) || 0;
+                let dispCajas = parseFloat(row[kDisp]) || 0;
                 let estado = kEst ? String(row[kEst]).trim() : "";
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                // Solo lotes no bloqueados (Estado en blanco)
+                // Solo lotes aprobados (Estado en blanco)
                 if (estado !== "") return;
-                if (disp <= 0) return;
+                if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
-                stockMap[sku].push({ lote, ubicacion, disponible: disp });
+                stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
             });
 
             resultadosAnalisis = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
 
-            // Procesar Pedidos
             pedidosData.forEach(row => {
                 let keys = Object.keys(row);
                 let kOrden = keys.find(k => norm(k).includes('orden') || norm(k).includes('numero orden'));
@@ -254,6 +254,7 @@
                 let kSku = keys.find(k => norm(k).includes('2') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion'));
                 let kCant = keys.find(k => norm(k).includes('cantidad'));
+                let kUm = keys.find(k => norm(k) === 'um' || norm(k).includes('unidad'));
 
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
@@ -261,51 +262,80 @@
                 let venta = kVenta ? row[kVenta] : "";
                 let nomVenta = kNom ? row[kNom] : "";
                 let sku = kSku ? String(row[kSku]).trim() : "";
-                let desc = kDesc ? row[kDesc] : "";
+                let desc = kDesc ? String(row[kDesc]) : "";
                 let cantidadPedido = kCant ? parseFloat(row[kCant]) || 0 : 0;
+                let um = kUm ? String(row[kUm]).trim().toUpperCase() : "CA";
 
                 if (!sku || cantidadPedido <= 0) return;
 
+                // Detectar unidades por caja desde la descripción (ej: "6X750" -> 6)
+                let unPorCaja = obtenerUnidadesPorCaja(desc);
+
+                // Convertir la cantidad solicitada a CAJAS para comparar contra el stock
+                let cajasRequeridas = (um === 'UN') ? (cantidadPedido / unPorCaja) : cantidadPedido;
+
                 let lotesDisponibles = stockMap[sku] ? JSON.parse(JSON.stringify(stockMap[sku])) : [];
-                let stockTotal = lotesDisponibles.reduce((a, b) => a + b.disponible, 0);
+                let stockTotalCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
 
                 let estadoItem = "";
                 let detalleSplit = [];
 
-                if (stockTotal < cantidadPedido) {
+                if (stockTotalCA < cajasRequeridas) {
                     estadoItem = "Falta Stock";
                     countMissing++;
-                    detalleSplit.push({ texto: `Stock total insuficiente (${stockTotal} dispon. vs ${cantidadPedido} pedidas)`, clase: "text-red-600 font-semibold" });
+                    let detalleUm = (um === 'UN') ? ` (${cajasRequeridas.toFixed(2)} CA requeridas, empaque: ${unPorCaja} un/caja)` : '';
+                    detalleSplit.push({ 
+                        texto: `Stock insuficiente (${stockTotalCA} CA dispon. en total vs ${cantidadPedido} ${um} pedidas${detalleUm})`, 
+                        clase: "text-red-600 font-semibold" 
+                    });
                 } else {
-                    let loteUnico = lotesDisponibles.find(l => l.disponible >= cantidadPedido);
+                    let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasRequeridas);
                     if (loteUnico) {
                         estadoItem = "OK";
                         countOk++;
-                        detalleSplit.push({ texto: `Cubre en 1 lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Disp: ${loteUnico.disponible})`, clase: "text-green-600" });
+                        let infoEquiv = (um === 'UN') ? ` [${cantidadPedido} UN = ${cajasRequeridas.toFixed(2)} CA]` : '';
+                        detalleSplit.push({ 
+                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Disp: ${loteUnico.disponibleCajas} CA)${infoEquiv}`, 
+                            clase: "text-green-600" 
+                        });
                     } else {
                         estadoItem = "Requiere Split";
                         countSplit++;
 
-                        let resto = cantidadPedido;
+                        let restoCajasRequeridas = cajasRequeridas;
                         let subIndex = 1;
 
-                        for (let l of lotesDisponibles) {
-                            if (resto <= 0) break;
-                            let tomar = Math.min(resto, l.disponible);
+                        for (let i = 0; i < lotesDisponibles.length; i++) {
+                            if (restoCajasRequeridas <= 0) break;
+
+                            let l = lotesDisponibles[i];
+                            let tomarCajas = Math.min(restoCajasRequeridas, l.disponibleCajas);
+                            
+                            // Si el pedido original vino en UN, calculamos las UN correspondientes a esta sublínea
+                            let tomarUnidades = tomarCajas * unPorCaja;
+
+                            let notaAgotamiento = (tomarCajas === l.disponibleCajas) 
+                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
+                                : " <span class='text-xs text-slate-500'>(Deja remanente)</span>";
+
+                            let textoTomar = (um === 'UN') 
+                                ? `<b>${tomarUnidades.toFixed(0)} UN</b> (${tomarCajas.toFixed(2)} CA)` 
+                                : `<b>${tomarCajas.toFixed(2)} CA</b>`;
+
                             detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar <b>${tomar}</b> un. (Lote: ${l.lote} | Ubic: ${l.ubicacion})`,
+                                texto: `Sublínea ${subIndex}: Tomar ${textoTomar} (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
                                 clase: "text-amber-700 font-medium"
                             });
-                            resto -= tomar;
+
+                            restoCajasRequeridas -= tomarCajas;
                             subIndex++;
                         }
                     }
                 }
 
-                resultadosAnalisis.push({ orden, tpOrd, linea, venta, nomVenta, sku, desc, cantidadPedido, estadoItem, detalleSplit });
+                resultadosAnalisis.push({ orden, tpOrd, linea, venta, nomVenta, sku, desc, cantidadPedido, um, estadoItem, detalleSplit });
             });
 
-            // Actualizar KPIs
             document.getElementById('kpi-total').textContent = resultadosAnalisis.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
@@ -327,7 +357,7 @@
             });
 
             if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="9" class="p-6 text-center text-slate-400">No hay registros para este filtro.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400">No hay registros para este filtro.</td></tr>`;
                 return;
             }
 
@@ -345,6 +375,7 @@
                     <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
                     <td class="p-3">${item.desc}</td>
                     <td class="p-3 text-right font-bold">${item.cantidadPedido}</td>
+                    <td class="p-3 text-center font-bold text-slate-600">${item.um}</td>
                     <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
                     <td class="p-3 space-y-0.5">${detalleHtml}</td>
                 `;
@@ -377,6 +408,7 @@
                 "SKU": i.sku,
                 "Descripción": i.desc,
                 "Cantidad Pedida": i.cantidadPedido,
+                "UM": i.um,
                 "Estado": i.estadoItem,
                 "Sugerencia Split": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
             }));
