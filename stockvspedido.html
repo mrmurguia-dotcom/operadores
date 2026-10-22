@@ -20,7 +20,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Validador de Split
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Con detección automática de empaque (ej. 6X750 -> 6 un/caja) y conversión UN a CA</p>
+                <p class="text-blue-200 text-sm mt-1">Con consumo secuencial dinámico de stock entre pedidos y nueva estructura de columnas</p>
             </div>
         </div>
     </header>
@@ -35,9 +35,9 @@
                 <div>
                     <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">1</span> 
-                        Bajada de Stock (Cajas - CA)
+                        Bajada de Stock (Cajas - CA)[cite: 1]
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Stock disponible clasificado por Lote y Ubicación.</p>
+                    <p class="text-xs text-slate-500 mb-4">Stock disponible clasificado por Lote, Ubicación y Estado[cite: 1].</p>
                     
                     <input type="file" id="file-stock" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-stock" id="drop-stock" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
@@ -54,9 +54,9 @@
                 <div>
                     <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">2</span> 
-                        Bajada de Pedidos (CA / UN)
+                        Bajada de Pedidos (Nueva estructura)
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Maneja unidades expresadas en Cajas (CA) o Unidades (UN).</p>
+                    <p class="text-xs text-slate-500 mb-4">Incluye Cod de item largo, Cajas, Cliente, etc.</p>
                     
                     <input type="file" id="file-pedidos" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-pedidos" id="drop-pedidos" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
@@ -72,7 +72,7 @@
         <!-- Botón Procesar -->
         <div class="flex justify-center">
             <button id="btn-procesar" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                <i class="fa-solid fa-gears"></i> Procesar Cruce y Analizar Splits
+                <i class="fa-solid fa-gears"></i> Procesar Cruce y Simular Consumo
             </button>
         </div>
 
@@ -118,16 +118,14 @@
                     <table class="w-full text-left border-collapse text-xs">
                         <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200">
                             <tr>
-                                <th class="p-3">Pedido</th>
-                                <th class="p-3">Tipo</th>
-                                <th class="p-3">Línea</th>
-                                <th class="p-3">Cliente</th>
-                                <th class="p-3">SKU / Artículo</th>
-                                <th class="p-3">Descripción</th>
-                                <th class="p-3 text-right">Cant. Pedida</th>
-                                <th class="p-3 text-center">UM</th>
+                                <th class="p-3">Nro Orden[cite: 5]</th>
+                                <th class="p-3">Tipo[cite: 5]</th>
+                                <th class="p-3">Cliente[cite: 5]</th>
+                                <th class="p-3">Cod Item Largo (SKU)[cite: 5]</th>
+                                <th class="p-3">Descripción de línea[cite: 5]</th>
+                                <th class="p-3 text-right">Cajas Pedidas[cite: 5]</th>
                                 <th class="p-3">Estado</th>
-                                <th class="p-3">Sugerencia de Split (Consumo Completo de Lotes)</th>
+                                <th class="p-3">Sugerencia de Split (Consumo Dinámico de Lotes)</th>
                             </tr>
                         </thead>
                         <tbody id="tabla-resultados" class="divide-y divide-slate-100">
@@ -148,16 +146,6 @@
         function norm(str) {
             if (!str) return '';
             return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
-        }
-
-        // Función para extraer las unidades por caja desde la descripción (ej: "6X750" -> 6)
-        function obtenerUnidadesPorCaja(descripcion) {
-            if (!descripcion) return 1;
-            const match = descripcion.toString().match(/(\d+)\s*X\s*\d+/i);
-            if (match && match[1]) {
-                return parseInt(match[1], 10);
-            }
-            return 1; // Si no encuentra el patrón "6X750", asume 1 unidad por caja
         }
 
         function cargarExcel(file, tipo) {
@@ -214,9 +202,8 @@
         document.getElementById('btn-procesar').addEventListener('click', function() {
             if (stockData.length === 0 || pedidosData.length === 0) return;
 
+            // 1. Mapear Stock en memoria con cantidades mutables para consumo secuencial
             const stockMap = {};
-
-            // Mapeo del stock (siempre expresado en Cajas - CA)
             stockData.forEach(row => {
                 let keys = Object.keys(row);
                 let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
@@ -233,7 +220,7 @@
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                // Solo lotes aprobados (Estado en blanco)
+                // Excluir lotes bloqueados (estado con letras)[cite: 1]
                 if (estado !== "") return;
                 if (dispCajas <= 0) return;
 
@@ -244,98 +231,98 @@
             resultadosAnalisis = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
 
-            pedidosData.forEach(row => {
+            // 2. Procesar Pedidos secuencialmente (el stock se va consumiendo en stockMap en tiempo real)
+            pedidosData.forEach((row, index) => {
                 let keys = Object.keys(row);
-                let kOrden = keys.find(k => norm(k).includes('orden') || norm(k).includes('numero orden'));
-                let kTp = keys.find(k => norm(k).includes('tp') || norm(k).includes('tipo'));
-                let kLin = keys.find(k => norm(k).includes('linea') || norm(k).includes('numero linea'));
-                let kVenta = keys.find(k => norm(k).includes('venta') && !norm(k).includes('nombre'));
-                let kNom = keys.find(k => norm(k).includes('nombre'));
-                let kSku = keys.find(k => norm(k).includes('2') || norm(k).includes('sku') || norm(k).includes('articulo'));
-                let kDesc = keys.find(k => norm(k).includes('descripcion'));
-                let kCant = keys.find(k => norm(k).includes('cantidad'));
-                let kUm = keys.find(k => norm(k) === 'um' || norm(k).includes('unidad'));
+                
+                // Mapeo según la nueva estructura de columnas de Pedidos[cite: 5]
+                let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('nro orden') || norm(k).includes('orden'));
+                let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo orden') || norm(k).includes('tp'));
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente') && !norm(k).includes('nombre'));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
+                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
+                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
 
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
-                let linea = kLin ? row[kLin] : "";
-                let venta = kVenta ? row[kVenta] : "";
-                let nomVenta = kNom ? row[kNom] : "";
+                let codCliente = kCodCliente ? row[kCodCliente] : "";
+                let nomCliente = kNomCliente ? row[kNomCliente] : "";
                 let sku = kSku ? String(row[kSku]).trim() : "";
                 let desc = kDesc ? String(row[kDesc]) : "";
-                let cantidadPedido = kCant ? parseFloat(row[kCant]) || 0 : 0;
-                let um = kUm ? String(row[kUm]).trim().toUpperCase() : "CA";
+                let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
 
-                if (!sku || cantidadPedido <= 0) return;
+                if (!sku || cajasPedidas <= 0) return;
 
-                // Detectar unidades por caja desde la descripción (ej: "6X750" -> 6)
-                let unPorCaja = obtenerUnidadesPorCaja(desc);
-
-                // Convertir la cantidad solicitada a CAJAS para comparar contra el stock
-                let cajasRequeridas = (um === 'UN') ? (cantidadPedido / unPorCaja) : cantidadPedido;
-
-                let lotesDisponibles = stockMap[sku] ? JSON.parse(JSON.stringify(stockMap[sku])) : [];
-                let stockTotalCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
+                // Referencia directa al stock actual de este SKU (acumula reducciones de pedidos anteriores)
+                let lotesDisponibles = stockMap[sku] || [];
+                let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
 
                 let estadoItem = "";
                 let detalleSplit = [];
 
-                if (stockTotalCA < cajasRequeridas) {
+                if (stockTotalActualCA < cajasPedidas) {
                     estadoItem = "Falta Stock";
                     countMissing++;
-                    let detalleUm = (um === 'UN') ? ` (${cajasRequeridas.toFixed(2)} CA requeridas, empaque: ${unPorCaja} un/caja)` : '';
                     detalleSplit.push({ 
-                        texto: `Stock insuficiente (${stockTotalCA} CA dispon. en total vs ${cantidadPedido} ${um} pedidas${detalleUm})`, 
+                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. en stock vs ${cajasPedidas} CA pedidas)`, 
                         clase: "text-red-600 font-semibold" 
                     });
                 } else {
-                    let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasRequeridas);
+                    // Verificar si un lote único con stock suficiente actual cubre el pedido completo
+                    let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasPedidas);
+                    
                     if (loteUnico) {
                         estadoItem = "OK";
                         countOk++;
-                        let infoEquiv = (um === 'UN') ? ` [${cantidadPedido} UN = ${cajasRequeridas.toFixed(2)} CA]` : '';
+                        // Descontar del lote elegido
+                        loteUnico.disponibleCajas -= cajasPedidas;
+
                         detalleSplit.push({ 
-                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Disp: ${loteUnico.disponibleCajas} CA)${infoEquiv}`, 
+                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante en lote: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
                             clase: "text-green-600" 
                         });
                     } else {
                         estadoItem = "Requiere Split";
                         countSplit++;
 
-                        let restoCajasRequeridas = cajasRequeridas;
+                        let restoRequerido = cajasPedidas;
                         let subIndex = 1;
 
+                        // Consumo secuencial exhaustivo lote por lote
                         for (let i = 0; i < lotesDisponibles.length; i++) {
-                            if (restoCajasRequeridas <= 0) break;
+                            if (restoRequerido <= 0) break;
 
                             let l = lotesDisponibles[i];
-                            let tomarCajas = Math.min(restoCajasRequeridas, l.disponibleCajas);
+                            if (l.disponibleCajas <= 0) continue;
+
+                            let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
+                            let stockAnteriorLote = l.disponibleCajas;
                             
-                            // Si el pedido original vino en UN, calculamos las UN correspondientes a esta sublínea
-                            let tomarUnidades = tomarCajas * unPorCaja;
+                            // Descontar físicamente del stock en memoria
+                            l.disponibleCajas -= tomarCajas;
 
-                            let notaAgotamiento = (tomarCajas === l.disponibleCajas) 
+                            let notaAgotamiento = (l.disponibleCajas === 0) 
                                 ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
-                                : " <span class='text-xs text-slate-500'>(Deja remanente)</span>";
-
-                            let textoTomar = (um === 'UN') 
-                                ? `<b>${tomarUnidades.toFixed(0)} UN</b> (${tomarCajas.toFixed(2)} CA)` 
-                                : `<b>${tomarCajas.toFixed(2)} CA</b>`;
+                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA en lote)</span>`;
 
                             detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar ${textoTomar} (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
+                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
                                 clase: "text-amber-700 font-medium"
                             });
 
-                            restoCajasRequeridas -= tomarCajas;
+                            restoRequerido -= tomarCajas;
                             subIndex++;
                         }
                     }
                 }
 
-                resultadosAnalisis.push({ orden, tpOrd, linea, venta, nomVenta, sku, desc, cantidadPedido, um, estadoItem, detalleSplit });
+                resultadosAnalisis.push({ 
+                    orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
+                });
             });
 
+            // Actualizar KPIs
             document.getElementById('kpi-total').textContent = resultadosAnalisis.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
@@ -357,7 +344,7 @@
             });
 
             if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="10" class="p-6 text-center text-slate-400">No hay registros para este filtro.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros para este filtro.</td></tr>`;
                 return;
             }
 
@@ -370,12 +357,10 @@
                 tr.innerHTML = `
                     <td class="p-3 font-semibold text-slate-700">${item.orden}</td>
                     <td class="p-3">${item.tpOrd}</td>
-                    <td class="p-3">${item.linea}</td>
-                    <td class="p-3">${item.venta} <span class="text-slate-400 block">${item.nomVenta}</span></td>
+                    <td class="p-3">${item.cliente}</td>
                     <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
                     <td class="p-3">${item.desc}</td>
-                    <td class="p-3 text-right font-bold">${item.cantidadPedido}</td>
-                    <td class="p-3 text-center font-bold text-slate-600">${item.um}</td>
+                    <td class="p-3 text-right font-bold">${item.cajasPedidas} CA</td>
                     <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
                     <td class="p-3 space-y-0.5">${detalleHtml}</td>
                 `;
@@ -400,22 +385,19 @@
         document.getElementById('btn-exportar').addEventListener('click', () => {
             if (resultadosAnalisis.length === 0) return;
             let exportData = resultadosAnalisis.map(i => ({
-                "Número Orden": i.orden,
+                "Nro Orden": i.orden,
                 "Tipo Ord": i.tpOrd,
-                "Línea": i.linea,
-                "Cliente": i.venta,
-                "Nombre Cliente": i.nomVenta,
-                "SKU": i.sku,
-                "Descripción": i.desc,
-                "Cantidad Pedida": i.cantidadPedido,
-                "UM": i.um,
+                "Cliente": i.cliente,
+                "Cod Item Largo (SKU)": i.sku,
+                "Descripción de línea": i.desc,
+                "Cajas Pedidas": i.cajasPedidas,
                 "Estado": i.estadoItem,
-                "Sugerencia Split": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
+                "Sugerencia Split / Lotes": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
             }));
             let ws = XLSX.utils.json_to_sheet(exportData);
             let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE");
-            XLSX.writeFile(wb, "Reporte_Splits_JDE.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
+            XLSX.writeFile(wb, "Reporte_Splits_JDE_Consumo.xlsx");
         });
     </script>
 </body>
