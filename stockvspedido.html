@@ -3,24 +3,24 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Validador de Split, Resumen y Mapa Logístico</title>
+    <title>JDE - Validador de Split, Resumen y Mapas Provinciales</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- html2pdf.js (Para exportar el resumen y mapa a PDF) -->
+    <!-- html2pdf.js (Para exportar el resumen y mapas múltiples a PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .map-container {
-            display: flex;
-            justify-content: center;
-            align-items: center;
+        .map-card {
             background: #ffffff;
             border-radius: 0.75rem;
             padding: 1rem;
             border: 1px solid #e2e8f0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
     </style>
 </head>
@@ -33,7 +33,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Control de Splits, Tabla Dinámica, Mapa Provincial Vectorial y PDF</p>
+                <p class="text-blue-200 text-sm mt-1">Control de Splits, Resumen Dinámico y Mapas Vectoriales Multi-Provincia</p>
             </div>
         </div>
     </header>
@@ -83,7 +83,7 @@
         <!-- Botón Procesar -->
         <div class="flex justify-center">
             <button id="btn-procesar" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                <i class="fa-solid fa-gears"></i> Procesar Cruce, Resumen y Mapa
+                <i class="fa-solid fa-gears"></i> Procesar Cruce, Resumen y Mapas Provinciales
             </button>
         </div>
 
@@ -95,8 +95,8 @@
                 <button id="tab-splits-btn" class="tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i> Validador de Splits (JDE)
                 </button>
-                <button id="tab-resumen-btn" class="tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2">
-                    <i class="fa-solid> table-cells"></i> Resumen de Pedidos y Mapa
+                <button id="tab-resumen-btn" class="tab-btn pb-3 px-4 font-semibold text-slate-500 cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells"></i> Resumen de Pedidos y Mapas
                 </button>
             </div>
 
@@ -154,18 +154,18 @@
                 </div>
             </div>
 
-            <!-- VISTA 2: RESUMEN Y MAPA VECTORIAL PARA PDF -->
+            <!-- VISTA 2: RESUMEN Y MAPAS MÚLTIPLES PARA PDF -->
             <div id="view-resumen" class="hidden space-y-6">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
                     <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-table-cells text-blue-600"></i> Resumen Logístico y Mapa Provincial
+                        <i class="fa-solid fa-table-cells text-blue-600"></i> Resumen Logístico y Mapas Provinciales
                     </h3>
                     <button id="btn-exportar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> Descargar Resumen y Mapa en PDF
+                        <i class="fa-solid fa-file-pdf"></i> Descargar Resumen y Mapas en PDF
                     </button>
                 </div>
 
-                <!-- CONTENEDOR EXPORTABLE A PDF (Tabla + Mapa Vectorial) -->
+                <!-- CONTENEDOR EXPORTABLE A PDF (Tabla + Mapas dinámicos de cada provincia) -->
                 <div id="pdf-container" class="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="border-b pb-4 mb-4">
                         <h2 class="text-lg font-bold text-slate-800">Reporte de Resumen Logístico de Pedidos</h2>
@@ -188,23 +188,15 @@
                         </table>
                     </div>
 
-                    <!-- MAPA VECTORIAL PROVINCIAL (Estilo boceto solicitado) -->
-                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-3">
+                    <!-- CONTENEDOR DE MAPAS PROVINCIALES DINÁMICOS -->
+                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-4">
                         <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-red-600"></i> Ubicación de Despachos en la Provincia (CBA)
+                            <i class="fa-solid fa-map-location-dot text-red-600"></i> Mapas de Despachos por Provincia
                         </h3>
-                        <p class="text-xs text-slate-500">Esquema provincial con los puntos de entrega activos.</p>
+                        <p class="text-xs text-slate-500">Esquemas provinciales con las localidades de entrega detectadas.</p>
                         
-                        <div class="map-container">
-                            <!-- SVG Vectorial de Córdoba con puntos y nombres de localidades -->
-                            <svg id="vector-map" viewBox="0 0 450 480" width="100%" height="320" style="max-width: 420px;">
-                                <!-- Contorno vectorial de la Provincia de Córdoba -->
-                                <path d="M 120,40 Q 180,25 240,35 Q 310,30 350,70 Q 380,120 400,180 Q 420,250 390,320 Q 360,390 320,440 Q 250,470 180,450 Q 110,430 90,360 Q 70,280 85,200 Q 95,120 120,40 Z" 
-                                      fill="#a5f3fc" stroke="#0f172a" stroke-width="4" stroke-linejoin="round" />
-                                
-                                <!-- Capa dinámica donde se insertan los puntos rojos y las etiquetas de texto -->
-                                <g id="map-markers"></g>
-                            </svg>
+                        <div id="dynamic-maps-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                            <!-- Se inyectan dinámicamente los mapas de las provincias detectadas -->
                         </div>
                     </div>
                 </div>
@@ -225,24 +217,57 @@
             return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
-        // Coordenadas fijas en el plano SVG (X, Y) para ubicar las ciudades dentro del mapa de Córdoba
-        const posicionesMapaCBA = {
-            "alta gracia": { x: 180, y: 260 },
-            "cordoba": { x: 210, y: 210 },
-            "villa maria": { x: 290, y: 310 },
-            "rio cuarto": { x: 220, y: 400 },
-            "carlos paz": { x: 170, y: 200 },
-            "san francisco": { x: 370, y: 180 },
-            "jesus maria": { x: 215, y: 130 },
-            "default": { x: 210, y: 250 }
+        // Base de datos de ciudades con su provincia correspondiente y posición estimada (X, Y) en el SVG provincial
+        const baseCiudadesProvincia = {
+            "alta gracia": { provincia: "Córdoba", x: 180, y: 260 },
+            "cordoba": { provincia: "Córdoba", x: 210, y: 210 },
+            "villa maria": { provincia: "Córdoba", x: 290, y: 310 },
+            "rio cuarto": { provincia: "Córdoba", x: 220, y: 400 },
+            "carlos paz": { provincia: "Córdoba", x: 170, y: 200 },
+            "san francisco": { provincia: "Córdoba", x: 370, y: 180 },
+            "jesus maria": { provincia: "Córdoba", x: 215, y: 130 },
+            "rosario": { provincia: "Santa Fe", x: 250, y: 320 },
+            "carcaraña": { provincia: "Santa Fe", x: 190, y: 280 },
+            "santa fe": { provincia: "Santa Fe", x: 220, y: 150 },
+            "rafaela": { provincia: "Santa Fe", x: 210, y: 200 },
+            "resistencia": { provincia: "Chaco", x: 230, y: 350 },
+            "saenz peña": { provincia: "Chaco", x: 160, y: 200 },
+            "posadas": { provincia: "Misiones", x: 250, y: 300 },
+            "obera": { provincia: "Misiones", x: 270, y: 350 }
         };
 
-        function obtenerPosicionSVG(ciudad) {
-            let key = norm(ciudad);
-            for (let c in posicionesMapaCBA) {
-                if (key.includes(c)) return posicionesMapaCBA[c];
+        // Formas vectoriales (SVG paths) simplificadas para las provincias principales
+        const svgProvinciasPaths = {
+            "Córdoba": "M 120,40 Q 180,25 240,35 Q 310,30 350,70 Q 380,120 400,180 Q 420,250 390,320 Q 360,390 320,440 Q 250,470 180,450 Q 110,430 90,360 Q 70,280 85,200 Q 95,120 120,40 Z",
+            "Santa Fe": "M 180,20 Q 240,40 280,100 Q 310,200 290,320 Q 270,420 220,460 Q 160,430 140,350 Q 120,250 150,140 Q 160,70 180,20 Z",
+            "Chaco": "M 100,60 Q 220,40 340,70 Q 380,180 350,280 Q 280,380 180,360 Q 90,320 80,200 Q 70,120 100,60 Z",
+            "Misiones": "M 150,40 Q 280,60 320,150 Q 350,280 280,420 Q 200,450 140,380 Q 100,250 120,120 Q 130,70 150,40 Z",
+            "Default": "M 100,50 Q 200,30 300,50 Q 370,150 350,300 Q 300,420 200,450 Q 100,400 80,250 Q 70,120 100,50 Z"
+        };
+
+        function identificarUbicacion(ciudadInput, regionInput) {
+            let cNorm = norm(ciudadInput);
+            let rNorm = norm(regionInput);
+
+            // Buscar en el diccionario de ciudades
+            for (let cKey in baseCiudadesProvincia) {
+                if (cNorm.includes(cKey)) {
+                    return {
+                        provincia: baseCiudadesProvincia[cKey].provincia,
+                        ciudadLimpia: ciudadInput || cKey,
+                        x: baseCiudadesProvincia[cKey].x,
+                        y: baseCiudadesProvincia[cKey].y
+                    };
+                }
             }
-            return posicionesMapaCBA["default"];
+
+            // Si dice Centro o no se encuentra, por defecto se asume Córdoba
+            if (rNorm.includes('centro') || cNorm === '' || cNorm.includes('cordoba')) {
+                return { provincia: "Córdoba", ciudadLimpia: ciudadInput || "Córdoba", x: 210, y: 210 };
+            }
+
+            // Fallback genérico para otras ciudades desconocidas
+            return { provincia: "Otras Provincias", ciudadLimpia: ciudadInput || "Destino", x: 200, y: 250 };
         }
 
         // Lector Inteligente
@@ -362,14 +387,10 @@
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
                 let descReg = kDescReg ? String(row[kDescReg]).trim() : "";
-                let ciudad = kCiudad ? String(row[kCiudad]).trim() : "";
+                let ciudadRaw = kCiudad ? String(row[kCiudad]).trim() : "";
 
-                // Regla: si Desc región dice "Centro", interpretarlo como CBA
-                if (norm(descReg) === 'centro' && (!ciudad || norm(ciudad) === '')) {
-                    ciudad = 'Cordoba';
-                } else if (!ciudad) {
-                    ciudad = 'Cordoba';
-                }
+                // Identificar provincia y localidad automáticamente
+                let ubiInfo = identificarUbicacion(ciudadRaw, descReg);
 
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
@@ -389,11 +410,18 @@
                         descVendedor,
                         ocCliente,
                         totalCajas: 0,
-                        ciudades: new Set()
+                        destinos: {} // Almacena { provincia: { ciudad: cajas } }
                     };
                 }
                 mapaResumenAgrupado[claveAgrupacion].totalCajas += cajasPedidas;
-                mapaResumenAgrupado[claveAgrupacion].ciudades.add(ciudad);
+                
+                if (!mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia]) {
+                    mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia] = {};
+                }
+                if (!mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia]) {
+                    mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia] = { cajas: 0, x: ubiInfo.x, y: ubiInfo.y };
+                }
+                mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia].cajas += cajasPedidas;
 
                 // Cruce de stock para splits
                 let lotesDisponibles = stockMap[sku] || [];
@@ -449,7 +477,7 @@
 
             renderizarTablaSplits(resultadosAnalisis);
             renderizarTablaResumen(resumenDinamico);
-            dibujarMapaVectorial(resumenDinamico);
+            generarMapasProvincialesDinactivos(resumenDinamico);
 
             document.getElementById('resultados-container').classList.remove('hidden');
         });
@@ -510,51 +538,75 @@
             });
         }
 
-        // Generar puntos rojos y etiquetas de texto directamente en el SVG vectorial
-        function dibujarMapaVectorial(datos) {
-            const svgGroup = document.getElementById('map-markers');
-            svgGroup.innerHTML = '';
+        // Generar mapas vectoriales independientes por cada provincia detectada
+        function generarMapasProvincialesDinactivos(datos) {
+            const container = document.getElementById('dynamic-maps-container');
+            container.innerHTML = '';
 
-            let ciudadesUnicas = {};
+            // Consolidar ciudades por provincia
+            let provinciasData = {};
             datos.forEach(item => {
-                item.ciudades.forEach(ciudad => {
-                    if (!ciudadesUnicas[ciudad]) ciudadesUnicas[ciudad] = 0;
-                    ciudadesUnicas[ciudad] += item.totalCajas;
-                });
+                for (let prov in item.destinos) {
+                    if (!provinciasData[prov]) provinciasData[prov] = {};
+                    for (let ciu in item.destinos[prov]) {
+                        if (!provinciasData[prov][ciu]) {
+                            provinciasData[prov][ciu] = { cajas: 0, x: item.destinos[prov][ciu].x, y: item.destinos[prov][ciu].y };
+                        }
+                        provinciasData[prov][ciu].cajas += item.destinos[prov][ciu].cajas;
+                    }
+                }
             });
 
-            for (let ciudad in ciudadesUnicas) {
-                let pos = obtenerPosicionSVG(ciudad);
+            // Crear una tarjeta de mapa SVG por cada provincia presente
+            for (let prov in provinciasData) {
+                let pathSvg = svgProvinciasPaths[prov] || svgProvinciasPaths["Default"];
+                
+                let card = document.createElement('div');
+                card.className = "map-card shadow-sm";
+                card.innerHTML = `
+                    <h4 class="font-bold text-slate-700 text-sm mb-2">Provincia: ${prov}</h4>
+                    <svg viewBox="0 0 450 480" width="100%" height="260" style="max-width: 350px;">
+                        <path d="${pathSvg}" fill="#a5f3fc" stroke="#0f172a" stroke-width="4" stroke-linejoin="round" />
+                        <g class="markers-group"></g>
+                    </svg>
+                `;
 
-                // Círculo rojo (Punto)
-                let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                circle.setAttribute("cx", pos.x);
-                circle.setAttribute("cy", pos.y);
-                circle.setAttribute("r", "6");
-                circle.setAttribute("fill", "#ef4444");
-                circle.setAttribute("stroke", "#ffffff");
-                circle.setAttribute("stroke-width", "2");
+                let markersGroup = card.querySelector('.markers-group');
+                let ciudadesProv = provinciasData[prov];
 
-                // Línea de referencia y Texto con el nombre de la localidad (estilo boceto)
-                let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                line.setAttribute("x1", pos.x + 6);
-                line.setAttribute("y1", pos.y);
-                line.setAttribute("x2", pos.x + 35);
-                line.setAttribute("y2", pos.y);
-                line.setAttribute("stroke", "#f97316");
-                line.setAttribute("stroke-width", "2");
+                for (let ciu in ciudadesProv) {
+                    let info = ciudadesProv[ciu];
 
-                let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                text.setAttribute("x", pos.x + 40);
-                text.setAttribute("y", pos.y + 4);
-                text.setAttribute("font-size", "11px");
-                text.setAttribute("font-weight", "bold");
-                text.setAttribute("fill", "#0f172a");
-                text.textContent = `${ciudad.toUpperCase()} (${ciudadesUnicas[ciudad].toFixed(0)} CA)`;
+                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+                    circle.setAttribute("cx", info.x);
+                    circle.setAttribute("cy", info.y);
+                    circle.setAttribute("r", "6");
+                    circle.setAttribute("fill", "#ef4444");
+                    circle.setAttribute("stroke", "#ffffff");
+                    circle.setAttribute("stroke-width", "2");
 
-                svgGroup.appendChild(circle);
-                svgGroup.appendChild(line);
-                svgGroup.appendChild(text);
+                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+                    line.setAttribute("x1", info.x + 6);
+                    line.setAttribute("y1", info.y);
+                    line.setAttribute("x2", info.x + 35);
+                    line.setAttribute("y2", info.y);
+                    line.setAttribute("stroke", "#f97316");
+                    line.setAttribute("stroke-width", "2");
+
+                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
+                    text.setAttribute("x", info.x + 40);
+                    text.setAttribute("y", info.y + 4);
+                    text.setAttribute("font-size", "11px");
+                    text.setAttribute("font-weight", "bold");
+                    text.setAttribute("fill", "#0f172a");
+                    text.textContent = `${ciu.toUpperCase()} (${info.cajas.toFixed(0)} CA)`;
+
+                    markersGroup.appendChild(circle);
+                    markersGroup.appendChild(line);
+                    markersGroup.appendChild(text);
+                }
+
+                container.appendChild(card);
             }
         }
 
@@ -605,12 +657,12 @@
             XLSX.writeFile(wb, "Reporte_Splits.xlsx");
         });
 
-        // Exportar Resumen + Mapa a PDF (Sin errores de CORS ni mapas en blanco)
+        // Exportar Resumen + Todos los Mapas Provinciales a PDF
         document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
             const element = document.getElementById('pdf-container');
             const options = {
                 margin:       10,
-                filename:     'Resumen_Logistico_Cordoba.pdf',
+                filename:     'Resumen_Logistico_Provincias.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
