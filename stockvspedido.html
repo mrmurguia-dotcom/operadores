@@ -3,25 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Validador de Split, Resumen y Mapas Provinciales</title>
+    <title>JDE - Validador de Split, Resumen y Mapa Logístico</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
-    <!-- html2pdf.js (Para exportar el resumen y mapas múltiples a PDF) -->
+    <!-- Leaflet CSS y JS (Para el mapa interactivo) -->
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <!-- html2pdf.js (Para exportar el resumen a PDF) -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        .map-card {
-            background: #ffffff;
-            border-radius: 0.75rem;
-            padding: 1rem;
-            border: 1px solid #e2e8f0;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
+        #map { height: 400px; width: 100%; border-radius: 0.75rem; z-index: 10; }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
@@ -33,7 +28,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Control de Splits, Resumen Dinámico y Mapas Vectoriales Multi-Provincia</p>
+                <p class="text-blue-200 text-sm mt-1">Control de Splits, Tabla Dinámica de Pedidos, Exportación PDF y Mapa de Entregas</p>
             </div>
         </div>
     </header>
@@ -55,7 +50,8 @@
                     <input type="file" id="file-stock" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-stock" id="drop-stock" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
                         <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
-                        <span id="stock-name" class="text-sm font-semibold text-slate-700 text-center">Seleccionar archivo de Stock</span>
+                        <span id="stock-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Stock</span>
+                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
                 <div id="status-stock" class="mt-4 text-xs font-semibold"></div>
@@ -66,14 +62,15 @@
                 <div>
                     <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">2</span> 
-                        Bajada de Pedidos[cite: 5]
+                        Bajada de Pedidos
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Incluye Desc región, Ciudad, Cod de cliente, Cajas[cite: 5].</p>
+                    <p class="text-xs text-slate-500 mb-4">Incluye Ciudad, Cod de cliente, Cajas, etc.</p>
                     
                     <input type="file" id="file-pedidos" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-pedidos" id="drop-pedidos" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
                         <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
-                        <span id="pedidos-name" class="text-sm font-semibold text-slate-700 text-center">Seleccionar archivo de Pedidos</span>
+                        <span id="pedidos-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Pedidos</span>
+                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
                 <div id="status-pedidos" class="mt-4 text-xs font-semibold"></div>
@@ -83,93 +80,98 @@
         <!-- Botón Procesar -->
         <div class="flex justify-center">
             <button id="btn-procesar" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                <i class="fa-solid fa-gears"></i> Procesar Cruce, Resumen y Mapas Provinciales
+                <i class="fa-solid fa-gears"></i> Procesar Cruce, Resumen y Mapa
             </button>
         </div>
 
         <!-- Dashboard de Resultados -->
         <div id="resultados-container" class="hidden space-y-6">
             
-            <!-- Pestañas -->
+            <!-- Pestañas de Navegación -->
             <div class="flex border-b border-slate-300 gap-4">
                 <button id="tab-splits-btn" class="tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2">
                     <i class="fa-solid fa-list-check"></i> Validador de Splits (JDE)
                 </button>
-                <button id="tab-resumen-btn" class="tab-btn pb-3 px-4 font-semibold text-slate-500 cursor-pointer flex items-center gap-2">
-                    <i class="fa-solid fa-table-cells"></i> Resumen de Pedidos y Mapas
+                <button id="tab-resumen-btn" class="tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2">
+                    <i class="fa-solid fa-table-cells"></i> Resumen de Pedidos y Mapa
                 </button>
             </div>
 
-            <!-- VISTA 1: SPLITS -->
+            <!-- VISTA 1: VALIDADOR DE SPLITS -->
             <div id="view-splits" class="space-y-6">
+                <!-- Resumen KPIs -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium uppercase">Total Líneas</p>
+                        <p class="text-xs text-slate-500 font-medium uppercase">Total Líneas Analizadas</p>
                         <p id="kpi-total" class="text-2xl font-bold text-slate-800 mt-1">0</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-green-600 font-medium uppercase">Líneas OK</p>
+                        <p class="text-xs text-green-600 font-medium uppercase">Líneas OK (Sin Split)</p>
                         <p id="kpi-ok" class="text-2xl font-bold text-green-600 mt-1">0</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-amber-600 font-medium uppercase">Requieren Split</p>
+                        <p class="text-xs text-amber-600 font-medium uppercase">Requieren Split de Línea</p>
                         <p id="kpi-split" class="text-2xl font-bold text-amber-600 mt-1">0</p>
                     </div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-red-600 font-medium uppercase">Sin Stock</p>
+                        <p class="text-xs text-red-600 font-medium uppercase">Sin Stock Suficiente</p>
                         <p id="kpi-faltantes" class="text-2xl font-bold text-red-600 mt-1">0</p>
                     </div>
                 </div>
 
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
-                    <div class="flex gap-2">
+                <!-- Filtros y Exportación de Splits -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                    <div class="flex flex-wrap gap-2">
                         <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white" data-filter="all">Todas</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700" data-filter="split">Requieren Split</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700" data-filter="ok">OK</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700" data-filter="missing">Falta Stock</button>
+                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="split">Requieren Split</button>
+                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="ok">OK</button>
+                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="missing">Falta Stock</button>
                     </div>
                     <button id="btn-exportar-splits" class="bg-green-600 hover:bg-green-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i> Descargar Excel Splits
+                        <i class="fa-solid fa-file-excel"></i> Descargar Reporte Splits Excel
                     </button>
                 </div>
 
+                <!-- Tabla de Splits -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto max-h-[600px]">
                         <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b">
+                            <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200">
                                 <tr>
-                                    <th class="p-3">Nro Orden[cite: 5]</th>
+                                    <th class="p-3">Nro Orden</th>
                                     <th class="p-3">Tipo[cite: 5]</th>
                                     <th class="p-3">Cliente[cite: 5]</th>
-                                    <th class="p-3">SKU[cite: 5]</th>
+                                    <th class="p-3">Cod Item Largo (SKU)[cite: 5]</th>
                                     <th class="p-3">Descripción[cite: 5]</th>
-                                    <th class="p-3 text-right">Cajas[cite: 5]</th>
+                                    <th class="p-3 text-right">Cajas Pedidas[cite: 5]</th>
                                     <th class="p-3">Estado</th>
-                                    <th class="p-3">Sugerencia Split</th>
+                                    <th class="p-3">Sugerencia de Split</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-splits" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="tabla-splits" class="divide-y divide-slate-100">
+                            </tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- VISTA 2: RESUMEN Y MAPAS MÚLTIPLES PARA PDF -->
+            <!-- VISTA 2: RESUMEN Y MAPA LOGÍSTICO -->
             <div id="view-resumen" class="hidden space-y-6">
+                <!-- Controles del Resumen -->
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
                     <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-table-cells text-blue-600"></i> Resumen Logístico y Mapas Provinciales
+                        <i class="fa-solid fa-table-cells text-blue-600"></i> Tabla Dinámica de Pedidos Consolidada
                     </h3>
                     <button id="btn-exportar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> Descargar Resumen y Mapas en PDF
+                        <i class="fa-solid fa-file-pdf"></i> Descargar Resumen en PDF
                     </button>
                 </div>
 
-                <!-- CONTENEDOR EXPORTABLE A PDF (Tabla + Mapas dinámicos de cada provincia) -->
+                <!-- Contenedor Imprimible para el PDF -->
                 <div id="pdf-container" class="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="border-b pb-4 mb-4">
                         <h2 class="text-lg font-bold text-slate-800">Reporte de Resumen Logístico de Pedidos</h2>
-                        <p class="text-xs text-slate-500">Detalle consolidado por cliente, vendedor y orden de compra.</p>
+                        <p class="text-xs text-slate-500">Agrupado por Cliente, Vendedor y Orden de Compra.</p>
                     </div>
 
                     <!-- Tabla Dinámica -->
@@ -184,20 +186,18 @@
                                     <th class="p-3 text-right">Total Cajas</th>
                                 </tr>
                             </thead>
-                            <tbody id="tabla-resumen-dinamica" class="divide-y divide-slate-100"></tbody>
+                            <tbody id="tabla-resumen-dinamica" class="divide-y divide-slate-100">
+                            </tbody>
                         </table>
                     </div>
 
-                    <!-- CONTENEDOR DE MAPAS PROVINCIALES DINÁMICOS -->
-                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-4">
+                    <!-- Mapa Interactivo con Puntos Rojos -->
+                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-3">
                         <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-red-600"></i> Mapas de Despachos por Provincia
+                            <i class="fa-solid fa-map-location-dot text-red-600"></i> Mapa de Entregas por Localidad (Ciudad)
                         </h3>
-                        <p class="text-xs text-slate-500">Esquemas provinciales con las localidades de entrega detectadas.</p>
-                        
-                        <div id="dynamic-maps-container" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <!-- Se inyectan dinámicamente los mapas de las provincias detectadas -->
-                        </div>
+                        <p class="text-xs text-slate-500">Puntos rojos indicando las localidades de despacho según los pedidos cargados.</p>
+                        <div id="map"></div>
                     </div>
                 </div>
             </div>
@@ -211,72 +211,40 @@
         let pedidosData = [];
         let resultadosAnalisis = [];
         let resumenDinamico = [];
+        let mapInstance = null;
 
         function norm(str) {
             if (!str) return '';
             return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
-        // Base de datos de ciudades con su provincia correspondiente y posición estimada (X, Y) en el SVG provincial
-        const baseCiudadesProvincia = {
-            "alta gracia": { provincia: "Córdoba", x: 180, y: 260 },
-            "cordoba": { provincia: "Córdoba", x: 210, y: 210 },
-            "villa maria": { provincia: "Córdoba", x: 290, y: 310 },
-            "rio cuarto": { provincia: "Córdoba", x: 220, y: 400 },
-            "carlos paz": { provincia: "Córdoba", x: 170, y: 200 },
-            "san francisco": { provincia: "Córdoba", x: 370, y: 180 },
-            "jesus maria": { provincia: "Córdoba", x: 215, y: 130 },
-            "rosario": { provincia: "Santa Fe", x: 250, y: 320 },
-            "carcaraña": { provincia: "Santa Fe", x: 190, y: 280 },
-            "santa fe": { provincia: "Santa Fe", x: 220, y: 150 },
-            "rafaela": { provincia: "Santa Fe", x: 210, y: 200 },
-            "resistencia": { provincia: "Chaco", x: 230, y: 350 },
-            "saenz peña": { provincia: "Chaco", x: 160, y: 200 },
-            "posadas": { provincia: "Misiones", x: 250, y: 300 },
-            "obera": { provincia: "Misiones", x: 270, y: 350 }
+        // Diccionario base de coordenadas de ciudades comunes en Argentina (para el mapa con puntos rojos)
+        const coordenadasCiudades = {
+            "alta gracia": [-31.6528, -64.4304],
+            "cordoba": [-31.4201, -64.1888],
+            "villa maria": [-32.4075, -63.2402],
+            "rio cuarto": [-33.1303, -64.3499],
+            "carlos paz": [-31.4241, -64.4978],
+            "san francisco": [-31.4278, -62.0833],
+            "jesus maria": [-30.9833, -64.1000],
+            "default": [-31.4201, -64.1888] // Centro por defecto
         };
 
-        // Formas vectoriales (SVG paths) simplificadas para las provincias principales
-        const svgProvinciasPaths = {
-            "Córdoba": "M 120,40 Q 180,25 240,35 Q 310,30 350,70 Q 380,120 400,180 Q 420,250 390,320 Q 360,390 320,440 Q 250,470 180,450 Q 110,430 90,360 Q 70,280 85,200 Q 95,120 120,40 Z",
-            "Santa Fe": "M 180,20 Q 240,40 280,100 Q 310,200 290,320 Q 270,420 220,460 Q 160,430 140,350 Q 120,250 150,140 Q 160,70 180,20 Z",
-            "Chaco": "M 100,60 Q 220,40 340,70 Q 380,180 350,280 Q 280,380 180,360 Q 90,320 80,200 Q 70,120 100,60 Z",
-            "Misiones": "M 150,40 Q 280,60 320,150 Q 350,280 280,420 Q 200,450 140,380 Q 100,250 120,120 Q 130,70 150,40 Z",
-            "Default": "M 100,50 Q 200,30 300,50 Q 370,150 350,300 Q 300,420 200,450 Q 100,400 80,250 Q 70,120 100,50 Z"
-        };
-
-        function identificarUbicacion(ciudadInput, regionInput) {
-            let cNorm = norm(ciudadInput);
-            let rNorm = norm(regionInput);
-
-            // Buscar en el diccionario de ciudades
-            for (let cKey in baseCiudadesProvincia) {
-                if (cNorm.includes(cKey)) {
-                    return {
-                        provincia: baseCiudadesProvincia[cKey].provincia,
-                        ciudadLimpia: ciudadInput || cKey,
-                        x: baseCiudadesProvincia[cKey].x,
-                        y: baseCiudadesProvincia[cKey].y
-                    };
-                }
+        function obtenerCoordenadas(ciudad) {
+            let key = norm(ciudad);
+            for (let c in coordenadasCiudades) {
+                if (key.includes(c)) return coordenadasCiudades[c];
             }
-
-            // Si dice Centro o no se encuentra, por defecto se asume Córdoba
-            if (rNorm.includes('centro') || cNorm === '' || cNorm.includes('cordoba')) {
-                return { provincia: "Córdoba", ciudadLimpia: ciudadInput || "Córdoba", x: 210, y: 210 };
-            }
-
-            // Fallback genérico para otras ciudades desconocidas
-            return { provincia: "Otras Provincias", ciudadLimpia: ciudadInput || "Destino", x: 200, y: 250 };
+            return coordenadasCiudades["default"];
         }
 
-        // Lector Inteligente
+        // Lector Inteligente de Excel
         function leerExcelInteligente(file, tipo, callback) {
             const statusElem = document.getElementById(`status-${tipo}`);
             const nameElem = document.getElementById(`${tipo}-name`);
 
             statusElem.className = "mt-4 text-xs font-semibold text-blue-600";
-            statusElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Leyendo...';
+            statusElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Leyendo archivo...';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -285,11 +253,11 @@
                     const workbook = XLSX.read(data, { type: 'array' });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-                    if (rows.length === 0) throw new Error("Vacío.");
+                    if (rows.length === 0) throw new Error("El archivo está vacío.");
 
                     let headerRowIndex = 0;
                     let maxMatches = -1;
-                    const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'dep', 'cliente', 'ciudad', 'region'];
+                    const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'dep', 'cliente', 'ciudad'];
 
                     for (let i = 0; i < Math.min(rows.length, 5); i++) {
                         let rowStr = rows[i].map(cell => norm(String(cell))).join(' ');
@@ -315,33 +283,38 @@
                         if (hasData) json.push(obj);
                     }
 
+                    if (json.length === 0) throw new Error("No se encontraron datos válidos debajo de las cabeceras.");
+
                     nameElem.textContent = file.name;
                     statusElem.className = "mt-4 text-xs font-semibold text-green-600";
-                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${json.length} filas cargadas.`;
+                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${json.length} filas cargadas correctamente.`;
 
                     callback(json);
+
                     if (stockData.length > 0 && pedidosData.length > 0) {
                         document.getElementById('btn-procesar').removeAttribute('disabled');
                     }
                 } catch (err) {
                     statusElem.className = "mt-4 text-xs font-semibold text-red-600";
-                    statusElem.innerHTML = `Error: ${err.message}`;
+                    statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${err.message}`;
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
-        document.getElementById('file-stock').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'stock', (d) => { stockData = d; });
+        document.getElementById('file-stock').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'stock', (data) => { stockData = data; });
         });
 
-        document.getElementById('file-pedidos').addEventListener('change', (e) => {
-            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'pedidos', (d) => { pedidosData = d; });
+        document.getElementById('file-pedidos').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'pedidos', (data) => { pedidosData = data; });
         });
 
+        // Botón Procesar Principal
         document.getElementById('btn-procesar').addEventListener('click', function() {
             if (stockData.length === 0 || pedidosData.length === 0) return;
 
+            // 1. Mapear Stock en memoria con cantidades mutables
             const stockMap = {};
             stockData.forEach(row => {
                 let keys = Object.keys(row);
@@ -352,13 +325,14 @@
                 let kUbi = keys.find(k => norm(k).includes('ubicacion'));
 
                 if (!kArt || !kDisp) return;
+
                 let sku = String(row[kArt]).trim();
                 let dispCajas = parseFloat(row[kDisp]) || 0;
                 let estado = kEst ? String(row[kEst]).trim() : "";
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                if (estado !== "") return;[cite: 1]
+                if (estado !== "") return; // Excluir lotes bloqueados[cite: 1]
                 if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
@@ -369,39 +343,35 @@
             let mapaResumenAgrupado = {};
             let countOk = 0, countSplit = 0, countMissing = 0;
 
+            // 2. Procesar Pedidos Secuencialmente
             pedidosData.forEach((row) => {
                 let keys = Object.keys(row);
                 
-                let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('orden'));
-                let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tp'));
-                let kDescReg = keys.find(k => norm(k).includes('desc region') || norm(k).includes('region'));
-                let kCiudad = keys.find(k => norm(k).includes('ciudad'));
+                let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('nro orden') || norm(k).includes('orden'));
+                let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo orden') || norm(k).includes('tp'));
                 let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
                 let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
                 let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
                 let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
+                let kCiudad = keys.find(k => norm(k).includes('ciudad'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
                 let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
 
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
-                let descReg = kDescReg ? String(row[kDescReg]).trim() : "";
-                let ciudadRaw = kCiudad ? String(row[kCiudad]).trim() : "";
-
-                // Identificar provincia y localidad automáticamente
-                let ubiInfo = identificarUbicacion(ciudadRaw, descReg);
-
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
                 let descVendedor = kDescVendedor ? String(row[kDescVendedor]).trim() : "";
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : "";
+                let ciudad = kCiudad ? String(row[kCiudad]).trim() : "Desconocida";
                 let sku = kSku ? String(row[kSku]).trim() : "";
                 let desc = kDesc ? String(row[kDesc]) : "";
                 let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
 
                 if (!sku || cajasPedidas <= 0) return;
 
+                // Armar Resumen Dinámico agrupado por cliente, vendedor y OC
                 let claveAgrupacion = `${codCliente}_${ocCliente}_${descVendedor}`;
                 if (!mapaResumenAgrupado[claveAgrupacion]) {
                     mapaResumenAgrupado[claveAgrupacion] = {
@@ -410,20 +380,13 @@
                         descVendedor,
                         ocCliente,
                         totalCajas: 0,
-                        destinos: {} // Almacena { provincia: { ciudad: cajas } }
+                        ciudades: new Set()
                     };
                 }
                 mapaResumenAgrupado[claveAgrupacion].totalCajas += cajasPedidas;
-                
-                if (!mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia]) {
-                    mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia] = {};
-                }
-                if (!mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia]) {
-                    mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia] = { cajas: 0, x: ubiInfo.x, y: ubiInfo.y };
-                }
-                mapaResumenAgrupado[claveAgrupacion].destinos[ubiInfo.provincia][ubiInfo.ciudadLimpia].cajas += cajasPedidas;
+                mapaResumenAgrupado[claveAgrupacion].ciudades.add(ciudad);
 
-                // Cruce de stock para splits
+                // Cruce de Stock para Splits
                 let lotesDisponibles = stockMap[sku] || [];
                 let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
 
@@ -433,14 +396,20 @@
                 if (stockTotalActualCA < cajasPedidas) {
                     estadoItem = "Falta Stock";
                     countMissing++;
-                    detalleSplit.push({ texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} vs ${cajasPedidas} CA)`, clase: "text-red-600 font-semibold" });
+                    detalleSplit.push({ 
+                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. vs ${cajasPedidas} CA pedidas)`, 
+                        clase: "text-red-600 font-semibold" 
+                    });
                 } else {
                     let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasPedidas);
                     if (loteUnico) {
                         estadoItem = "OK";
                         countOk++;
                         loteUnico.disponibleCajas -= cajasPedidas;
-                        detalleSplit.push({ texto: `Cubre en 1 lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion})`, clase: "text-green-600" });
+                        detalleSplit.push({ 
+                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
+                            clase: "text-green-600" 
+                        });
                     } else {
                         estadoItem = "Requiere Split";
                         countSplit++;
@@ -455,8 +424,12 @@
                             let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
                             l.disponibleCajas -= tomarCajas;
 
+                            let notaAgotamiento = (l.disponibleCajas === 0) 
+                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
+                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA)</span>`;
+
                             detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})`,
+                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
                                 clase: "text-amber-700 font-medium"
                             });
                             restoRequerido -= tomarCajas;
@@ -465,11 +438,15 @@
                     }
                 }
 
-                resultadosAnalisis.push({ orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit });
+                resultadosAnalisis.push({ 
+                    orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
+                });
             });
 
+            // Guardar Resumen Dinámico procesado
             resumenDinamico = Object.values(mapaResumenAgrupado);
 
+            // Actualizar KPIs de Splits
             document.getElementById('kpi-total').textContent = resultadosAnalisis.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
@@ -477,11 +454,16 @@
 
             renderizarTablaSplits(resultadosAnalisis);
             renderizarTablaResumen(resumenDinamico);
-            generarMapasProvincialesDinactivos(resumenDinamico);
 
             document.getElementById('resultados-container').classList.remove('hidden');
+            
+            // Inicializar el mapa con puntos rojos
+            setTimeout(() => {
+                inicializarMapa(resumenDinamico);
+            }, 300);
         });
 
+        // Renderizar Tabla Splits
         function renderizarTablaSplits(datos, filtro = 'all') {
             const tbody = document.getElementById('tabla-splits');
             tbody.innerHTML = '';
@@ -493,7 +475,7 @@
             });
 
             if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">Sin registros.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros.</td></tr>`;
                 return;
             }
 
@@ -501,9 +483,9 @@
                 let badgeClass = item.estadoItem === 'OK' ? 'bg-green-100 text-green-800' : (item.estadoItem === 'Requiere Split' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
                 let detalleHtml = item.detalleSplit.map(d => `<div class="${d.clase}">• ${d.texto}</div>`).join('');
                 let tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b";
+                tr.className = "hover:bg-slate-50 border-b border-slate-100";
                 tr.innerHTML = `
-                    <td class="p-3 font-semibold">${item.orden}</td>
+                    <td class="p-3 font-semibold text-slate-700">${item.orden}</td>
                     <td class="p-3">${item.tpOrd}</td>
                     <td class="p-3">${item.cliente}</td>
                     <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
@@ -516,19 +498,20 @@
             });
         }
 
+        // Renderizar Tabla Dinámica de Resumen
         function renderizarTablaResumen(datos) {
             const tbody = document.getElementById('tabla-resumen-dinamica');
             tbody.innerHTML = '';
             if (datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Sin datos.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Sin datos de resumen.</td></tr>`;
                 return;
             }
 
             datos.forEach(item => {
                 let tr = document.createElement('tr');
-                tr.className = "border-b";
+                tr.className = "border-b border-slate-100";
                 tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold">${item.codCliente}</td>
+                    <td class="p-3 font-mono font-bold text-slate-700">${item.codCliente}</td>
                     <td class="p-3">${item.nombreCliente}</td>
                     <td class="p-3">${item.descVendedor}</td>
                     <td class="p-3">${item.ocCliente}</td>
@@ -538,94 +521,59 @@
             });
         }
 
-        // Generar mapas vectoriales independientes por cada provincia detectada
-        function generarMapasProvincialesDinactivos(datos) {
-            const container = document.getElementById('dynamic-maps-container');
-            container.innerHTML = '';
+        // Inicializar Mapa con Leaflet y Puntos Rojos
+        function inicializarMapa(datos) {
+            const mapContainer = document.getElementById('map');
+            if (mapInstance) {
+                mapInstance.remove(); // Limpiar mapa anterior si existe
+            }
 
-            // Consolidar ciudades por provincia
-            let provinciasData = {};
+            mapInstance = L.map(mapContainer).setView([-31.4201, -64.1888], 8); // Centrado inicial
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mapInstance);
+
+            // Obtener ciudades únicas del resumen
+            let ciudadesUnicas = {};
             datos.forEach(item => {
-                for (let prov in item.destinos) {
-                    if (!provinciasData[prov]) provinciasData[prov] = {};
-                    for (let ciu in item.destinos[prov]) {
-                        if (!provinciasData[prov][ciu]) {
-                            provinciasData[prov][ciu] = { cajas: 0, x: item.destinos[prov][ciu].x, y: item.destinos[prov][ciu].y };
-                        }
-                        provinciasData[prov][ciu].cajas += item.destinos[prov][ciu].cajas;
-                    }
-                }
+                item.ciudades.forEach( ciudad => {
+                    if (!ciudadesUnicas[ciudad]) ciudadesUnicas[ciudad] = 0;
+                    ciudadesUnicas[ciudad] += item.totalCajas;
+                });
             });
 
-            // Crear una tarjeta de mapa SVG por cada provincia presente
-            for (let prov in provinciasData) {
-                let pathSvg = svgProvinciasPaths[prov] || svgProvinciasPaths["Default"];
-                
-                let card = document.createElement('div');
-                card.className = "map-card shadow-sm";
-                card.innerHTML = `
-                    <h4 class="font-bold text-slate-700 text-sm mb-2">Provincia: ${prov}</h4>
-                    <svg viewBox="0 0 450 480" width="100%" height="260" style="max-width: 350px;">
-                        <path d="${pathSvg}" fill="#a5f3fc" stroke="#0f172a" stroke-width="4" stroke-linejoin="round" />
-                        <g class="markers-group"></g>
-                    </svg>
-                `;
+            // Agregar marcadores rojos
+            for (let ciudad in ciudadesUnicas) {
+                let coords = obtenerCoordenadas(ciudad);
+                let circuloRojo = L.circleMarker(coords, {
+                    color: 'red',
+                    fillColor: '#f03',
+                    fillOpacity: 0.7,
+                    radius: 8
+                }).addTo(mapInstance);
 
-                let markersGroup = card.querySelector('.markers-group');
-                let ciudadesProv = provinciasData[prov];
-
-                for (let ciu in ciudadesProv) {
-                    let info = ciudadesProv[ciu];
-
-                    let circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-                    circle.setAttribute("cx", info.x);
-                    circle.setAttribute("cy", info.y);
-                    circle.setAttribute("r", "6");
-                    circle.setAttribute("fill", "#ef4444");
-                    circle.setAttribute("stroke", "#ffffff");
-                    circle.setAttribute("stroke-width", "2");
-
-                    let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-                    line.setAttribute("x1", info.x + 6);
-                    line.setAttribute("y1", info.y);
-                    line.setAttribute("x2", info.x + 35);
-                    line.setAttribute("y2", info.y);
-                    line.setAttribute("stroke", "#f97316");
-                    line.setAttribute("stroke-width", "2");
-
-                    let text = document.createElementNS("http://www.w3.org/2000/svg", "text");
-                    text.setAttribute("x", info.x + 40);
-                    text.setAttribute("y", info.y + 4);
-                    text.setAttribute("font-size", "11px");
-                    text.setAttribute("font-weight", "bold");
-                    text.setAttribute("fill", "#0f172a");
-                    text.textContent = `${ciu.toUpperCase()} (${info.cajas.toFixed(0)} CA)`;
-
-                    markersGroup.appendChild(circle);
-                    markersGroup.appendChild(line);
-                    markersGroup.appendChild(text);
-                }
-
-                container.appendChild(card);
+                circuloRojo.bindPopup(`<b>Localidad:</b> ${ciudad.toUpperCase()}<br><b>Total Cajas:</b> ${ciudadesUnicas[ciudad].toFixed(2)} CA`);
             }
         }
 
-        // Pestañas
+        // Gestión de Pestañas (Tabs)
         document.getElementById('tab-splits-btn').addEventListener('click', () => {
             document.getElementById('view-splits').classList.remove('hidden');
             document.getElementById('view-resumen').classList.add('hidden');
             document.getElementById('tab-splits-btn').className = "tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2";
-            document.getElementById('tab-resumen-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 cursor-pointer flex items-center gap-2";
+            document.getElementById('tab-resumen-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2";
         });
 
         document.getElementById('tab-resumen-btn').addEventListener('click', () => {
             document.getElementById('view-resumen').classList.remove('hidden');
             document.getElementById('view-splits').classList.add('hidden');
             document.getElementById('tab-resumen-btn').className = "tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2";
-            document.getElementById('tab-splits-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 cursor-pointer flex items-center gap-2";
+            document.getElementById('tab-splits-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2";
+            if (mapInstance) mapInstance.invalidateSize(); // Recargar dimensiones del mapa
         });
 
-        // Filtros Splits
+        // Filtros de Splits
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
@@ -638,31 +586,31 @@
             });
         });
 
-        // Exportar Excel
+        // Exportar Splits a Excel
         document.getElementById('btn-exportar-splits').addEventListener('click', () => {
             if (resultadosAnalisis.length === 0) return;
             let exportData = resultadosAnalisis.map(i => ({
                 "Nro Orden": i.orden,
                 "Tipo Ord": i.tpOrd,
                 "Cliente": i.cliente,
-                "SKU": i.sku,
-                "Descripción": i.desc,
-                "Cajas": i.cajasPedidas,
+                "Cod Item Largo (SKU)": i.sku,
+                "Descripción de línea": i.desc,
+                "Cajas Pedidas": i.cajasPedidas,
                 "Estado": i.estadoItem,
-                "Split": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
+                "Sugerencia Split / Lotes": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
             }));
             let ws = XLSX.utils.json_to_sheet(exportData);
             let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Splits");
-            XLSX.writeFile(wb, "Reporte_Splits.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
+            XLSX.writeFile(wb, "Reporte_Splits_JDE_Consumo.xlsx");
         });
 
-        // Exportar Resumen + Todos los Mapas Provinciales a PDF
+        // Exportar Resumen a PDF
         document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
             const element = document.getElementById('pdf-container');
             const options = {
                 margin:       10,
-                filename:     'Resumen_Logistico_Provincias.pdf',
+                filename:     'Resumen_Logistico_Pedidos.pdf',
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
