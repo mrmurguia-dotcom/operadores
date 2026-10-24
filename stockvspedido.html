@@ -129,20 +129,16 @@
                     </button>
                 </div>
 
-                <!-- Bloque Copiable de Resumen Pedidos -->
+                <!-- Bloque Vista Resumen Pedidos -->
                 <div id="copyable-resumen-pedidos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <!-- Texto cuerpo de mail -->
                     <div id="pedidos-mail-text" class="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 font-sans leading-relaxed">
-                        Estimados,<br><br>
-                        adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.
+                        Estimados,<br>adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.
                     </div>
 
-                    <!-- Título dinámico -->
                     <h2 id="pedidos-table-title" class="text-base font-bold text-slate-800 pt-2 border-t border-slate-100">
                         Resumen de pedidos ( Sin archivo )
                     </h2>
 
-                    <!-- Tabla Dinámica -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-pedidos-export" style="border-collapse: collapse; width: 100%;">
                             <thead>
@@ -162,7 +158,7 @@
                         </table>
                     </div>
 
-                    <div class="text-sm text-slate-700 font-sans pt-2">
+                    <div class="text-sm text-slate-700 font-sans pt-1">
                         Saludos
                     </div>
                 </div>
@@ -187,23 +183,19 @@
                     <label for="motivos-custom-text" class="text-xs font-bold text-slate-600 whitespace-nowrap">
                         Texto personalizado (XXXXX):
                     </label>
-                    <input type="text" id="motivos-custom-text" placeholder="Ej: CBA 21/10" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="motivos-custom-text" placeholder="Ej: LITORAL Y NEA 21/10" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
-                <!-- Bloque Copiable de Resumen Motivos -->
+                <!-- Bloque Vista Resumen Motivos -->
                 <div id="copyable-resumen-motivos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
-                    <!-- Texto cuerpo de mail dinámico -->
                     <div id="motivos-mail-text" class="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 font-sans leading-relaxed">
-                        Estimados,<br><br>
-                        adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>.
+                        Estimados,<br>adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>.
                     </div>
 
-                    <!-- Título dinámico -->
                     <h2 id="motivos-table-title" class="text-base font-bold text-slate-800 pt-2 border-t border-slate-100">
                         Resumen motivos ( <span id="motivos-title-placeholder"></span> )
                     </h2>
 
-                    <!-- Tabla Motivos -->
                     <div class="overflow-x-auto">
                         <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-motivos-export" style="border-collapse: collapse; width: 100%;">
                             <thead>
@@ -224,7 +216,7 @@
                         </table>
                     </div>
 
-                    <div class="text-sm text-slate-700 font-sans pt-2">
+                    <div class="text-sm text-slate-700 font-sans pt-1">
                         Saludos
                     </div>
                 </div>
@@ -311,28 +303,23 @@
 
     <!-- SCRIPT LOGIC -->
     <script>
-        // Data Stores Independientes
         let rawStock = [];
         let rawPedidos = [];
         let rawMotivos = [];
 
         let fileNames = { stock: '', pedidos: '', motivos: '' };
-
         let splitsResult = [];
 
-        // Normalizador de Strings
         function norm(str) {
             if (str === null || str === undefined) return '';
             return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
-        // Formateador de números (Enteros con separador de miles es-AR)
         function fmtInt(val) {
             let num = Math.round(parseFloat(val) || 0);
             return num.toLocaleString('es-AR');
         }
 
-        // Mostrar Notificación Toast
         function showToast(msg) {
             const toast = document.getElementById('toast-notif');
             document.getElementById('toast-text').textContent = msg;
@@ -340,15 +327,13 @@
             setTimeout(() => { toast.classList.add('hidden'); }, 3000);
         }
 
-        // Limpiar Nombre de Archivo
         function cleanFileName(filename) {
             if (!filename) return '';
-            let name = filename.replace(/\.[^/.]+$/, ""); // quitar extensión
-            name = name.replace(/^copia\s+de\s+/i, ''); // quitar "Copia de " o "copia de "
+            let name = filename.replace(/\.[^/.]+$/, "");
+            name = name.replace(/^copia\s+de\s+/i, '');
             return name.trim();
         }
 
-        // Lector Inteligente Generico
         function leerExcelFile(file, key, statusId, nameId, callback) {
             const statusElem = document.getElementById(statusId);
             const nameElem = document.getElementById(nameId);
@@ -366,7 +351,6 @@
 
                     if (!rows || rows.length === 0) throw new Error("El archivo está vacío.");
 
-                    // Encontrar fila de encabezado inteligente
                     let headerRowIndex = 0;
                     let maxMatches = -1;
                     const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'cliente', 'total', 'turno', 'zona', 'localidad', 'entrega'];
@@ -410,7 +394,6 @@
             reader.readAsArrayBuffer(file);
         }
 
-        // Listeners Carga Archivos
         document.getElementById('file-stock').addEventListener('change', function(e) {
             if (e.target.files.length > 0) leerExcelFile(e.target.files[0], 'stock', 'status-stock', 'stock-name', data => { rawStock = data; });
         });
@@ -423,7 +406,6 @@
             if (e.target.files.length > 0) leerExcelFile(e.target.files[0], 'motivos', 'status-motivos', 'motivos-name', data => { rawMotivos = data; });
         });
 
-        // Cambio de Vistas
         function showView(viewId) {
             ['view-resumen-pedidos', 'view-resumen-motivos', 'view-sugerencia-pk', 'view-split-lineas'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
@@ -441,40 +423,19 @@
                 return;
             }
 
-            // Título dinámico
             const nameClean = cleanFileName(fileNames.pedidos);
             document.getElementById('pedidos-table-title').textContent = `Resumen de pedidos (${nameClean})`;
 
-            // Agrupación de Pedidos
             const agrupado = {};
 
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
 
-                let kCodCliente = keys.find(k => {
-                    let nk = norm(k);
-                    return nk.includes('cod de cliente') || nk.includes('codigo de cliente') || nk.includes('cod cliente');
-                });
-
-                let kNomCliente = keys.find(k => {
-                    let nk = norm(k);
-                    return nk.includes('nombre de cliente') || nk.includes('nombre cliente');
-                });
-
-                let kDescVendedor = keys.find(k => {
-                    let nk = norm(k);
-                    return nk.includes('desc vendedor') || nk.includes('vendedor');
-                });
-
-                let kOcCliente = keys.find(k => {
-                    let nk = norm(k);
-                    return nk.includes('oc del cliente') || nk.includes('oc cliente');
-                });
-
-                let kCajas = keys.find(k => {
-                    let nk = norm(k);
-                    return nk === 'cajas' || nk.includes('cajas') || nk.includes('total cajas') || nk.includes('cantidad');
-                });
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('codigo de cliente') || norm(k).includes('cod cliente'));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
+                let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
+                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc cliente'));
+                let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('total cajas') || norm(k).includes('cantidad'));
 
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
@@ -482,23 +443,15 @@
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
                 let cajas = kCajas ? parseFloat(row[kCajas]) || 0 : 0;
 
-                // Descartar encabezados falsos o subtotales
                 if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general') || norm(nomCliente).includes('nombre de cliente')) return;
 
                 let keyGroup = `${codCliente}_${ocCliente}_${descVendedor}`;
                 if (!agrupado[keyGroup]) {
-                    agrupado[keyGroup] = {
-                        codCliente,
-                        nomCliente,
-                        descVendedor,
-                        ocCliente,
-                        totalCajas: 0
-                    };
+                    agrupado[keyGroup] = { codCliente, nomCliente, descVendedor, ocCliente, totalCajas: 0 };
                 }
                 agrupado[keyGroup].totalCajas += cajas;
             });
 
-            // Renderizar Tabla
             const tbody = document.getElementById('tbody-resumen-pedidos');
             tbody.innerHTML = '';
 
@@ -523,39 +476,34 @@
                 tbody.appendChild(tr);
             });
 
-            // Fila Total General
             let trTotal = document.createElement('tr');
             trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
             trTotal.innerHTML = `
-                <td colspan="4" class="p-2.5 border border-slate-300 text-right uppercase bg-slate-100 font-bold">Total General:</td>
+                <td colspan="4" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total General:</td>
                 <td class="p-2.5 border border-slate-300 text-right text-blue-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
             `;
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Pedidos al Portapapeles (Estilos Inline Nativos para Mail)
+        // Copiar Resumen Pedidos al Portapapeles (Estructura limpia sin saltos extra)
         document.getElementById('btn-copiar-resumen-pedidos').addEventListener('click', () => {
-            const mailHtml = `Estimados,<br><br>adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.`;
             const titleText = document.getElementById('pedidos-table-title').innerText;
-
-            // Construir tabla con estilos inline explícitos
             const tbody = document.getElementById('tbody-resumen-pedidos').cloneNode(true);
             
             let tableStyled = `
-                <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1;">
+                <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
                     <thead>
                         <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Nombre de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Desc Vendedor</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">OC del cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Cod de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Nombre de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Desc Vendedor</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">OC del cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">Total Cajas</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
-            // Procesar filas para inyectar bordes y padding
             Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
                 let isTotal = tr.innerText.includes('Total General');
                 let rowBg = isTotal ? 'background-color: #f1f5f9; font-weight: bold;' : '';
@@ -564,7 +512,7 @@
                 Array.from(tr.querySelectorAll('td')).forEach(td => {
                     let align = td.classList.contains('text-right') ? 'text-align: right;' : 'text-align: left;';
                     let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
-                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 8px; ${align}">${td.innerHTML}</td>`;
+                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 6px; ${align}">${td.innerHTML}</td>`;
                 });
                 
                 tableStyled += `</tr>`;
@@ -572,25 +520,16 @@
 
             tableStyled += `</tbody></table>`;
 
-            const fullHtml = `
-                <div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #1e293b; line-height: 1.5;">
-                    <p style="margin-bottom: 16px;">${mailHtml}</p>
-                    <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #1e3a8a;">${titleText}</h3>
-                    ${tableStyled}
-                    <p style="margin-top: 16px;">Saludos</p>
-                </div>
-            `;
+            const fullHtml = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #000; line-height: 1.3;">Estimados,<br>adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.<br><br><b>${titleText}</b><br>${tableStyled}Saludos</div>`;
 
             navigator.clipboard.write([
                 new ClipboardItem({
                     'text/html': new Blob([fullHtml], { type: 'text/html' }),
-                    'text/plain': new Blob([`Estimados,\n\nadjunto el detalle de los pedidos incluidos en el próximo cross docking...\n\n${titleText}\n\nSaludos`], { type: 'text/plain' })
+                    'text/plain': new Blob([`Estimados,\nadjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.\n\n${titleText}\n\n[Tabla Pedidos]\n\nSaludos`], { type: 'text/plain' })
                 })
             ]).then(() => {
-                showToast("¡Resumen de Pedidos copiado con bordes para el correo!");
-            }).catch(err => {
-                alert("Error al copiar: " + err);
-            });
+                showToast("¡Resumen de Pedidos copiado correctamente!");
+            }).catch(err => alert("Error al copiar: " + err));
         });
 
         // ==========================================
@@ -610,7 +549,6 @@
                 return;
             }
 
-            // Agrupación de Motivos (Tomando Columna N / Total CA)
             const agrupadoMotivos = {};
 
             rawMotivos.forEach(row => {
@@ -621,8 +559,6 @@
                 let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
                 let kFechaEntrega = keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
                 let kTurno = keys.find(k => norm(k).includes('turno'));
-
-                // Columna N: Total (CA)
                 let kTotalCa = keys[13] || keys.find(k => norm(k).includes('total (ca)') || norm(k) === 'total' || norm(k).includes('cajas'));
 
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
@@ -632,24 +568,15 @@
                 let turno = kTurno ? String(row[kTurno]).trim() : '';
                 let totalCA = kTotalCa ? parseFloat(row[kTotalCa]) || 0 : 0;
 
-                // Descartar subtotales o encabezados
                 if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general')) return;
 
                 let keyGroup = `${codCliente}_${ocCliente}_${fechaEntrega}_${turno}`;
                 if (!agrupadoMotivos[keyGroup]) {
-                    agrupadoMotivos[keyGroup] = {
-                        codCliente,
-                        nomCliente,
-                        ocCliente,
-                        fechaEntrega,
-                        turno,
-                        totalCajas: 0
-                    };
+                    agrupadoMotivos[keyGroup] = { codCliente, nomCliente, ocCliente, fechaEntrega, turno, totalCajas: 0 };
                 }
                 agrupadoMotivos[keyGroup].totalCajas += totalCA;
             });
 
-            // Renderizar Tabla Motivos
             const tbody = document.getElementById('tbody-resumen-motivos');
             tbody.innerHTML = '';
 
@@ -675,41 +602,36 @@
                 tbody.appendChild(tr);
             });
 
-            // Fila Total General
             let trTotal = document.createElement('tr');
             trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
             trTotal.innerHTML = `
-                <td colspan="5" class="p-2.5 border border-slate-300 text-right uppercase bg-slate-100 font-bold">Total General:</td>
+                <td colspan="5" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total General:</td>
                 <td class="p-2.5 border border-slate-300 text-right text-indigo-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
             `;
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Motivos al Portapapeles (Estilos Inline Nativos para Mail)
+        // Copiar Resumen Motivos al Portapapeles (Estructura limpia sin saltos extra)
         document.getElementById('btn-copiar-resumen-motivos').addEventListener('click', () => {
             const customVal = document.getElementById('motivos-custom-text').value.trim();
-            const mailHtml = `Estimados,<br><br>adjunto los motivos correspondientes a ${customVal || 'xxxxx'}.`;
             const titleText = document.getElementById('motivos-table-title').innerText;
-
-            // Construir tabla con estilos inline explícitos
             const tbody = document.getElementById('tbody-resumen-motivos').cloneNode(true);
             
             let tableStyled = `
-                <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1;">
+                <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
                     <thead>
                         <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Nombre de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">OC del cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Fecha de entrega</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Turno</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Cod de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Nombre de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">OC del cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Fecha de entrega</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px;">Turno</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right;">Total Cajas</th>
                         </tr>
                     </thead>
                     <tbody>
             `;
 
-            // Procesar filas para inyectar bordes y padding
             Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
                 let isTotal = tr.innerText.includes('Total General');
                 let rowBg = isTotal ? 'background-color: #f1f5f9; font-weight: bold;' : '';
@@ -718,7 +640,7 @@
                 Array.from(tr.querySelectorAll('td')).forEach(td => {
                     let align = td.classList.contains('text-right') ? 'text-align: right;' : 'text-align: left;';
                     let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
-                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 8px; ${align}">${td.innerHTML}</td>`;
+                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 6px; ${align}">${td.innerHTML}</td>`;
                 });
                 
                 tableStyled += `</tr>`;
@@ -726,25 +648,16 @@
 
             tableStyled += `</tbody></table>`;
 
-            const fullHtml = `
-                <div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #1e293b; line-height: 1.5;">
-                    <p style="margin-bottom: 16px;">${mailHtml}</p>
-                    <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #3730a3;">${titleText}</h3>
-                    ${tableStyled}
-                    <p style="margin-top: 16px;">Saludos</p>
-                </div>
-            `;
+            const fullHtml = `<div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #000; line-height: 1.3;">Estimados,<br>adjunto los motivos correspondientes a ${customVal || 'xxxxx'}.<br><br><b>${titleText}</b><br>${tableStyled}Saludos</div>`;
 
             navigator.clipboard.write([
                 new ClipboardItem({
                     'text/html': new Blob([fullHtml], { type: 'text/html' }),
-                    'text/plain': new Blob([`Estimados,\n\nadjunto los motivos correspondientes a ${customVal || 'xxxxx'}.\n\n${titleText}\n\nSaludos`], { type: 'text/plain' })
+                    'text/plain': new Blob([`Estimados,\nadjunto los motivos correspondientes a ${customVal || 'xxxxx'}.\n\n${titleText}\n\n[Tabla Motivos]\n\nSaludos`], { type: 'text/plain' })
                 })
             ]).then(() => {
-                showToast("¡Resumen de Motivos copiado con bordes para el correo!");
-            }).catch(err => {
-                alert("Error al copiar: " + err);
-            });
+                showToast("¡Resumen de Motivos copiado correctamente!");
+            }).catch(err => alert("Error al copiar: " + err));
         });
 
         // ==========================================
@@ -780,7 +693,6 @@
                 return;
             }
 
-            // Procesamiento de Lotes y Stock
             const stockMap = {};
             rawStock.forEach(row => {
                 let keys = Object.keys(row);
@@ -798,7 +710,7 @@
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                if (estado !== "") return; // Lotes bloqueados
+                if (estado !== "") return;
                 if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
@@ -881,7 +793,6 @@
                 });
             });
 
-            // KPIs
             document.getElementById('kpi-total').textContent = splitsResult.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
@@ -890,7 +801,6 @@
             renderTablaSplits(splitsResult);
         });
 
-        // Render Tabla Splits
         function renderTablaSplits(datos, filtro = 'all') {
             const tbody = document.getElementById('tabla-splits');
             tbody.innerHTML = '';
@@ -926,7 +836,6 @@
             });
         }
 
-        // Filtros de Tabla Splits
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
@@ -939,7 +848,6 @@
             });
         });
 
-        // Exportar Splits a Excel
         document.getElementById('btn-exportar-splits').addEventListener('click', () => {
             if (splitsResult.length === 0) return;
             let exportData = splitsResult.map(i => ({
