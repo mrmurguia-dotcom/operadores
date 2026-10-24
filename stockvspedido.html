@@ -133,7 +133,8 @@
                 <div id="copyable-resumen-pedidos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <!-- Texto cuerpo de mail -->
                     <div id="pedidos-mail-text" class="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 font-sans leading-relaxed">
-                        Estimados, adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.
+                        Estimados,<br><br>
+                        adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.
                     </div>
 
                     <!-- Título dinámico -->
@@ -143,14 +144,14 @@
 
                     <!-- Tabla Dinámica -->
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-pedidos-export">
+                        <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-pedidos-export" style="border-collapse: collapse; width: 100%;">
                             <thead>
-                                <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-300">
-                                    <th class="p-3 border border-slate-200">Cod de cliente</th>
-                                    <th class="p-3 border border-slate-200">Nombre de cliente</th>
-                                    <th class="p-3 border border-slate-200">Desc Vendedor</th>
-                                    <th class="p-3 border border-slate-200">OC del cliente</th>
-                                    <th class="p-3 border border-slate-200 text-right">Total Cajas</th>
+                                <tr class="bg-slate-100 text-slate-700 font-semibold">
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Cod de cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Nombre de cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Desc Vendedor</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">OC del cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100 text-right">Total Cajas</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-resumen-pedidos" class="divide-y divide-slate-200 text-slate-700">
@@ -159,6 +160,10 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="text-sm text-slate-700 font-sans pt-2">
+                        Saludos
                     </div>
                 </div>
             </div>
@@ -182,14 +187,15 @@
                     <label for="motivos-custom-text" class="text-xs font-bold text-slate-600 whitespace-nowrap">
                         Texto personalizado (XXXXX):
                     </label>
-                    <input type="text" id="motivos-custom-text" placeholder="Ej: Zona Norte / Distribuidora X" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <input type="text" id="motivos-custom-text" placeholder="Ej: CBA 21/10" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
                 <!-- Bloque Copiable de Resumen Motivos -->
                 <div id="copyable-resumen-motivos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
                     <!-- Texto cuerpo de mail dinámico -->
                     <div id="motivos-mail-text" class="text-sm text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 font-sans leading-relaxed">
-                        Estimados, adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>. Saludos
+                        Estimados,<br><br>
+                        adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>.
                     </div>
 
                     <!-- Título dinámico -->
@@ -199,15 +205,15 @@
 
                     <!-- Tabla Motivos -->
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-motivos-export">
+                        <table class="w-full text-left border-collapse text-xs font-sans" id="tabla-motivos-export" style="border-collapse: collapse; width: 100%;">
                             <thead>
-                                <tr class="bg-slate-100 text-slate-700 font-semibold border-b border-slate-300">
-                                    <th class="p-3 border border-slate-200">Cod de cliente</th>
-                                    <th class="p-3 border border-slate-200">Nombre de cliente</th>
-                                    <th class="p-3 border border-slate-200">OC del cliente</th>
-                                    <th class="p-3 border border-slate-200">Fecha de entrega</th>
-                                    <th class="p-3 border border-slate-200">Turno</th>
-                                    <th class="p-3 border border-slate-200 text-right">Total Cajas</th>
+                                <tr class="bg-slate-100 text-slate-700 font-semibold">
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Cod de cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Nombre de cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">OC del cliente</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Fecha de entrega</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Turno</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100 text-right">Total Cajas</th>
                                 </tr>
                             </thead>
                             <tbody id="tbody-resumen-motivos" class="divide-y divide-slate-200 text-slate-700">
@@ -216,6 +222,10 @@
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="text-sm text-slate-700 font-sans pt-2">
+                        Saludos
                     </div>
                 </div>
             </div>
@@ -316,7 +326,7 @@
             return String(str).toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
         }
 
-        // Formateador de números (Enteros sin decimales)
+        // Formateador de números (Enteros con separador de miles es-AR)
         function fmtInt(val) {
             let num = Math.round(parseFloat(val) || 0);
             return num.toLocaleString('es-AR');
@@ -504,11 +514,11 @@
                 grandTotal += item.totalCajas;
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2.5 border border-slate-200 font-mono font-bold">${item.codCliente}</td>
-                    <td class="p-2.5 border border-slate-200">${item.nomCliente}</td>
-                    <td class="p-2.5 border border-slate-200">${item.descVendedor}</td>
-                    <td class="p-2.5 border border-slate-200">${item.ocCliente}</td>
-                    <td class="p-2.5 border border-slate-200 text-right font-bold text-blue-700">${fmtInt(item.totalCajas)} CA</td>
+                    <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.codCliente}</td>
+                    <td class="p-2.5 border border-slate-300">${item.nomCliente}</td>
+                    <td class="p-2.5 border border-slate-300">${item.descVendedor}</td>
+                    <td class="p-2.5 border border-slate-300">${item.ocCliente}</td>
+                    <td class="p-2.5 border border-slate-300 text-right font-bold text-blue-700">${fmtInt(item.totalCajas)} CA</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -517,33 +527,67 @@
             let trTotal = document.createElement('tr');
             trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
             trTotal.innerHTML = `
-                <td colspan="4" class="p-3 border border-slate-200 text-right uppercase">Total General:</td>
-                <td class="p-3 border border-slate-200 text-right text-blue-900 text-sm font-bold">${fmtInt(grandTotal)} CA</td>
+                <td colspan="4" class="p-2.5 border border-slate-300 text-right uppercase bg-slate-100 font-bold">Total General:</td>
+                <td class="p-2.5 border border-slate-300 text-right text-blue-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
             `;
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Pedidos al Portapapeles
+        // Copiar Resumen Pedidos al Portapapeles (Estilos Inline Nativos para Mail)
         document.getElementById('btn-copiar-resumen-pedidos').addEventListener('click', () => {
-            const mailText = document.getElementById('pedidos-mail-text').innerText;
+            const mailHtml = `Estimados,<br><br>adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.`;
             const titleText = document.getElementById('pedidos-table-title').innerText;
-            const tableHtml = document.getElementById('tabla-pedidos-export').outerHTML;
+
+            // Construir tabla con estilos inline explícitos
+            const tbody = document.getElementById('tbody-resumen-pedidos').cloneNode(true);
+            
+            let tableStyled = `
+                <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Nombre de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Desc Vendedor</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">OC del cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Procesar filas para inyectar bordes y padding
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                let isTotal = tr.innerText.includes('Total General');
+                let rowBg = isTotal ? 'background-color: #f1f5f9; font-weight: bold;' : '';
+                tableStyled += `<tr style="${rowBg}">`;
+                
+                Array.from(tr.querySelectorAll('td')).forEach(td => {
+                    let align = td.classList.contains('text-right') ? 'text-align: right;' : 'text-align: left;';
+                    let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
+                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 8px; ${align}">${td.innerHTML}</td>`;
+                });
+                
+                tableStyled += `</tr>`;
+            });
+
+            tableStyled += `</tbody></table>`;
 
             const fullHtml = `
-                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                    <p style="margin-bottom: 16px;">${mailText}</p>
-                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #1e3a8a;">${titleText}</h3>
-                    ${tableHtml}
+                <div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #1e293b; line-height: 1.5;">
+                    <p style="margin-bottom: 16px;">${mailHtml}</p>
+                    <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #1e3a8a;">${titleText}</h3>
+                    ${tableStyled}
+                    <p style="margin-top: 16px;">Saludos</p>
                 </div>
             `;
 
             navigator.clipboard.write([
                 new ClipboardItem({
                     'text/html': new Blob([fullHtml], { type: 'text/html' }),
-                    'text/plain': new Blob([`${mailText}\n\n${titleText}\n\n[Tabla Resumen Pedidos]`], { type: 'text/plain' })
+                    'text/plain': new Blob([`Estimados,\n\nadjunto el detalle de los pedidos incluidos en el próximo cross docking...\n\n${titleText}\n\nSaludos`], { type: 'text/plain' })
                 })
             ]).then(() => {
-                showToast("¡Resumen de Pedidos copiado para enviar por mail!");
+                showToast("¡Resumen de Pedidos copiado con bordes para el correo!");
             }).catch(err => {
                 alert("Error al copiar: " + err);
             });
@@ -621,12 +665,12 @@
                 grandTotal += item.totalCajas;
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
-                    <td class="p-2.5 border border-slate-200 font-mono font-bold">${item.codCliente}</td>
-                    <td class="p-2.5 border border-slate-200">${item.nomCliente}</td>
-                    <td class="p-2.5 border border-slate-200">${item.ocCliente}</td>
-                    <td class="p-2.5 border border-slate-200">${item.fechaEntrega}</td>
-                    <td class="p-2.5 border border-slate-200">${item.turno}</td>
-                    <td class="p-2.5 border border-slate-200 text-right font-bold text-indigo-700">${fmtInt(item.totalCajas)} CA</td>
+                    <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.codCliente}</td>
+                    <td class="p-2.5 border border-slate-300">${item.nomCliente}</td>
+                    <td class="p-2.5 border border-slate-300">${item.ocCliente}</td>
+                    <td class="p-2.5 border border-slate-300">${item.fechaEntrega}</td>
+                    <td class="p-2.5 border border-slate-300">${item.turno}</td>
+                    <td class="p-2.5 border border-slate-300 text-right font-bold text-indigo-700">${fmtInt(item.totalCajas)} CA</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -635,33 +679,69 @@
             let trTotal = document.createElement('tr');
             trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
             trTotal.innerHTML = `
-                <td colspan="5" class="p-3 border border-slate-200 text-right uppercase">Total General:</td>
-                <td class="p-3 border border-slate-200 text-right text-indigo-900 text-sm font-bold">${fmtInt(grandTotal)} CA</td>
+                <td colspan="5" class="p-2.5 border border-slate-300 text-right uppercase bg-slate-100 font-bold">Total General:</td>
+                <td class="p-2.5 border border-slate-300 text-right text-indigo-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
             `;
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Motivos al Portapapeles
+        // Copiar Resumen Motivos al Portapapeles (Estilos Inline Nativos para Mail)
         document.getElementById('btn-copiar-resumen-motivos').addEventListener('click', () => {
-            const mailText = document.getElementById('motivos-mail-text').innerText;
+            const customVal = document.getElementById('motivos-custom-text').value.trim();
+            const mailHtml = `Estimados,<br><br>adjunto los motivos correspondientes a ${customVal || 'xxxxx'}.`;
             const titleText = document.getElementById('motivos-table-title').innerText;
-            const tableHtml = document.getElementById('tabla-motivos-export').outerHTML;
+
+            // Construir tabla con estilos inline explícitos
+            const tbody = document.getElementById('tbody-resumen-motivos').cloneNode(true);
+            
+            let tableStyled = `
+                <table border="1" cellpadding="8" cellspacing="0" style="border-collapse: collapse; font-family: Calibri, Arial, sans-serif; font-size: 13px; width: 100%; border: 1px solid #cbd5e1;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Nombre de cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">OC del cliente</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Fecha de entrega</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Turno</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            // Procesar filas para inyectar bordes y padding
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                let isTotal = tr.innerText.includes('Total General');
+                let rowBg = isTotal ? 'background-color: #f1f5f9; font-weight: bold;' : '';
+                tableStyled += `<tr style="${rowBg}">`;
+                
+                Array.from(tr.querySelectorAll('td')).forEach(td => {
+                    let align = td.classList.contains('text-right') ? 'text-align: right;' : 'text-align: left;';
+                    let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
+                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 8px; ${align}">${td.innerHTML}</td>`;
+                });
+                
+                tableStyled += `</tr>`;
+            });
+
+            tableStyled += `</tbody></table>`;
 
             const fullHtml = `
-                <div style="font-family: Arial, sans-serif; font-size: 14px; color: #333;">
-                    <p style="margin-bottom: 16px;">${mailText}</p>
-                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #3730a3;">${titleText}</h3>
-                    ${tableHtml}
+                <div style="font-family: Calibri, Arial, sans-serif; font-size: 14px; color: #1e293b; line-height: 1.5;">
+                    <p style="margin-bottom: 16px;">${mailHtml}</p>
+                    <h3 style="font-size: 15px; font-weight: bold; margin-bottom: 12px; color: #3730a3;">${titleText}</h3>
+                    ${tableStyled}
+                    <p style="margin-top: 16px;">Saludos</p>
                 </div>
             `;
 
             navigator.clipboard.write([
                 new ClipboardItem({
                     'text/html': new Blob([fullHtml], { type: 'text/html' }),
-                    'text/plain': new Blob([`${mailText}\n\n${titleText}\n\n[Tabla Resumen Motivos]`], { type: 'text/plain' })
+                    'text/plain': new Blob([`Estimados,\n\nadjunto los motivos correspondientes a ${customVal || 'xxxxx'}.\n\n${titleText}\n\nSaludos`], { type: 'text/plain' })
                 })
             ]).then(() => {
-                showToast("¡Resumen de Motivos copiado para enviar por mail!");
+                showToast("¡Resumen de Motivos copiado con bordes para el correo!");
             }).catch(err => {
                 alert("Error al copiar: " + err);
             });
