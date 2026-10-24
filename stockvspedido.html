@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Validador de Split, Resumen y Mapa Logístico</title>
+    <title>JDE - Panel Logístico e Intel de Entregas</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -16,209 +16,561 @@
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
-        #map { height: 400px; width: 100%; border-radius: 0.75rem; z-index: 10; }
+        #map { height: 380px; width: 100%; border-radius: 0.75rem; z-index: 10; }
+        .copy-hover:hover { background-color: #f8fafc; }
     </style>
 </head>
-<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col">
+<body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans">
 
     <!-- Header -->
     <header class="bg-blue-900 text-white shadow-md py-4 px-6">
-        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
+        <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-2">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Control de Splits, Tabla Dinámica de Pedidos, Exportación PDF y Mapa de Entregas</p>
+                <p class="text-blue-200 text-sm mt-0.5">Gestión independiente de Stock, Pedidos, Motivos y Sugerencias PK</p>
             </div>
         </div>
     </header>
 
     <!-- Main Container -->
-    <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-6">
+    <main class="max-w-7xl mx-auto px-4 py-6 flex-grow w-full space-y-6">
 
-        <!-- Carga de Archivos -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <!-- Card Stock -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+        <!-- 1. Carga de Archivos Independiente (3 Cajas) -->
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            
+            <!-- Card 1: Stock -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
                 <div>
-                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">1</span> 
-                        Bajada de Stock (Cajas - CA)[cite: 1]
+                    <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">1</span> 
+                        Bajada de Stock (Cajas - CA)
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Stock disponible clasificado por Lote y Ubicación[cite: 1].</p>
+                    <p class="text-xs text-slate-500 mb-3">Stock disponible clasificado por Lote y Ubicación.</p>
                     
                     <input type="file" id="file-stock" class="hidden" accept=".xlsx, .xls, .csv">
-                    <label for="file-stock" id="drop-stock" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
-                        <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
-                        <span id="stock-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Stock</span>
-                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
+                    <label for="file-stock" id="drop-stock" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
+                        <i class="fa-solid fa-file-excel text-3xl text-emerald-600 mb-1.5"></i>
+                        <span id="stock-name" class="text-xs font-semibold text-slate-700 text-center break-all">Seleccionar archivo de Stock</span>
+                        <span class="text-[10px] text-slate-400 mt-0.5">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
-                <div id="status-stock" class="mt-4 text-xs font-semibold"></div>
+                <div id="status-stock" class="mt-3 text-xs font-semibold min-h-[20px]"></div>
             </div>
 
-            <!-- Card Pedidos -->
-            <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+            <!-- Card 2: Pedidos -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between hover:shadow-md transition">
                 <div>
-                    <h2 class="text-lg font-semibold text-slate-700 flex items-center gap-2 mb-2">
-                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">2</span> 
+                    <h2 class="text-base font-semibold text-slate-800 flex items-center gap-2 mb-1">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-0.5 rounded-full">2</span> 
                         Bajada de Pedidos
                     </h2>
-                    <p class="text-xs text-slate-500 mb-4">Incluye Ciudad, Cod de cliente, Cajas, etc.</p>
-                    
-                    <input type="file" id="file-pedidos" class="hidden" accept=".xlsx, .xls, .csv">
-                    <label for="file-pedidos" id="drop-pedidos" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-6 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
-                        <i class="fa-solid fa-file-excel text-4xl text-green-600 mb-2"></i>
-                        <span id="pedidos-name" class="text-sm font-semibold text-slate-700 text-center">Haz clic para seleccionar archivo de Pedidos</span>
-                        <span class="text-xs text-slate-400 mt-1">.xlsx, .xls, .csv</span>
-                    </label>
-                </div>
-                <div id="status-pedidos" class="mt-4 text-xs font-semibold"></div>
-            </div>
-        </div>
-
-        <!-- Botón Procesar -->
-        <div class="flex justify-center">
-            <button id="btn-procesar" disabled class="bg-blue-600 hover:bg-blue-700 disabled:bg-slate-300 text-white font-semibold px-8 py-3 rounded-xl shadow-md transition flex items-center gap-2 cursor-pointer disabled:cursor-not-allowed">
-                <i class="fa-solid fa-gears"></i> Procesar Cruce, Resumen y Mapa
-            </button>
-        </div>
-
-        <!-- Dashboard de Resultados -->
-        <div id="resultados-container" class="hidden space-y-6">
-            
-            <!-- Pestañas de Navegación -->
-            <div class="flex border-b border-slate-300 gap-4">
-                <button id="tab-splits-btn" class="tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2">
-                    <i class="fa-solid fa-list-check"></i> Validador de Splits (JDE)
-                </button>
-                <button id="tab-resumen-btn" class="tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2">
-                    <i class="fa-solid fa-table-cells"></i> Resumen de Pedidos y Mapa
-                </button>
-            </div>
-
-            <!-- VISTA 1: VALIDADOR DE SPLITS -->
-            <div id="view-splits" class="space-y-6">
-                <!-- Resumen KPIs -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-slate-500 font-medium uppercase">Total Líneas Analizadas</p>
-                        <p id="kpi-total" class="text-2xl font-bold text-slate-800 mt-1">0</p>
+            <div id="tab-pedidos" class="space-y-6 hidden animate-fadeIn">
+                <div class="glass-card rounded-2xl p-6 border border-slate-700/50 relative overflow-hidden">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                        <div>
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-list-check text-blue-400"></i>
+                                Resumen de Pedidos por Cliente y Turno
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Previsualización y exportación rápida del detalle consolidado de pedidos.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                            <button id="btn-copy-pedidos" onclick="copyPedidosSummary()" class="flex-1 lg:flex-none px-4 py-2.5 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-xs">
+                                <i class="fas fa-copy"></i>
+                                Copiar para Mail
+                            </button>
+                            <button id="btn-export-pedidos" onclick="exportPedidosExcel()" class="flex-1 lg:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-xl border border-slate-600 transition duration-200 flex items-center justify-center gap-2 text-xs">
+                                <i class="fas fa-file-excel text-emerald-400"></i>
+                                Descargar Excel
+                            </button>
+                        </div>
                     </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-green-600 font-medium uppercase">Líneas OK (Sin Split)</p>
-                        <p id="kpi-ok" class="text-2xl font-bold text-green-600 mt-1">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-amber-600 font-medium uppercase">Requieren Split de Línea</p>
-                        <p id="kpi-split" class="text-2xl font-bold text-amber-600 mt-1">0</p>
-                    </div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
-                        <p class="text-xs text-red-600 font-medium uppercase">Sin Stock Suficiente</p>
-                        <p id="kpi-faltantes" class="text-2xl font-bold text-red-600 mt-1">0</p>
-                    </div>
-                </div>
 
-                <!-- Filtros y Exportación de Splits -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
-                    <div class="flex flex-wrap gap-2">
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white" data-filter="all">Todas</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="split">Requieren Split</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="ok">OK</button>
-                        <button class="filter-btn px-4 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="missing">Falta Stock</button>
+                    <!-- Texto del Cuerpo del Mail Editable/Copiable -->
+                    <div class="mb-5 bg-slate-900/80 rounded-xl p-4 border border-blue-500/30">
+                        <label class="block text-xs font-semibold text-blue-300 mb-1 flex items-center gap-1.5">
+                            <i class="fas fa-envelope-open-text text-blue-400"></i>
+                            Cuerpo del Mail (se incluye al copiar)
+                        </label>
+                        <textarea id="mail-body-pedidos" rows="2" class="w-full bg-slate-950/70 text-slate-200 text-sm p-3 rounded-lg border border-slate-700 focus:outline-none focus:border-blue-500 resize-y transition">Estimados, adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.</textarea>
                     </div>
-                    <button id="btn-exportar-splits" class="bg-green-600 hover:bg-green-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-excel"></i> Descargar Reporte Splits Excel
-                    </button>
-                </div>
 
-                <!-- Tabla de Splits -->
-                <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="overflow-x-auto max-h-[600px]">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-100 text-slate-600 sticky top-0 border-b border-slate-200">
-                                <tr>
-                                    <th class="p-3">Nro Orden</th>
-                                    <th class="p-3">Tipo[cite: 5]</th>
-                                    <th class="p-3">Cliente[cite: 5]</th>
-                                    <th class="p-3">Cod Item Largo (SKU)[cite: 5]</th>
-                                    <th class="p-3">Descripción[cite: 5]</th>
-                                    <th class="p-3 text-right">Cajas Pedidas[cite: 5]</th>
-                                    <th class="p-3">Estado</th>
-                                    <th class="p-3">Sugerencia de Split</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-splits" class="divide-y divide-slate-100">
-                            </tbody>
-                        </table>
+                    <!-- Title Banner for Table -->
+                    <div id="pedidos-title-container" class="mb-4 bg-gradient-to-r from-blue-900/50 to-indigo-900/50 p-3 rounded-xl border border-blue-500/30 text-center">
+                        <span id="pedidos-table-title" class="text-base font-bold text-blue-200 tracking-wide">
+                            Resumen de pedidos
+                        </span>
+                    </div>
+
+                    <!-- Container Table -->
+                    <div id="container-resumen-pedidos" class="overflow-x-auto rounded-xl border border-slate-700/60 max-h-[600px] overflow-y-auto">
+                        <div class="p-12 text-center text-slate-400">
+                            <i class="fas fa-file-arrow-up text-4xl mb-3 text-slate-600 block"></i>
+                            Suba un archivo en la pestaña <strong>"Cargar Bajada de Pedidos"</strong> para generar esta vista.
+                        </div>
                     </div>
                 </div>
             </div>
 
-            <!-- VISTA 2: RESUMEN Y MAPA LOGÍSTICO -->
-            <div id="view-resumen" class="hidden space-y-6">
-                <!-- Controles del Resumen -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex justify-between items-center">
-                    <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                        <i class="fa-solid fa-table-cells text-blue-600"></i> Tabla Dinámica de Pedidos Consolidada
-                    </h3>
-                    <button id="btn-exportar-pdf" class="bg-red-600 hover:bg-red-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
-                        <i class="fa-solid fa-file-pdf"></i> Descargar Resumen en PDF
-                    </button>
-                </div>
-
-                <!-- Contenedor Imprimible para el PDF -->
-                <div id="pdf-container" class="space-y-6 bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div class="border-b pb-4 mb-4">
-                        <h2 class="text-lg font-bold text-slate-800">Reporte de Resumen Logístico de Pedidos</h2>
-                        <p class="text-xs text-slate-500">Agrupado por Cliente, Vendedor y Orden de Compra.</p>
+            <!-- TAB RESUMEN MOTIVOS -->
+            <div id="tab-motivos" class="space-y-6 hidden animate-fadeIn">
+                <div class="glass-card rounded-2xl p-6 border border-slate-700/50 relative overflow-hidden">
+                    <div class="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4 mb-6 pb-4 border-b border-slate-700/50">
+                        <div>
+                            <h2 class="text-xl font-bold text-white flex items-center gap-2">
+                                <i class="fas fa-clipboard-list text-purple-400"></i>
+                                Resumen de Motivos por Fecha y Turno
+                            </h2>
+                            <p class="text-xs text-slate-400 mt-1">Consolidación de motivos agrupados por Cliente, Fecha de Entrega y Turno.</p>
+                        </div>
+                        <div class="flex flex-wrap items-center gap-3 w-full lg:w-auto">
+                            <button id="btn-copy-motivos" onclick="copyMotivosSummary()" class="flex-1 lg:flex-none px-4 py-2.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-medium rounded-xl shadow-lg transition duration-200 flex items-center justify-center gap-2 text-xs">
+                                <i class="fas fa-copy"></i>
+                                Copiar para Mail
+                            </button>
+                            <button id="btn-export-motivos" onclick="exportMotivosExcel()" class="flex-1 lg:flex-none px-4 py-2.5 bg-slate-800 hover:bg-slate-700 text-slate-200 font-medium rounded-xl border border-slate-600 transition duration-200 flex items-center justify-center gap-2 text-xs">
+                                <i class="fas fa-file-excel text-emerald-400"></i>
+                                Descargar Excel
+                            </button>
+                        </div>
                     </div>
 
-                    <!-- Tabla Dinámica -->
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse text-xs">
-                            <thead class="bg-slate-100 text-slate-700 border-b">
-                                <tr>
-                                    <th class="p-3">Cod de cliente</th>
-                                    <th class="p-3">Nombre de cliente</th>
-                                    <th class="p-3">Desc Vendedor</th>
-                                    <th class="p-3">OC del cliente</th>
-                                    <th class="p-3 text-right">Total Cajas</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tabla-resumen-dinamica" class="divide-y divide-slate-100">
-                            </tbody>
-                        </table>
+                    <!-- Configuración del Motivo / Cliente XXXXX -->
+                    <div class="mb-5 bg-slate-900/80 rounded-xl p-4 border border-purple-500/30 space-y-3">
+                        <div>
+                            <label class="block text-xs font-semibold text-purple-300 mb-1 flex items-center gap-1.5">
+                                <i class="fas fa-pen-to-square text-purple-400"></i>
+                                Detalle / Nombre Comercial (XXXXX):
+                            </label>
+                            <input type="text" id="motivos-xxxxx-input" oninput="updateMotivosTitleAndMail()" placeholder="Escriba aquí (ej. COTO, CARREFOUR, etc.)..." class="w-full bg-slate-950/70 text-slate-200 text-sm p-2.5 rounded-lg border border-slate-700 focus:outline-none focus:border-purple-500 transition" />
+                        </div>
+                        <div>
+                            <label class="block text-xs font-semibold text-purple-300 mb-1 flex items-center gap-1.5">
+                                <i class="fas fa-envelope-open-text text-purple-400"></i>
+                                Cuerpo del Mail (se actualiza automáticamente y se incluye al copiar)
+                            </label>
+                            <textarea id="mail-body-motivos" rows="2" class="w-full bg-slate-950/70 text-slate-200 text-sm p-3 rounded-lg border border-slate-700 focus:outline-none focus:border-purple-500 resize-y transition" readonly>Estimados, adjunto los motivos correspondientes a . Saludos</textarea>
+                        </div>
                     </div>
 
-                    <!-- Mapa Interactivo con Puntos Rojos -->
-                    <div class="mt-8 pt-6 border-t border-slate-200 space-y-3">
-                        <h3 class="font-bold text-slate-700 flex items-center gap-2">
-                            <i class="fa-solid fa-map-location-dot text-red-600"></i> Mapa de Entregas por Localidad (Ciudad)
-                        </h3>
-                        <p class="text-xs text-slate-500">Puntos rojos indicando las localidades de despacho según los pedidos cargados.</p>
-                        <div id="map"></div>
+                    <!-- Title Banner for Table -->
+                    <div id="motivos-title-container" class="mb-4 bg-gradient-to-r from-purple-900/50 to-indigo-900/50 p-3 rounded-xl border border-purple-500/30 text-center">
+                        <span id="motivos-table-title" class="text-base font-bold text-purple-200 tracking-wide">
+                            Resumen motivos ( )
+                        </span>
+                    </div>
+
+                    <!-- Container Table -->
+                    <div id="container-resumen-motivos" class="overflow-x-auto rounded-xl border border-slate-700/60 max-h-[600px] overflow-y-auto">
+                        <div class="p-12 text-center text-slate-400">
+                            <i class="fas fa-file-arrow-up text-4xl mb-3 text-slate-600 block"></i>
+                            Suba un archivo en la pestaña <strong>"Cargar Planilla de Motivos"</strong> para generar esta vista.
+                        </div>
                     </div>
                 </div>
             </div>
-
-        </div>
-
-    </main>
-
-    <script>
-        let stockData = [];
-        let pedidosData = [];
-        let resultadosAnalisis = [];
-        let resumenDinamico = [];
-        let mapInstance = null;
-
-        function norm(str) {
-            if (!str) return '';
-            return str.toString().toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim();
+        // Helper para limpiar nombre de archivo (Saca extensión y prefijos como "Copia de")
+        function cleanFileName(filename) {
+            if (!filename) return '';
+            // Remover extensiones .xlsx, .xls, .csv
+            let cleaned = filename.replace(/\.(xlsx|xls|csv)$/i, '');
+            // Remover prefijos "Copia de ", "copia de ", "Copia de", etc.
+            cleaned = cleaned.replace(/^copia\s+de\s*/i, '').trim();
+            return cleaned;
         }
 
-        // Diccionario base de coordenadas de ciudades comunes en Argentina (para el mapa con puntos rojos)
+        // Helper para dar formato sin .00 a cantidades
+        function formatBoxes(value) {
+            let num = parseFloat(value);
+            if (isNaN(num)) return '0 CA';
+            // Si es un entero o muy cercano a entero, mostrar sin decimales
+            if (Math.abs(num - Math.round(num)) < 0.001) {
+                return Math.round(num).toLocaleString('es-AR') + ' CA';
+            } else {
+                return num.toLocaleString('es-AR', { minimumFractionDigits: 0, maximumFractionDigits: 2 }) + ' CA';
+            }
+        }
+
+        // Event Handler: Bajada de Pedidos
+        function handlePedidosFileUpload(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            
+            showToast(`Cargando archivo: ${file.name}...`, 'info');
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (!jsonData || jsonData.length === 0) {
+                        showToast("El archivo parece estar vacío o sin datos válidos.", "error");
+                        return;
+                    }
+
+                    // Guardar datos globales
+                    rawPedidosData = jsonData;
+                    const cleanedName = cleanFileName(file.name);
+                    pedidosFileName = cleanedName;
+
+                    // Actualizar Título
+                    document.getElementById('pedidos-table-title').innerText = `Resumen de pedidos (${cleanedName})`;
+
+                    // Procesar y Renderizar
+                    processAndRenderPedidos(jsonData);
+                    showToast("Pedidos cargados y procesados con éxito.", "success");
+                } catch (err) {
+                    console.error("Error al leer Excel de Pedidos:", err);
+                    showToast("Error al procesar el archivo de Excel.", "error");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Event Handler: Planilla de Motivos
+        function handleMotivosFileUpload(file) {
+            if (!file) return;
+            const reader = new FileReader();
+            
+            showToast(`Cargando motivos: ${file.name}...`, 'info');
+
+            reader.onload = function(e) {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const firstSheetName = workbook.SheetNames[0];
+                    const worksheet = workbook.Sheets[firstSheetName];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+
+                    if (!jsonData || jsonData.length === 0) {
+                        showToast("El archivo de motivos está vacío.", "error");
+                        return;
+                    }
+
+                    rawMotivosData = jsonData;
+
+                    // Si la XXXXX no ha sido ingresada manualmente, intentar inferir del nombre del archivo
+                    const xxxxxInput = document.getElementById('motivos-xxxxx-input');
+                    if (!xxxxxInput.value.trim()) {
+                        const cleaned = cleanFileName(file.name);
+                        // Extraer entre paréntesis si existe o tomar nombre limpio
+                        const match = cleaned.match(/\(([^)]+)\)/);
+                        if (match && match[1]) {
+                            xxxxxInput.value = match[1].trim();
+                        }
+                    }
+
+                    updateMotivosTitleAndMail();
+                    processAndRenderMotivos(jsonData);
+                    showToast("Motivos cargados y agrupados con éxito.", "success");
+                } catch (err) {
+                    console.error("Error al leer Excel de Motivos:", err);
+                    showToast("Error al procesar la planilla de motivos.", "error");
+                }
+            };
+
+            reader.readAsArrayBuffer(file);
+        }
+
+        // Actualiza el título y mail del Resumen de Motivos dinámicamente
+        function updateMotivosTitleAndMail() {
+            const val = document.getElementById('motivos-xxxxx-input').value.trim();
+            const titleElem = document.getElementById('motivos-table-title');
+            const mailElem = document.getElementById('mail-body-motivos');
+
+            titleElem.innerText = `Resumen motivos ( ${val} )`;
+            mailElem.value = `Estimados, adjunto los motivos correspondientes a ${val}. Saludos`;
+        }
+
+        // Normalización de Claves para Planilla de Motivos (con soporte para Columna N)
+        function findMotivosKey(row, possibleKeys) {
+            const keys = Object.keys(row);
+            for (let target of possibleKeys) {
+                let found = keys.find(k => k.trim().toLowerCase() === target.toLowerCase());
+                if (found) return found;
+            }
+            // Búsqueda parcial si no coincide exacto
+            for (let target of possibleKeys) {
+                let found = keys.find(k => k.trim().toLowerCase().includes(target.toLowerCase()));
+                if (found) return found;
+            }
+            return null;
+        }
+
+        // Procesar Datos de Pedidos
+        function processAndRenderPedidos(data) {
+            const container = document.getElementById('container-resumen-pedidos');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400">Sin datos.</div>';
+                return;
+            }
+
+            // Mapeo flexible de columnas
+            const sample = data[0];
+            const keyCliente = Object.keys(sample).find(k => /cliente|desc.*vendedor|vendedor/i.test(k)) || Object.keys(sample)[0];
+            const keyFecha = Object.keys(sample).find(k => /fecha.*envio|fecha.*1er|fecha/i.test(k)) || Object.keys(sample)[1];
+            const keyTurno = Object.keys(sample).find(k => /turno/i.test(k)) || Object.keys(sample)[2];
+            const keyCajas = Object.keys(sample).find(k => /total.*ca|total|cajas|ca\b/i.test(k)) || Object.keys(sample)[3];
+
+            // Agrupamiento
+            const map = new Map();
+            let totalGeneral = 0;
+
+            data.forEach(row => {
+                let cliente = String(row[keyCliente] || 'SIN CLIENTE').trim();
+                let fecha = formatDateValue(row[keyFecha]);
+                let turno = String(row[keyTurno] || 'NO').trim();
+                let cajas = parseFloat(row[keyCajas]) || 0;
+
+                let key = `${cliente}|${fecha}|${turno}`;
+                if (!map.has(key)) {
+                    map.set(key, { cliente, fecha, turno, cajas: 0 });
+                }
+                map.get(key).cajas += cajas;
+                totalGeneral += cajas;
+            });
+
+            // Generar HTML Tabla
+            let html = `
+                <table id="table-resumen-pedidos-el" class="w-full text-sm text-left text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-900/90 text-slate-400 sticky top-0 border-b border-slate-700">
+                        <tr>
+                            <th class="py-3 px-4">Desc Vendedor</th>
+                            <th class="py-3 px-4">Fecha 1er envio</th>
+                            <th class="py-3 px-4">Turno</th>
+                            <th class="py-3 px-4 text-right">Total (CA)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+            `;
+
+            map.forEach(item => {
+                html += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-2.5 px-4 font-medium text-slate-200">${item.cliente}</td>
+                        <td class="py-2.5 px-4">${item.fecha}</td>
+                        <td class="py-2.5 px-4">
+                            <span class="px-2 py-0.5 text-xs rounded ${item.turno.toUpperCase() === 'SI' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400'}">${item.turno}</span>
+                        </td>
+                        <td class="py-2.5 px-4 text-right font-semibold text-blue-400">${formatBoxes(item.cajas)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                    <tfoot class="bg-slate-900/90 font-bold border-t border-slate-700 text-white sticky bottom-0">
+                        <tr>
+                            <td colspan="3" class="py-3 px-4 text-right">Total General:</td>
+                            <td class="py-3 px-4 text-right text-emerald-400">${formatBoxes(totalGeneral)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Procesar Datos de Motivos (con soporte para columna N)
+        function processAndRenderMotivos(data) {
+            const container = document.getElementById('container-resumen-motivos');
+            if (!data || data.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400">Sin datos.</div>';
+                return;
+            }
+
+            const sample = data[0];
+
+            // Búsqueda específica para la columna N ("Total", "Total (CA)", "Total", "CA", etc.)
+            const keyFecha = findMotivosKey(sample, ['fecha de entrega', 'fecha entrega', 'fecha 1er envio', 'fecha']) || Object.keys(sample)[0];
+            const keyTurno = findMotivosKey(sample, ['turno']) || Object.keys(sample)[1];
+            const keyCajas = findMotivosKey(sample, ['total', 'total (ca)', 'total(ca)', 'total ca', 'cajas', 'ca']) || Object.keys(sample)[Object.keys(sample).length - 1];
+
+            const map = new Map();
+            let totalGeneral = 0;
+
+            data.forEach(row => {
+                let fecha = formatDateValue(row[keyFecha]);
+                let turno = String(row[keyTurno] || 'NO').trim();
+                let cajas = parseFloat(row[keyCajas]);
+
+                // Si la conversión falla, intentar buscar en cualquier valor de celda numérica al final
+                if (isNaN(cajas)) {
+                    const rowValues = Object.values(row);
+                    for (let i = rowValues.length - 1; i >= 0; i--) {
+                        let parsed = parseFloat(rowValues[i]);
+                        if (!isNaN(parsed)) {
+                            cajas = parsed;
+                            break;
+                        }
+                    }
+                }
+                if (isNaN(cajas)) cajas = 0;
+
+                let key = `${fecha}|${turno}`;
+                if (!map.has(key)) {
+                    map.set(key, { fecha, turno, cajas: 0 });
+                }
+                map.get(key).cajas += cajas;
+                totalGeneral += cajas;
+            });
+
+            // Generar Tabla (Sin columna Desc Vendedor según solicitud)
+            let html = `
+                <table id="table-resumen-motivos-el" class="w-full text-sm text-left text-slate-300">
+                    <thead class="text-xs uppercase bg-slate-900/90 text-slate-400 sticky top-0 border-b border-slate-700">
+                        <tr>
+                            <th class="py-3 px-4">Fecha de entrega</th>
+                            <th class="py-3 px-4">Turno</th>
+                            <th class="py-3 px-4 text-right">Total (CA)</th>
+                        </tr>
+                    </thead>
+                    <tbody class="divide-y divide-slate-800">
+            `;
+
+            map.forEach(item => {
+                html += `
+                    <tr class="hover:bg-slate-800/50 transition">
+                        <td class="py-2.5 px-4 font-medium text-slate-200">${item.fecha}</td>
+                        <td class="py-2.5 px-4">
+                            <span class="px-2 py-0.5 text-xs rounded ${item.turno.toUpperCase() === 'SI' ? 'bg-emerald-500/20 text-emerald-300 border border-emerald-500/30' : 'bg-slate-700/50 text-slate-400'}">${item.turno}</span>
+                        </td>
+                        <td class="py-2.5 px-4 text-right font-semibold text-purple-400">${formatBoxes(item.cajas)}</td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                    </tbody>
+                    <tfoot class="bg-slate-900/90 font-bold border-t border-slate-700 text-white sticky bottom-0">
+                        <tr>
+                            <td colspan="2" class="py-3 px-4 text-right">Total General:</td>
+                            <td class="py-3 px-4 text-right text-emerald-400">${formatBoxes(totalGeneral)}</td>
+                        </tr>
+                    </tfoot>
+                </table>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        // Auxiliar para formatear fechas de Excel / String
+        function formatDateValue(val) {
+            if (!val) return '-';
+            if (typeof val === 'number') {
+                // Serial de Excel a Fecha
+                const date = new Date(Math.round((val - 25569) * 86400 * 1000));
+                const day = String(date.getUTCDate()).padStart(2, '0');
+                const month = String(date.getUTCMonth() + 1).padStart(2, '0');
+                const year = date.getUTCFullYear();
+                return `${day}/${month}/${year}`;
+            }
+            return String(val).trim();
+        }
+
+        // Copiar Resumen de Pedidos Completo
+        function copyPedidosSummary() {
+            const mailBody = document.getElementById('mail-body-pedidos').value.trim();
+            const title = document.getElementById('pedidos-table-title').innerText.trim();
+            const table = document.getElementById('table-resumen-pedidos-el');
+
+            if (!table) {
+                showToast("No hay datos para copiar. Suba una planilla primero.", "warning");
+                return;
+            }
+
+            let textToCopy = `${mailBody}\n\n${title}\n\n`;
+
+            // Extraer filas de la tabla
+            const rows = table.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('th, td');
+                let rowText = [];
+                cols.forEach(col => {
+                    rowText.push(col.innerText.trim());
+                });
+                textToCopy += rowText.join('\t') + '\n';
+            });
+
+            copyToClipboard(textToCopy);
+            showToast("Resumen de pedidos copiado al portapapeles.", "success");
+        }
+
+        // Copiar Resumen de Motivos Completo
+        function copyMotivosSummary() {
+            const mailBody = document.getElementById('mail-body-motivos').value.trim();
+            const title = document.getElementById('motivos-table-title').innerText.trim();
+            const table = document.getElementById('table-resumen-motivos-el');
+
+            if (!table) {
+                showToast("No hay datos para copiar. Suba una planilla primero.", "warning");
+                return;
+            }
+
+            let textToCopy = `${mailBody}\n\n${title}\n\n`;
+
+            const rows = table.querySelectorAll('tr');
+            rows.forEach(row => {
+                const cols = row.querySelectorAll('th, td');
+                let rowText = [];
+                cols.forEach(col => {
+                    rowText.push(col.innerText.trim());
+                });
+                textToCopy += rowText.join('\t') + '\n';
+            });
+
+            copyToClipboard(textToCopy);
+            showToast("Resumen de motivos copiado al portapapeles.", "success");
+        }
+
+        // Exportar a Excel: Pedidos
+        function exportPedidosExcel() {
+            const table = document.getElementById('table-resumen-pedidos-el');
+            if (!table) {
+                showToast("No hay datos para exportar.", "warning");
+                return;
+            }
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Resumen Pedidos" });
+            const title = document.getElementById('pedidos-table-title').innerText;
+            XLSX.writeFile(wb, `${title}.xlsx`);
+            showToast("Archivo Excel descargado.", "success");
+        }
+
+        // Exportar a Excel: Motivos
+        function exportMotivosExcel() {
+            const table = document.getElementById('table-resumen-motivos-el');
+            if (!table) {
+                showToast("No hay datos para exportar.", "warning");
+                return;
+            }
+            const wb = XLSX.utils.table_to_book(table, { sheet: "Resumen Motivos" });
+            const title = document.getElementById('motivos-table-title').innerText;
+            XLSX.writeFile(wb, `${title}.xlsx`);
+            showToast("Archivo Excel descargado.", "success");
+        }
+
+        // Obtener nombre limpio sin extensión
+        function cleanFileName(filename) {
+            if (!filename) return "";
+            return filename.replace(/\.[^/.]+$/, "");
+        }
+
+        // Mostrar Toast Feedback
+        function showToast(msg, isError = false) {
+            const toast = document.getElementById('toast-msg');
+            toast.className = `p-3 rounded-lg text-xs font-semibold text-center transition-all ${isError ? 'bg-red-100 text-red-700 border border-red-200' : 'bg-green-100 text-green-700 border border-green-200'}`;
+            toast.textContent = msg;
+            toast.classList.remove('hidden');
+            setTimeout(() => { toast.classList.add('hidden'); }, 4000);
+        }
+
+        // Coordenadas base
         const coordenadasCiudades = {
             "alta gracia": [-31.6528, -64.4304],
             "cordoba": [-31.4201, -64.1888],
@@ -227,7 +579,7 @@
             "carlos paz": [-31.4241, -64.4978],
             "san francisco": [-31.4278, -62.0833],
             "jesus maria": [-30.9833, -64.1000],
-            "default": [-31.4201, -64.1888] // Centro por defecto
+            "default": [-31.4201, -64.1888]
         };
 
         function obtenerCoordenadas(ciudad) {
@@ -238,13 +590,13 @@
             return coordenadasCiudades["default"];
         }
 
-        // Lector Inteligente de Excel
+        // Lector Inteligente de Archivos Excel
         function leerExcelInteligente(file, tipo, callback) {
             const statusElem = document.getElementById(`status-${tipo}`);
             const nameElem = document.getElementById(`${tipo}-name`);
 
-            statusElem.className = "mt-4 text-xs font-semibold text-blue-600";
-            statusElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Leyendo archivo...';
+            statusElem.className = "mt-2 text-xs font-semibold text-blue-600";
+            statusElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Leyendo...';
 
             const reader = new FileReader();
             reader.onload = function(e) {
@@ -257,9 +609,9 @@
 
                     let headerRowIndex = 0;
                     let maxMatches = -1;
-                    const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'dep', 'cliente', 'ciudad'];
+                    const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'cliente', 'ciudad', 'zona', 'turno', 'motivo'];
 
-                    for (let i = 0; i < Math.min(rows.length, 5); i++) {
+                    for (let i = 0; i < Math.min(rows.length, 6); i++) {
                         let rowStr = rows[i].map(cell => norm(String(cell))).join(' ');
                         let matches = keywords.filter(kw => rowStr.includes(kw)).length;
                         if (matches > maxMatches) {
@@ -283,38 +635,336 @@
                         if (hasData) json.push(obj);
                     }
 
-                    if (json.length === 0) throw new Error("No se encontraron datos válidos debajo de las cabeceras.");
+                    if (json.length === 0) throw new Error("No se encontraron datos válidos.");
 
                     nameElem.textContent = file.name;
-                    statusElem.className = "mt-4 text-xs font-semibold text-green-600";
-                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${json.length} filas cargadas correctamente.`;
+                    statusElem.className = "mt-2 text-xs font-semibold text-emerald-600";
+                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${json.length} filas cargadas.`;
 
-                    callback(json);
+                    callback(json, file.name);
+                    showToast(`Archivo de ${tipo.toUpperCase()} cargado con éxito.`, false);
 
-                    if (stockData.length > 0 && pedidosData.length > 0) {
-                        document.getElementById('btn-procesar').removeAttribute('disabled');
-                    }
                 } catch (err) {
-                    statusElem.className = "mt-4 text-xs font-semibold text-red-600";
+                    statusElem.className = "mt-2 text-xs font-semibold text-red-600";
                     statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${err.message}`;
+                    showToast(`Error al leer archivo de ${tipo}: ${err.message}`, true);
                 }
             };
             reader.readAsArrayBuffer(file);
         }
 
+        // Listeners para inputs de archivo
         document.getElementById('file-stock').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'stock', (data) => { stockData = data; });
+            if (e.target.files.length > 0) {
+                leerExcelInteligente(e.target.files[0], 'stock', (data, fname) => { 
+                    stockData = data; 
+                    stockFileName = fname;
+                });
+            }
         });
 
         document.getElementById('file-pedidos').addEventListener('change', function(e) {
-            if (e.target.files.length > 0) leerExcelInteligente(e.target.files[0], 'pedidos', (data) => { pedidosData = data; });
+            if (e.target.files.length > 0) {
+                leerExcelInteligente(e.target.files[0], 'pedidos', (data, fname) => { 
+                    pedidosData = data; 
+                    pedidosFileName = fname;
+                });
+            }
         });
 
-        // Botón Procesar Principal
-        document.getElementById('btn-procesar').addEventListener('click', function() {
-            if (stockData.length === 0 || pedidosData.length === 0) return;
+        document.getElementById('file-motivos').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) {
+                leerExcelInteligente(e.target.files[0], 'motivos', (data, fname) => { 
+                    motivosData = data; 
+                    motivosFileName = fname;
+                });
+            }
+        });
 
-            // 1. Mapear Stock en memoria con cantidades mutables
+        // Ocultar todas las vistas
+        function hideAllViews() {
+            document.getElementById('main-view-container').classList.add('hidden');
+            document.getElementById('view-resumen-pedidos').classList.add('hidden');
+            document.getElementById('view-resumen-motivos').classList.add('hidden');
+            document.getElementById('view-sugerencia-pk').classList.add('hidden');
+            document.getElementById('view-split-lineas').classList.add('hidden');
+        }
+
+        // ----------------------------------------------------
+        // BOTÓN 1: RESUMEN PEDIDOS
+        // ----------------------------------------------------
+        document.getElementById('btn-action-resumen-pedidos').addEventListener('click', () => {
+            if (pedidosData.length === 0) {
+                showToast("Por favor cargue el archivo de Bajada de Pedidos antes de continuar.", true);
+                return;
+            }
+
+            let nameClean = cleanFileName(pedidosFileName);
+            let headerText = `Resumen de pedidos (${nameClean})`;
+            document.getElementById('title-resumen-pedidos').textContent = headerText;
+            document.getElementById('export-header-pedidos').textContent = headerText;
+
+            let mapaResumen = {};
+
+            pedidosData.forEach(row => {
+                let keys = Object.keys(row);
+                
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
+                let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
+                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
+                let kCiudad = keys.find(k => norm(k).includes('ciudad'));
+                let kCant = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cantidad') || norm(k).includes('total'));
+
+                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
+                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
+                let descVendedor = kDescVendedor ? String(row[kDescVendedor]).trim() : "";
+                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : "";
+                let ciudad = kCiudad ? String(row[kCiudad]).trim() : "Desconocida";
+                let cajas = kCant ? parseFloat(row[kCant]) || 0 : 0;
+
+                let key = `${codCliente}_${ocCliente}_${descVendedor}`;
+                if (!mapaResumen[key]) {
+                    mapaResumen[key] = {
+                        codCliente,
+                        nomCliente,
+                        descVendedor,
+                        ocCliente,
+                        totalCajas: 0,
+                        ciudades: new Set()
+                    };
+                }
+                mapaResumen[key].totalCajas += cajas;
+                if (ciudad) mapaResumen[key].ciudades.add(ciudad);
+            });
+
+            resumenPedidosData = Object.values(mapaResumen);
+
+            // Renderizar Tabla
+            const tbody = document.getElementById('tbody-resumen-pedidos');
+            tbody.innerHTML = '';
+            resumenPedidosData.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-2.5 font-mono font-bold text-slate-800">${item.codCliente}</td>
+                    <td class="p-2.5 font-medium text-slate-700">${item.nomCliente}</td>
+                    <td class="p-2.5 text-slate-600">${item.descVendedor}</td>
+                    <td class="p-2.5 font-mono text-slate-600">${item.ocCliente}</td>
+                    <td class="p-2.5 text-right font-bold text-blue-600">${item.totalCajas.toFixed(2)} CA</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            hideAllViews();
+            document.getElementById('main-view-container').classList.remove('hidden');
+            document.getElementById('view-resumen-pedidos').classList.remove('hidden');
+
+            setTimeout(() => { inicializarMapa(resumenPedidosData); }, 200);
+        });
+
+        // Copiar Resumen Pedidos al Portapapeles (Rich Text / Mail)
+        document.getElementById('btn-copy-pedidos').addEventListener('click', () => {
+            let titleText = document.getElementById('export-header-pedidos').innerText;
+            let rowsHtml = '';
+
+            resumenPedidosData.forEach(item => {
+                rowsHtml += `
+                    <tr>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px; font-weight: bold;">${item.codCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.nomCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.descVendedor}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.ocCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px; text-align: right; font-weight: bold; color: #1d4ed8;">${item.totalCajas.toFixed(2)} CA</td>
+                    </tr>
+                `;
+            });
+
+            let fullHtml = `
+                <div style="font-family: Arial, sans-serif; color: #1e293b;">
+                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #0f172a;">${titleText}</h3>
+                    <table style="border-collapse: collapse; width: 100%; font-size: 12px; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #f1f5f9; color: #334155;">
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Cod de cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Nombre de cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Desc Vendedor</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">OC del cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Total Cajas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            copyHtmlToClipboard(fullHtml);
+        });
+
+        // Exportar PDF Pedidos
+        document.getElementById('btn-pdf-pedidos').addEventListener('click', () => {
+            const element = document.getElementById('container-copy-pedidos');
+            const options = {
+                margin: 8,
+                filename: 'Resumen_Pedidos.pdf',
+                image: { type: 'jpeg', quality: 0.98 },
+                html2canvas: { scale: 2, useCORS: true },
+                jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+            html2pdf().from(element).set(options).save();
+        });
+
+        // ----------------------------------------------------
+        // BOTÓN 2: RESUMEN MOTIVOS
+        // ----------------------------------------------------
+        document.getElementById('btn-action-resumen-motivos').addEventListener('click', () => {
+            if (motivosData.length === 0) {
+                showToast("Por favor cargue el archivo de Bajada de Motivos antes de continuar.", true);
+                return;
+            }
+
+            let mapaMotivos = {};
+
+            motivosData.forEach(row => {
+                let keys = Object.keys(row);
+
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
+                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
+                let kFechaEntrega = keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
+                let kTurno = keys.find(k => norm(k).includes('turno'));
+                let kTotalCa = keys.find(k => norm(k).includes('total (ca)') || norm(k).includes('total') || norm(k).includes('ca'));
+
+                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
+                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
+                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : "";
+                let fechaEntrega = kFechaEntrega ? String(row[kFechaEntrega]).trim() : "";
+                let turno = kTurno ? String(row[kTurno]).trim() : "";
+                let cajas = kTotalCa ? parseFloat(row[kTotalCa]) || 0 : 0;
+
+                let key = `${codCliente}_${ocCliente}_${fechaEntrega}_${turno}`;
+                if (!mapaMotivos[key]) {
+                    mapaMotivos[key] = {
+                        codCliente,
+                        nomCliente,
+                        ocCliente,
+                        fechaEntrega,
+                        turno,
+                        totalCajas: 0
+                    };
+                }
+                mapaMotivos[key].totalCajas += cajas;
+            });
+
+            resumenMotivosData = Object.values(mapaMotivos);
+
+            // Renderizar Tabla Motivos
+            const tbody = document.getElementById('tbody-resumen-motivos');
+            tbody.innerHTML = '';
+            resumenMotivosData.forEach(item => {
+                let tr = document.createElement('tr');
+                tr.className = "border-b border-slate-100 hover:bg-slate-50";
+                tr.innerHTML = `
+                    <td class="p-2.5 font-mono font-bold text-slate-800">${item.codCliente}</td>
+                    <td class="p-2.5 font-medium text-slate-700">${item.nomCliente}</td>
+                    <td class="p-2.5 font-mono text-slate-600">${item.ocCliente}</td>
+                    <td class="p-2.5 text-slate-600">${item.fechaEntrega}</td>
+                    <td class="p-2.5 text-slate-600">${item.turno}</td>
+                    <td class="p-2.5 text-right font-bold text-indigo-600">${item.totalCajas.toFixed(2)} CA</td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Actualizar header dinámicamente según input
+            updateMotivosHeader();
+
+            hideAllViews();
+            document.getElementById('main-view-container').classList.remove('hidden');
+            document.getElementById('view-resumen-motivos').classList.remove('hidden');
+        });
+
+        // Actualizar header dinámico de motivos en tiempo real
+        const inputMotivosParam = document.getElementById('input-motivos-param');
+        function updateMotivosHeader() {
+            let val = inputMotivosParam.value.trim();
+            document.getElementById('export-header-motivos').textContent = `Resumen motivos ( ${val} )`;
+        }
+        inputMotivosParam.addEventListener('input', updateMotivosHeader);
+
+        // Copiar Resumen Motivos al Portapapeles
+        document.getElementById('btn-copy-motivos').addEventListener('click', () => {
+            let titleText = document.getElementById('export-header-motivos').innerText;
+            let rowsHtml = '';
+
+            resumenMotivosData.forEach(item => {
+                rowsHtml += `
+                    <tr>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px; font-weight: bold;">${item.codCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.nomCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.ocCliente}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.fechaEntrega}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px;">${item.turno}</td>
+                        <td style="padding: 6px; border: 1px solid #cbd5e1; font-family: sans-serif; font-size: 12px; text-align: right; font-weight: bold; color: #4f46e5;">${item.totalCajas.toFixed(2)} CA</td>
+                    </tr>
+                `;
+            });
+
+            let fullHtml = `
+                <div style="font-family: Arial, sans-serif; color: #1e293b;">
+                    <h3 style="font-size: 16px; font-weight: bold; margin-bottom: 12px; color: #0f172a;">${titleText}</h3>
+                    <table style="border-collapse: collapse; width: 100%; font-size: 12px; text-align: left;">
+                        <thead>
+                            <tr style="background-color: #f1f5f9; color: #334155;">
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Cod de cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Nombre de cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">OC del cliente</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Fecha de entrega</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1;">Turno</th>
+                                <th style="padding: 8px; border: 1px solid #cbd5e1; text-align: right;">Total Cajas</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            ${rowsHtml}
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            copyHtmlToClipboard(fullHtml);
+        });
+
+        // ----------------------------------------------------
+        // BOTÓN 3: SUGERENCIA PK
+        // ----------------------------------------------------
+        document.getElementById('btn-action-sugerencia-pk').addEventListener('click', () => {
+            let statusText = "";
+            if (pedidosData.length > 0 && stockData.length > 0) {
+                statusText = `Stock loaded (${stockData.length} items) & Pedidos loaded (${pedidosData.length} items). Ready to evaluate PK suggestions.`;
+            } else if (pedidosData.length > 0) {
+                statusText = `Pedidos loaded (${pedidosData.length} items). Load Stock for stock-assisted PK logic.`;
+            } else {
+                statusText = "Cargue los archivos correspondientes para procesar la sugerencia de Picking.";
+            }
+
+            document.getElementById('content-sugerencia-pk').textContent = statusText;
+
+            hideAllViews();
+            document.getElementById('main-view-container').classList.remove('hidden');
+            document.getElementById('view-sugerencia-pk').classList.remove('hidden');
+        });
+
+        // ----------------------------------------------------
+        // BOTÓN 4: SPLIT LÍNEAS
+        // ----------------------------------------------------
+        document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
+            if (stockData.length === 0 || pedidosData.length === 0) {
+                showToast("Para ejecutar el Split de Líneas debe cargar AMBOS archivos: Bajada de Stock y Bajada de Pedidos.", true);
+                return;
+            }
+
+            // Mapeo de Stock
             const stockMap = {};
             stockData.forEach(row => {
                 let keys = Object.keys(row);
@@ -332,61 +982,37 @@
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                if (estado !== "") return; // Excluir lotes bloqueados[cite: 1]
+                if (estado !== "") return; // Excluir lotes bloqueados
                 if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
                 stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
             });
 
-            resultadosAnalisis = [];
-            let mapaResumenAgrupado = {};
+            resultadosSplits = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
 
-            // 2. Procesar Pedidos Secuencialmente
-            pedidosData.forEach((row) => {
+            pedidosData.forEach(row => {
                 let keys = Object.keys(row);
-                
+
                 let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('nro orden') || norm(k).includes('orden'));
                 let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo orden') || norm(k).includes('tp'));
                 let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
                 let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
-                let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
-                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
-                let kCiudad = keys.find(k => norm(k).includes('ciudad'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
-                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
+                let kCant = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cantidad'));
 
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
-                let descVendedor = kDescVendedor ? String(row[kDescVendedor]).trim() : "";
-                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : "";
-                let ciudad = kCiudad ? String(row[kCiudad]).trim() : "Desconocida";
                 let sku = kSku ? String(row[kSku]).trim() : "";
                 let desc = kDesc ? String(row[kDesc]) : "";
                 let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
 
                 if (!sku || cajasPedidas <= 0) return;
 
-                // Armar Resumen Dinámico agrupado por cliente, vendedor y OC
-                let claveAgrupacion = `${codCliente}_${ocCliente}_${descVendedor}`;
-                if (!mapaResumenAgrupado[claveAgrupacion]) {
-                    mapaResumenAgrupado[claveAgrupacion] = {
-                        codCliente,
-                        nombreCliente: nomCliente,
-                        descVendedor,
-                        ocCliente,
-                        totalCajas: 0,
-                        ciudades: new Set()
-                    };
-                }
-                mapaResumenAgrupado[claveAgrupacion].totalCajas += cajasPedidas;
-                mapaResumenAgrupado[claveAgrupacion].ciudades.add(ciudad);
-
-                // Cruce de Stock para Splits
                 let lotesDisponibles = stockMap[sku] || [];
                 let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
 
@@ -408,7 +1034,7 @@
                         loteUnico.disponibleCajas -= cajasPedidas;
                         detalleSplit.push({ 
                             texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
-                            clase: "text-green-600" 
+                            clase: "text-emerald-600" 
                         });
                     } else {
                         estadoItem = "Requiere Split";
@@ -438,29 +1064,22 @@
                     }
                 }
 
-                resultadosAnalisis.push({ 
+                resultadosSplits.push({ 
                     orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
                 });
             });
 
-            // Guardar Resumen Dinámico procesado
-            resumenDinamico = Object.values(mapaResumenAgrupado);
-
-            // Actualizar KPIs de Splits
-            document.getElementById('kpi-total').textContent = resultadosAnalisis.length;
+            // Actualizar KPIs
+            document.getElementById('kpi-total').textContent = resultadosSplits.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
             document.getElementById('kpi-faltantes').textContent = countMissing;
 
-            renderizarTablaSplits(resultadosAnalisis);
-            renderizarTablaResumen(resumenDinamico);
+            renderizarTablaSplits(resultadosSplits);
 
-            document.getElementById('resultados-container').classList.remove('hidden');
-            
-            // Inicializar el mapa con puntos rojos
-            setTimeout(() => {
-                inicializarMapa(resumenDinamico);
-            }, 300);
+            hideAllViews();
+            document.getElementById('main-view-container').classList.remove('hidden');
+            document.getElementById('view-split-lineas').classList.remove('hidden');
         });
 
         // Renderizar Tabla Splits
@@ -480,7 +1099,7 @@
             }
 
             filtrados.forEach(item => {
-                let badgeClass = item.estadoItem === 'OK' ? 'bg-green-100 text-green-800' : (item.estadoItem === 'Requiere Split' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
+                let badgeClass = item.estadoItem === 'OK' ? 'bg-emerald-100 text-emerald-800' : (item.estadoItem === 'Requiere Split' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
                 let detalleHtml = item.detalleSplit.map(d => `<div class="${d.clase}">• ${d.texto}</div>`).join('');
                 let tr = document.createElement('tr');
                 tr.className = "hover:bg-slate-50 border-b border-slate-100";
@@ -498,82 +1117,7 @@
             });
         }
 
-        // Renderizar Tabla Dinámica de Resumen
-        function renderizarTablaResumen(datos) {
-            const tbody = document.getElementById('tabla-resumen-dinamica');
-            tbody.innerHTML = '';
-            if (datos.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">Sin datos de resumen.</td></tr>`;
-                return;
-            }
-
-            datos.forEach(item => {
-                let tr = document.createElement('tr');
-                tr.className = "border-b border-slate-100";
-                tr.innerHTML = `
-                    <td class="p-3 font-mono font-bold text-slate-700">${item.codCliente}</td>
-                    <td class="p-3">${item.nombreCliente}</td>
-                    <td class="p-3">${item.descVendedor}</td>
-                    <td class="p-3">${item.ocCliente}</td>
-                    <td class="p-3 text-right font-bold text-blue-600">${item.totalCajas.toFixed(2)} CA</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // Inicializar Mapa con Leaflet y Puntos Rojos
-        function inicializarMapa(datos) {
-            const mapContainer = document.getElementById('map');
-            if (mapInstance) {
-                mapInstance.remove(); // Limpiar mapa anterior si existe
-            }
-
-            mapInstance = L.map(mapContainer).setView([-31.4201, -64.1888], 8); // Centrado inicial
-
-            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                attribution: '&copy; OpenStreetMap contributors'
-            }).addTo(mapInstance);
-
-            // Obtener ciudades únicas del resumen
-            let ciudadesUnicas = {};
-            datos.forEach(item => {
-                item.ciudades.forEach( ciudad => {
-                    if (!ciudadesUnicas[ciudad]) ciudadesUnicas[ciudad] = 0;
-                    ciudadesUnicas[ciudad] += item.totalCajas;
-                });
-            });
-
-            // Agregar marcadores rojos
-            for (let ciudad in ciudadesUnicas) {
-                let coords = obtenerCoordenadas(ciudad);
-                let circuloRojo = L.circleMarker(coords, {
-                    color: 'red',
-                    fillColor: '#f03',
-                    fillOpacity: 0.7,
-                    radius: 8
-                }).addTo(mapInstance);
-
-                circuloRojo.bindPopup(`<b>Localidad:</b> ${ciudad.toUpperCase()}<br><b>Total Cajas:</b> ${ciudadesUnicas[ciudad].toFixed(2)} CA`);
-            }
-        }
-
-        // Gestión de Pestañas (Tabs)
-        document.getElementById('tab-splits-btn').addEventListener('click', () => {
-            document.getElementById('view-splits').classList.remove('hidden');
-            document.getElementById('view-resumen').classList.add('hidden');
-            document.getElementById('tab-splits-btn').className = "tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2";
-            document.getElementById('tab-resumen-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2";
-        });
-
-        document.getElementById('tab-resumen-btn').addEventListener('click', () => {
-            document.getElementById('view-resumen').classList.remove('hidden');
-            document.getElementById('view-splits').classList.add('hidden');
-            document.getElementById('tab-resumen-btn').className = "tab-btn pb-3 px-4 font-bold text-blue-600 border-b-2 border-blue-600 cursor-pointer flex items-center gap-2";
-            document.getElementById('tab-splits-btn').className = "tab-btn pb-3 px-4 font-semibold text-slate-500 hover:text-slate-800 cursor-pointer flex items-center gap-2";
-            if (mapInstance) mapInstance.invalidateSize(); // Recargar dimensiones del mapa
-        });
-
-        // Filtros de Splits
+        // Eventos para filtros de Splits
         document.querySelectorAll('.filter-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
                 document.querySelectorAll('.filter-btn').forEach(b => {
@@ -582,14 +1126,14 @@
                 });
                 e.target.classList.remove('bg-slate-200', 'text-slate-700');
                 e.target.classList.add('bg-blue-600', 'text-white');
-                renderizarTablaSplits(resultadosAnalisis, e.target.getAttribute('data-filter'));
+                renderizarTablaSplits(resultadosSplits, e.target.getAttribute('data-filter'));
             });
         });
 
-        // Exportar Splits a Excel
+        // Exportar Splits
         document.getElementById('btn-exportar-splits').addEventListener('click', () => {
-            if (resultadosAnalisis.length === 0) return;
-            let exportData = resultadosAnalisis.map(i => ({
+            if (resultadosSplits.length === 0) return;
+            let exportData = resultadosSplits.map(i => ({
                 "Nro Orden": i.orden,
                 "Tipo Ord": i.tpOrd,
                 "Cliente": i.cliente,
@@ -601,22 +1145,87 @@
             }));
             let ws = XLSX.utils.json_to_sheet(exportData);
             let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
-            XLSX.writeFile(wb, "Reporte_Splits_JDE_Consumo.xlsx");
+            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE");
+            XLSX.writeFile(wb, "Reporte_Splits_JDE.xlsx");
         });
 
-        // Exportar Resumen a PDF
-        document.getElementById('btn-exportar-pdf').addEventListener('click', () => {
-            const element = document.getElementById('pdf-container');
-            const options = {
-                margin:       10,
-                filename:     'Resumen_Logistico_Pedidos.pdf',
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
-            };
-            html2pdf().from(element).set(options).save();
-        });
+        // Funcionalidad de Copiado Rich Text en Portapapeles
+        function copyHtmlToClipboard(htmlContent) {
+            const blobHtml = new Blob([htmlContent], { type: 'text/html' });
+            const blobText = new Blob([htmlContent.replace(/<[^>]*>?/gm, '')], { type: 'text/plain' });
+
+            if (navigator.clipboard && navigator.clipboard.write) {
+                const item = new ClipboardItem({
+                    'text/html': blobHtml,
+                    'text/plain': blobText
+                });
+                navigator.clipboard.write([item]).then(() => {
+                    showToast("¡Reporte copiado al portapapeles! Listo para pegar en Mail/Outlook.", false);
+                }).catch(() => {
+                    fallbackCopy(htmlContent);
+                });
+            } else {
+                fallbackCopy(htmlContent);
+            }
+        }
+
+        function fallbackCopy(htmlContent) {
+            const container = document.createElement('div');
+            container.innerHTML = htmlContent;
+            container.style.position = 'fixed';
+            container.style.pointerEvents = 'none';
+            container.style.opacity = '0';
+            document.body.appendChild(container);
+
+            window.getSelection().removeAllRanges();
+            const range = document.createRange();
+            range.selectNode(container);
+            window.getSelection().addRange(range);
+
+            try {
+                document.execCommand('copy');
+                showToast("¡Reporte copiado al portapapeles con éxito!", false);
+            } catch (err) {
+                showToast("Error al copiar al portapapeles.", true);
+            }
+
+            window.getSelection().removeAllRanges();
+            document.body.removeChild(container);
+        }
+
+        // Inicializar Mapa
+        function inicializarMapa(datos) {
+            const mapContainer = document.getElementById('map');
+            if (mapInstance) {
+                mapInstance.remove();
+            }
+
+            mapInstance = L.map(mapContainer).setView([-31.4201, -64.1888], 8);
+
+            L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                attribution: '&copy; OpenStreetMap contributors'
+            }).addTo(mapInstance);
+
+            let ciudadesUnicas = {};
+            datos.forEach(item => {
+                item.ciudades.forEach(ciudad => {
+                    if (!ciudadesUnicas[ciudad]) ciudadesUnicas[ciudad] = 0;
+                    ciudadesUnicas[ciudad] += item.totalCajas;
+                });
+            });
+
+            for (let ciudad in ciudadesUnicas) {
+                let coords = obtenerCoordenadas(ciudad);
+                let circuloRojo = L.circleMarker(coords, {
+                    color: '#dc2626',
+                    fillColor: '#ef4444',
+                    fillOpacity: 0.8,
+                    radius: 8
+                }).addTo(mapInstance);
+
+                circuloRojo.bindPopup(`<b>Localidad:</b> ${ciudad.toUpperCase()}<br><b>Total Cajas:</b> ${ciudadesUnicas[ciudad].toFixed(2)} CA`);
+            }
+        }
     </script>
 </body>
 </html>
