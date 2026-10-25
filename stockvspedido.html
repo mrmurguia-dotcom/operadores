@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OL - Cross Interior</title>
+    <title>JDE - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -15,20 +15,25 @@
     <style>
         .font-aptos {
             font-family: 'Aptos', 'Calibri', sans-serif;
-            font-size: 12pt;
+            font-size: 11pt;
         }
         @media print {
             .no-print { display: none !important; }
-            .page-break { 
-                page-break-before: always !important; 
-                break-before: page !important;
+            .card-pk-printable {
+                page-break-after: always !important;
+                break-after: page !important;
+                page-break-inside: avoid !important;
+                break-inside: avoid !important;
             }
         }
         .card-pk-printable {
             page-break-after: always;
             break-after: page;
-            page-break-inside: avoid;
-            break-inside: avoid;
+            background: #ffffff;
+            margin-bottom: 20px;
+            padding: 20px;
+            border: 1px solid #cbd5e1;
+            border-radius: 8px;
         }
     </style>
 </head>
@@ -857,7 +862,6 @@
                     totalFichasGeneradas++;
                     let listOrdenesStr = Array.from(grupo.ordenesConTipo).join(', ');
 
-                    // Formato pestaña Excel: CodCliente(OC OCCliente)
                     let sheetTabTitle = `${grupo.codCliente}(OC ${grupo.ocCliente})`.replace(/[/\\?*[:\]]/g, '').substring(0, 30);
 
                     globalPickingDataStore.push({
@@ -869,37 +873,61 @@
                         items: itemsPicking
                     });
 
+                    // Estructura en Tabla HTML clásica para garantizar renderizado perfecto en PDF
                     let cardHtml = `
-                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos page-break card-pk-printable" id="card-pk-${cardIdx}">
-                            <!-- Cabecera -->
-                            <div class="border-b-2 border-slate-800 pb-3 space-y-2">
-                                <div class="flex justify-between items-center">
-                                    <h2 class="text-lg font-bold text-slate-900 uppercase">HOJA DE ARMADO DE PICKING</h2>
-                                    <div class="flex items-center gap-2">
-                                        <label class="text-xs font-bold text-slate-700">Carta de Porte N°:</label>
-                                        <input type="text" placeholder="Ingrese N°" class="carta-porte-input border border-slate-300 rounded px-2 py-1 text-xs w-36 font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
-                                    </div>
-                                </div>
-                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
-                                    <div><span class="font-bold text-slate-500 uppercase block">Cod Cliente:</span> <span class="font-bold font-mono text-slate-800 text-sm">${grupo.codCliente}</span></div>
-                                    <div><span class="font-bold text-slate-500 uppercase block">Nombre Cliente:</span> <span class="font-bold text-slate-800">${grupo.nomCliente}</span></div>
-                                    <div><span class="font-bold text-slate-500 uppercase block">OC del Cliente:</span> <span class="font-bold text-slate-800">${grupo.ocCliente}</span></div>
-                                    <div><span class="font-bold text-slate-500 uppercase block">N° de Orden(es):</span> <span class="font-bold text-slate-800">${listOrdenesStr}</span></div>
-                                </div>
-                            </div>
-
-                            <!-- Tabla de Picking -->
-                            <div class="overflow-x-auto">
-                                <table class="w-full text-left border-collapse font-aptos text-xs" style="border-collapse: collapse; width: 100%;">
-                                    <thead>
-                                        <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Sector / Ubicación</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de item largo (SKU)</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Descripción</th>
-                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas PK</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
+                        <div class="card-pk-printable font-aptos" id="card-pk-${cardIdx}">
+                            <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse; font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; color: #1e293b;">
+                                <!-- Cabecera Título y Carta de Porte -->
+                                <tr>
+                                    <td colspan="4" style="border-bottom: 2px solid #1e293b; padding-bottom: 8px; margin-bottom: 10px;">
+                                        <table border="0" cellpadding="0" cellspacing="0" style="width: 100%; border-collapse: collapse;">
+                                            <tr>
+                                                <td style="font-size: 14pt; font-weight: bold; text-transform: uppercase;">HOJA DE ARMADO DE PICKING</td>
+                                                <td style="text-align: right; font-size: 11pt; font-weight: bold;">
+                                                    Carta de Porte N°: <input type="text" placeholder="Ingrese N°" class="carta-porte-input" style="border: 1px solid #cbd5e1; border-radius: 4px; padding: 3px 6px; font-size: 11pt; font-weight: bold; color: #1e3a8a; width: 140px; text-align: center;">
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- Datos de Cabecera (Cliente, OC, Órdenes) -->
+                                <tr>
+                                    <td colspan="4" style="padding-top: 10px; padding-bottom: 12px;">
+                                        <table border="0" cellpadding="4" cellspacing="0" style="width: 100%; border-collapse: collapse; font-size: 10pt;">
+                                            <tr>
+                                                <td style="width: 25%; vertical-align: top;">
+                                                    <span style="font-weight: bold; color: #64748b; display: block; text-transform: uppercase; font-size: 9pt;">Cod Cliente:</span>
+                                                    <span style="font-weight: bold; font-family: monospace; font-size: 11pt; color: #0f172a;">${grupo.codCliente}</span>
+                                                </td>
+                                                <td style="width: 25%; vertical-align: top;">
+                                                    <span style="font-weight: bold; color: #64748b; display: block; text-transform: uppercase; font-size: 9pt;">Nombre Cliente:</span>
+                                                    <span style="font-weight: bold; color: #0f172a;">${grupo.nomCliente}</span>
+                                                </td>
+                                                <td style="width: 25%; vertical-align: top;">
+                                                    <span style="font-weight: bold; color: #64748b; display: block; text-transform: uppercase; font-size: 9pt;">OC del Cliente:</span>
+                                                    <span style="font-weight: bold; color: #0f172a;">${grupo.ocCliente}</span>
+                                                </td>
+                                                <td style="width: 25%; vertical-align: top;">
+                                                    <span style="font-weight: bold; color: #64748b; display: block; text-transform: uppercase; font-size: 9pt;">N° de Orden(es):</span>
+                                                    <span style="font-weight: bold; color: #0f172a;">${listOrdenesStr}</span>
+                                                </td>
+                                            </tr>
+                                        </table>
+                                    </td>
+                                </tr>
+                                <!-- Tabla de Ítems -->
+                                <tr>
+                                    <td colspan="4" style="padding-top: 5px;">
+                                        <table border="1" cellpadding="6" cellspacing="0" style="width: 100%; border-collapse: collapse; border: 1px solid #cbd5e1; font-size: 10pt;">
+                                            <thead>
+                                                <tr style="background-color: #f1f5f9; font-weight: bold; text-align: left;">
+                                                    <th style="border: 1px solid #cbd5e1; padding: 6px; width: 22%;">Sector / Ubicación</th>
+                                                    <th style="border: 1px solid #cbd5e1; padding: 6px; width: 22%;">Cod de item largo (SKU)</th>
+                                                    <th style="border: 1px solid #cbd5e1; padding: 6px; width: 40%;">Descripción</th>
+                                                    <th style="border: 1px solid #cbd5e1; padding: 6px; width: 16%; text-align: right;">Total Cajas PK</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
                     `;
 
                     let subtotalPk = 0;
@@ -907,22 +935,24 @@
                         subtotalPk += rowPk.cajasPk;
                         cardHtml += `
                             <tr>
-                                <td style="border: 1px solid #cbd5e1; padding: 8px;" class="font-mono font-bold text-blue-800">${rowPk.sector}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 8px;" class="font-mono font-bold">${rowPk.sku}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 8px;">${rowPk.desc}</td>
-                                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;" class="font-bold text-emerald-800">${fmtInt(rowPk.cajasPk)} CA</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: monospace; font-weight: bold; color: #1e40af;">${rowPk.sector}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: monospace; font-weight: bold;">${rowPk.sku}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 6px;">${rowPk.desc}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-weight: bold; color: #065f46;">${fmtInt(rowPk.cajasPk)} CA</td>
                             </tr>
                         `;
                     });
 
                     cardHtml += `
-                                        <tr class="bg-slate-50 font-bold">
-                                            <td colspan="3" style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;" class="uppercase">Total Cajas de Picking:</td>
-                                            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;" class="text-emerald-900 font-bold text-sm">${fmtInt(subtotalPk)} CA</td>
-                                        </tr>
-                                    </tbody>
-                                </table>
-                            </div>
+                                                <tr style="background-color: #f8fafc; font-weight: bold;">
+                                                    <td colspan="3" style="border: 1px solid #cbd5e1; padding: 6px; text-align: left; text-transform: uppercase;">Total Cajas de Picking:</td>
+                                                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; color: #065f46; font-size: 11pt;">${fmtInt(subtotalPk)} CA</td>
+                                                </tr>
+                                            </tbody>
+                                        </table>
+                                    </td>
+                                </tr>
+                            </table>
                         </div>
                     `;
 
@@ -980,7 +1010,7 @@
             XLSX.writeFile(wb, fileName);
         });
 
-        // Generar PDF Fichas Picking (Nombre dinámico + Aislamiento por Cliente)
+        // Generar PDF Fichas Picking (Diseño optimizado para html2pdf)
         document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
             const container = document.getElementById('pk-cards-container');
             if (!container || container.children.length === 0) {
@@ -992,12 +1022,12 @@
             let fileName = cp ? `Sugerencia PK CP ${cp}.pdf` : `Sugerencia PK.pdf`;
 
             const opt = {
-                margin:       [8, 8, 8, 8],
+                margin:       [10, 10, 10, 10],
                 filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true },
+                html2canvas:  { scale: 2, useCORS: true, letterRendering: true },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'] }
+                pagebreak:    { mode: ['css', 'legacy'], avoid: ['.card-pk-printable'] }
             };
 
             html2pdf().set(opt).from(container).save();
