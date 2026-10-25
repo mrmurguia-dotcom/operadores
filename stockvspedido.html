@@ -17,12 +17,16 @@
             font-family: 'Aptos', 'Calibri', sans-serif;
             font-size: 12pt;
         }
+        @media print {
+            .no-print { display: none !important; }
+            .page-break { page-break-after: always; }
+        }
     </style>
 </head>
 <body class="bg-slate-100 text-slate-800 min-h-screen flex flex-col font-sans">
 
     <!-- Header -->
-    <header class="bg-blue-900 text-white shadow-md py-4 px-6">
+    <header class="bg-blue-900 text-white shadow-md py-4 px-6 no-print">
         <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center">
             <div>
                 <h1 class="text-2xl font-bold flex items-center gap-2">
@@ -37,13 +41,13 @@
     <main class="max-w-7xl mx-auto px-4 py-8 flex-grow w-full space-y-6">
 
         <!-- Banner Alerta Notificación -->
-        <div id="toast-notif" class="hidden fixed top-5 right-5 bg-emerald-700 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3">
+        <div id="toast-notif" class="hidden fixed top-5 right-5 bg-emerald-700 text-white px-5 py-3 rounded-xl shadow-2xl z-50 flex items-center gap-3 no-print">
             <i class="fa-solid fa-circle-check text-xl"></i>
             <span id="toast-text" class="text-sm font-semibold">¡Copiado con éxito al portapapeles!</span>
         </div>
 
         <!-- Carga de Archivos Independientes (3 Secciones) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
             <!-- Card Stock -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div>
@@ -103,7 +107,7 @@
         </div>
 
         <!-- Botones de Acción (4 Botones) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print">
             <button id="btn-action-resumen-pedidos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
                 <i class="fa-solid fa-list-check"></i> 1. Resumen Pedidos
             </button>
@@ -126,7 +130,7 @@
 
             <!-- VISTA 1: RESUMEN PEDIDOS -->
             <div id="view-resumen-pedidos" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
                         <i class="fa-solid fa-table-cells text-blue-600"></i> Vista: Resumen de Pedidos
                     </h3>
@@ -135,7 +139,6 @@
                     </button>
                 </div>
 
-                <!-- Bloque Vista Resumen Pedidos -->
                 <div id="copyable-resumen-pedidos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos">
                     <div id="pedidos-mail-text" class="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 leading-relaxed">
                         Estimados,<br>adjunto el detalle de los pedidos incluidos en el próximo cross docking, a fin de que puedan avanzar con la gestión de los turnos de entrega.
@@ -172,7 +175,7 @@
 
             <!-- VISTA 2: RESUMEN MOTIVOS -->
             <div id="view-resumen-motivos" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                     <div class="flex items-center gap-3">
                         <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
                             <i class="fa-solid fa-clipboard-list text-indigo-600"></i> Vista: Resumen Motivos
@@ -184,15 +187,13 @@
                     </button>
                 </div>
 
-                <!-- Input para XXXXX -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-3">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-3 no-print">
                     <label for="motivos-custom-text" class="text-xs font-bold text-slate-600 whitespace-nowrap">
                         Texto personalizado (XXXXX):
                     </label>
                     <input type="text" id="motivos-custom-text" placeholder="Ej: LITORAL Y NEA 21/10" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 </div>
 
-                <!-- Bloque Vista Resumen Motivos -->
                 <div id="copyable-resumen-motivos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos">
                     <div id="motivos-mail-text" class="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 leading-relaxed">
                         Estimados,<br>adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>.
@@ -228,24 +229,39 @@
                 </div>
             </div>
 
-            <!-- VISTA 3: SUGERENCIA PK -->
+            <!-- VISTA 3: SUGERENCIA PK (PICKING) -->
             <div id="view-sugerencia-pk" class="hidden space-y-4">
-                <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Picking)
+                        <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Generación de Picking)
                     </h3>
-                    <p class="text-xs text-slate-500">Módulo de optimización y armado de picks según lotes y ubicaciones prioritarias.</p>
+                    <div class="flex items-center gap-3">
+                        <button id="btn-sync-sheet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-rotate"></i> Actualizar Posiciones Google Sheet
+                        </button>
+                        <button id="btn-export-pdf-pk" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-file-pdf"></i> Guardar Todo en PDF
+                        </button>
+                    </div>
+                </div>
 
-                    <div id="pk-content-area" class="p-6 bg-slate-50 rounded-xl border border-slate-200 text-center text-slate-500 text-xs italic">
-                        Cargue la Bajada de Pedidos y Stock para calcular la Sugerencia PK óptima.
+                <!-- Banner Estado Sincronización Sheet -->
+                <div id="sheet-status-banner" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-xs font-semibold flex items-center gap-2 no-print">
+                    <i class="fa-solid fa-circle-info text-base"></i>
+                    <span id="sheet-status-text">Listo para leer el listado publicado de Google Drive (503 - App SKU Villanueva).</span>
+                </div>
+
+                <!-- Panel Contenedor de Fichas de Picking por Cliente / OC -->
+                <div id="pk-cards-container" class="space-y-6">
+                    <div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-400 italic">
+                        Cargue la Bajada de Pedidos y presione "3. Sugerencia PK" para generar las fichas de picking por Cliente y OC.
                     </div>
                 </div>
             </div>
 
             <!-- VISTA 4: SPLIT LINEAS -->
             <div id="view-split-lineas" class="hidden space-y-6">
-                <!-- KPIs -->
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                         <p class="text-[10px] text-slate-500 font-medium uppercase">Total Líneas Analizadas</p>
                         <p id="kpi-total" class="text-2xl font-bold text-slate-800 mt-1">0</p>
@@ -264,8 +280,7 @@
                     </div>
                 </div>
 
-                <!-- Acciones y Filtros -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-col md:flex-row justify-between items-center gap-4 no-print">
                     <div class="flex flex-wrap gap-2">
                         <button class="filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-blue-600 text-white" data-filter="all">Todas</button>
                         <button class="filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="split">Requieren Split</button>
@@ -277,7 +292,6 @@
                     </button>
                 </div>
 
-                <!-- Tabla de Splits -->
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
                     <div class="overflow-x-auto max-h-[500px]">
                         <table class="w-full text-left border-collapse text-xs">
@@ -312,6 +326,10 @@
         let rawStock = [];
         let rawPedidos = [];
         let rawMotivos = [];
+
+        // Google Sheet Publicado Data (Opción B)
+        const GOOGLE_SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBxHEW3zAPqMgY6nXXk_HvMuCzYTzV6GwDOy60sUST3sXqgG9s_WRdg5-puvrBUQ/pub?output=csv';
+        let googleSheetPositions = [];
 
         let fileNames = { stock: '', pedidos: '', motivos: '' };
         let splitsResult = [];
@@ -566,7 +584,7 @@
                 let kFechaEntrega = keys[12] || keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
                 let kTurno = keys[10] || keys.find(k => norm(k).includes('turno'));
                 let kTotalCa = keys[13] || keys.find(k => norm(k).includes('total (ca)') || norm(k) === 'total' || norm(k).includes('cajas'));
-                
+
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
@@ -667,26 +685,244 @@
         });
 
         // ==========================================
-        // ACCIÓN 3: SUGERENCIA PK
+        // ACCIÓN 3: SUGERENCIA PK (OPCIÓN B GOOGLE DRIVE)
         // ==========================================
-        document.getElementById('btn-action-sugerencia-pk').addEventListener('click', () => {
+        async function fetchGoogleSheetPositions() {
+            const banner = document.getElementById('sheet-status-text');
+            banner.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Conectando con Google Sheet en tiempo real...';
+            try {
+                const response = await fetch(GOOGLE_SHEET_PUB_URL);
+                if (!response.ok) throw new Error("No se pudo obtener la planilla publicada de Google Drive.");
+                const csvText = await response.text();
+                
+                // Parse CSV
+                const workbook = XLSX.read(csvText, { type: 'string' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
+
+                googleSheetPositions = [];
+
+                // Mapeo por Posición de Columna:
+                // Col B (idx 1): Ubicación / Sector
+                // Col E (idx 4): Cantidad de cajas en la posición
+                // Col G (idx 6): SKU / Articulo
+                // Col H (idx 7): Descripcion
+                // Col I (idx 8): Palletizado (UM CA / Pallet completo)
+                for (let i = 1; i < rows.length; i++) {
+                    let r = rows[i];
+                    let ubi = r[1] ? String(r[1]).trim() : '';
+                    let cantPos = parseFloat(r[4]) || 0;
+                    let sku = r[6] ? String(r[6]).trim() : '';
+                    let desc = r[7] ? String(r[7]).trim() : '';
+                    let palletizado = parseFloat(r[8]) || 0;
+
+                    if (sku !== "") {
+                        googleSheetPositions.push({
+                            ubicacion: ubi,
+                            cantPosicion: cantPos,
+                            sku: sku,
+                            descripcion: desc,
+                            palletizado: palletizado
+                        });
+                    }
+                }
+
+                banner.innerHTML = `<i class="fa-solid fa-circle-check text-green-600"></i> Google Sheet sincronizado correctamente (${googleSheetPositions.length} registros cargados).`;
+            } catch (err) {
+                banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-600"></i> Error al conectar con Google Sheet: ${err.message}`;
+            }
+        }
+
+        document.getElementById('btn-sync-sheet').addEventListener('click', fetchGoogleSheetPositions);
+
+        document.getElementById('btn-action-sugerencia-pk').addEventListener('click', async () => {
             showView('view-sugerencia-pk');
-            const pkArea = document.getElementById('pk-content-area');
+
+            if (googleSheetPositions.length === 0) {
+                await fetchGoogleSheetPositions();
+            }
 
             if (rawPedidos.length === 0) {
-                pkArea.innerHTML = `<p class="text-amber-600 font-semibold">Cargue la Bajada de Pedidos para sugerir el picking.</p>`;
+                alert("Por favor cargue el archivo de Pedidos para generar las hojas de picking.");
                 return;
             }
 
-            pkArea.innerHTML = `
-                <div class="text-left space-y-3">
-                    <h4 class="font-bold text-slate-700 border-b pb-2">Plan de Picking Generado</h4>
-                    <p class="text-xs text-slate-600">Procesando un total de <b>${rawPedidos.length}</b> ítems para optimización de ruta de recolección en depósito.</p>
-                    <div class="bg-emerald-50 border border-emerald-200 p-4 rounded-lg text-emerald-800 text-xs font-semibold">
-                        <i class="fa-solid fa-check-circle"></i> Algoritmo PK ejecutado correctamente. Stock asignado por ubicación más cercana.
-                    </div>
-                </div>
-            `;
+            // Agrupar Pedidos por Cliente + OC
+            const agrupadoPicking = {};
+
+            rawPedidos.forEach(row => {
+                let keys = Object.keys(row);
+
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
+                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k) === 'oc');
+                let kNroOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('orden'));
+                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion'));
+                let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('cantidad'));
+
+                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
+                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
+                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
+                let nroOrden = kNroOrden ? String(row[kNroOrden]).trim() : '';
+                let sku = kSku ? String(row[kSku]).trim() : '';
+                let desc = kDesc ? String(row[kDesc]).trim() : '';
+                let cajasPedidas = kCajas ? parseFloat(row[kCajas]) || 0 : 0;
+
+                if (!codCliente || norm(codCliente).includes('cod de cliente') || !sku || cajasPedidas <= 0) return;
+
+                let keyGroup = `${codCliente}_${ocCliente}`;
+                if (!agrupadoPicking[keyGroup]) {
+                    agrupadoPicking[keyGroup] = {
+                        codCliente,
+                        nomCliente,
+                        ocCliente,
+                        ordenes: new Set(),
+                        skus: {}
+                    };
+                }
+
+                if (nroOrden) agrupadoPicking[keyGroup].ordenes.add(nroOrden);
+
+                if (!agrupadoPicking[keyGroup].skus[sku]) {
+                    agrupadoPicking[keyGroup].skus[sku] = {
+                        sku,
+                        desc,
+                        totalCajasPedidas: 0
+                    };
+                }
+                agrupadoPicking[keyGroup].skus[sku].totalCajasPedidas += cajasPedidas;
+            });
+
+            // Procesamiento de Picking vs Pallet Cerrado usando Google Sheet
+            const cardsContainer = document.getElementById('pk-cards-container');
+            cardsContainer.innerHTML = '';
+
+            let totalFichasGeneradas = 0;
+
+            Object.values(agrupadoPicking).forEach((grupo, cardIdx) => {
+                let itemsPicking = [];
+
+                Object.values(grupo.skus).forEach(item => {
+                    // Buscar Palletizado y Sector en Google Sheet
+                    let matchPosiciones = googleSheetPositions.filter(p => p.sku === item.sku);
+                    let palletizado = matchPosiciones.length > 0 ? matchPosiciones[0].palletizado : 0;
+
+                    let cajasPicking = 0;
+                    if (palletizado > 0) {
+                        cajasPicking = item.totalCajasPedidas % palletizado;
+                    } else {
+                        cajasPicking = item.totalCajasPedidas; // Si no hay dato de palletizado, va a picking
+                    }
+
+                    // Si hay residuo/sobrante, entra en la hoja de picking
+                    if (cajasPicking > 0) {
+                        // Buscar Sector / Ubicación que no sea múltiplo exacto de pallet
+                        let sectorElegido = 'S/D';
+                        let ubiMatch = matchPosiciones.find(p => p.cantPosicion > 0 && (p.cantPosicion % p.palletizado !== 0));
+                        if (ubiMatch) {
+                            sectorElegido = ubiMatch.ubicacion;
+                        } else if (matchPosiciones.length > 0) {
+                            sectorElegido = matchPosiciones[0].ubicacion;
+                        }
+
+                        itemsPicking.push({
+                            sector: sectorElegido,
+                            sku: item.sku,
+                            desc: item.desc || (matchPosiciones[0] ? matchPosiciones[0].descripcion : ''),
+                            cajasPk: cajasPicking
+                        });
+                    }
+                });
+
+                // Si hay ítems que van a picking, generamos la ficha imprimible
+                if (itemsPicking.length > 0) {
+                    totalFichasGeneradas++;
+                    let listOrdenesStr = Array.from(grupo.ordenes).join(', ');
+
+                    let cardHtml = `
+                        <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos page-break card-pk-printable" id="card-pk-${cardIdx}">
+                            <!-- Cabecera -->
+                            <div class="border-b-2 border-slate-800 pb-3 space-y-2">
+                                <div class="flex justify-between items-center">
+                                    <h2 class="text-lg font-bold text-slate-900 uppercase">Hoja de Armado de Picking</h2>
+                                    <div class="flex items-center gap-2">
+                                        <label class="text-xs font-bold text-slate-700">Carta de Porte N°:</label>
+                                        <input type="text" placeholder="Ingrese N°" class="border border-slate-300 rounded px-2 py-1 text-xs w-36 font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                    </div>
+                                </div>
+                                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
+                                    <div><span class="font-bold text-slate-500 uppercase block">Cod Cliente:</span> <span class="font-bold font-mono text-slate-800 text-sm">${grupo.codCliente}</span></div>
+                                    <div><span class="font-bold text-slate-500 uppercase block">Nombre Cliente:</span> <span class="font-bold text-slate-800">${grupo.nomCliente}</span></div>
+                                    <div><span class="font-bold text-slate-500 uppercase block">OC del Cliente:</span> <span class="font-bold text-slate-800">${grupo.ocCliente}</span></div>
+                                    <div><span class="font-bold text-slate-500 uppercase block">N° de Orden(es):</span> <span class="font-bold text-slate-800">${listOrdenesStr}</span></div>
+                                </div>
+                            </div>
+
+                            <!-- Tabla de Picking -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-left border-collapse font-aptos text-xs" style="border-collapse: collapse; width: 100%;">
+                                    <thead>
+                                        <tr class="bg-slate-100 text-slate-800 font-bold border-b border-slate-300">
+                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Sector / Ubicación</th>
+                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Cod de item largo (SKU)</th>
+                                            <th style="border: 1px solid #cbd5e1; padding: 8px;">Descripción</th>
+                                            <th style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;">Total Cajas PK</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                    `;
+
+                    let subtotalPk = 0;
+                    itemsPicking.forEach(rowPk => {
+                        subtotalPk += rowPk.cajasPk;
+                        cardHtml += `
+                            <tr>
+                                <td style="border: 1px solid #cbd5e1; padding: 8px;" class="font-mono font-bold text-blue-800">${rowPk.sector}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 8px;" class="font-mono font-bold">${rowPk.sku}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 8px;">${rowPk.desc}</td>
+                                <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;" class="font-bold text-emerald-800">${fmtInt(rowPk.cajasPk)} CA</td>
+                            </tr>
+                        `;
+                    });
+
+                    cardHtml += `
+                                        <tr class="bg-slate-50 font-bold">
+                                            <td colspan="3" style="border: 1px solid #cbd5e1; padding: 8px; text-align: left;" class="uppercase">Total Cajas de Picking:</td>
+                                            <td style="border: 1px solid #cbd5e1; padding: 8px; text-align: right;" class="text-emerald-900 font-bold text-sm">${fmtInt(subtotalPk)} CA</td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+
+                    cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
+                }
+            });
+
+            if (totalFichasGeneradas === 0) {
+                cardsContainer.innerHTML = `<div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-500 italic">Todos los pedidos corresponden a pallets completos. No se requirió armado de picking.</div>`;
+            }
+        });
+
+        // Generar PDF Fichas Picking
+        document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
+            const container = document.getElementById('pk-cards-container');
+            if (!container || container.children.length === 0) {
+                alert("No hay fichas de picking para exportar.");
+                return;
+            }
+
+            const opt = {
+                margin:       10,
+                filename:     'Fichas_Picking_JDE.pdf',
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2 },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+            };
+
+            html2pdf().set(opt).from(container).save();
         });
 
         // ==========================================
