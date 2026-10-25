@@ -3,13 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Panel Logístico Completo</title>
+    <title>OL - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <!-- PDF con tablas y paginación controlada -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -1035,27 +1038,95 @@
             XLSX.writeFile(wb, fileName);
         });
 
-        // Exportación de PDF limpia sin hojas en blanco
-        document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
-            const container = document.getElementById('pk-cards-container');
-            if (!container || container.children.length === 0) {
-                alert("No hay fichas de picking para exportar.");
+        // Exportación PDF: cada ficha ocupa una o dos páginas físicas como máximo.
+        document.getElementById('btn-export-pdf-pk').addEventListener('click', async () => {
+            if (!globalPickingDataStore.length) {
+                alert('No hay fichas de picking para exportar.');
                 return;
             }
-
-            let cp = getCartaDePorteGlobal();
-            let fileName = cp !== 'S/N' ? `Sugerencia PK CP ${cp}.pdf` : `Sugerencia PK.pdf`;
-
-            const opt = {
-                margin:       [5, 5, 5, 5],
-                filename:     fileName,
-                image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2, useCORS: true, logging: false },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css', 'legacy'], before: '.card-pk-page' }
-            };
-
-            html2pdf().set(opt).from(container).save();
+            if (!window.jspdf || !window.jspdf.jsPDF) {
+                alert('No se pudo cargar el generador PDF. Revisá la conexión a Internet.');
+                return;
+            }
+            const boton = document.getElementById('btn-export-pdf-pk');
+            boton.disabled = true;
+            try {
+                const { jsPDF } = window.jspdf;
+                const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
+                const cp = getCartaDePorteGlobal();
+                const margen = 9;
+                const ancho = 210 - 2 * margen;
+                const fondo = [248,250,252];
+                const azul = [30,58,95];
+                const verde = [6,95,70];
+                const dibujarCabecera = (ficha, continuacion=false) => {
+                    pdf.setFont('helvetica','bold');
+                    pdf.setFontSize(11);
+                    pdf.setTextColor(...azul);
+                    pdf.text('HOJA DE ARMADO DE PICKING' + (continuacion ? ' (CONTINUACION)' : ''), margen, 13);
+                    pdf.setFontSize(8);
+                    pdf.text('Carta de Porte N°: ' + cp, 201, 13, {align:'right'});
+                    pdf.setDrawColor(...azul);
+                    pdf.line(margen, 16, 201, 16);
+                    pdf.setFillColor(...fondo);
+                    pdf.rect(margen, 19, ancho, 24, 'F');
+                    pdf.setTextColor(35,45,60);
+                    pdf.setFontSize(7);
+                    pdf.text('COD / NOMBRE CLIENTE:', margen+2, 23);
+                    pdf.text('OC DEL CLIENTE:', 119, 23);
+                    pdf.text('N° DE ORDEN(ES):', margen+2, 34);
+                    pdf.setFontSize(8);
+                    pdf.setFont('helvetica','bold');
+                    const nombre = `${ficha.codCliente} - ${ficha.nomCliente}`;
+                    pdf.text(pdf.splitTextToSize(nombre, 105).slice(0,2), margen+2, 27);
+                    pdf.text(pdf.splitTextToSize(String(ficha.ocCliente||''), 78).slice(0,2),119,27);
+                    pdf.text(pdf.splitTextToSize(String(ficha.ordenes||''), 184).slice(0,1), margen+2, 38);
+                    pdf.setFont('helvetica','normal');
+                };
+                globalPickingDataStore.forEach((ficha, indice) => {
+                    if (indice > 0) pdf.addPage();
+                    const inicio = pdf.getNumberOfPages();
+                    const total = ficha.items.reduce((sum,it)=>sum+(Number(it.cajasPk)||0),0);
+                    const filas = ficha.items.map(it=>[
+                        String(it.sector??''),String(it.sku??''),String(it.desc??''),
+                        fmtInt(it.cajasPk)+' CA'
+                    ]);
+                    filas.push([{content:'TOTAL CAJAS DE PICKING:',colSpan:3,styles:{fontStyle:'bold',fillColor:fondo}},
+                        {content:fmtInt(total)+' CA',styles:{fontStyle:'bold',textColor:verde,fillColor:fondo}}]);
+                    // Buscar un tamaño de letra que mantenga la ficha dentro de dos hojas.
+                    let elegido=null;
+                    for (const tam of [8.5,8,7.5,7,6.5,6,5.5,5]) {
+                        const prueba = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
+                        prueba.autoTable({
+                            startY:47,margin:{left:margen,right:margen,top:47,bottom:12},
+                            head:[['Sector / Ubicación','Cod SKU','Descripción','Total Cajas PK']],
+                            body:filas,theme:'grid',
+                            styles:{font:'helvetica',fontSize:tam,cellPadding:1.4,overflow:'linebreak',lineWidth:0.1},
+                            headStyles:{fillColor:[241,245,249],textColor:[15,23,42],fontStyle:'bold'},
+                            columnStyles:{0:{cellWidth:39},1:{cellWidth:31},2:{cellWidth:93},3:{cellWidth:29,halign:'right'}},
+                        });
+                        if (prueba.getNumberOfPages()<=2) {elegido=tam;break;}
+                    }
+                    if (elegido===null) {
+                        throw new Error(`La ficha ${indice+1} tiene demasiadas líneas para dos hojas legibles. No se exportó un PDF incompleto.`);
+                    }
+                    pdf.autoTable({
+                        startY:47,margin:{left:margen,right:margen,top:47,bottom:12},
+                        head:[['Sector / Ubicación','Cod SKU','Descripción','Total Cajas PK']],
+                        body:filas,theme:'grid',
+                        styles:{font:'helvetica',fontSize:elegido,cellPadding:1.4,overflow:'linebreak',lineWidth:0.1,textColor:[30,41,59]},
+                        headStyles:{fillColor:[241,245,249],textColor:[15,23,42],fontStyle:'bold'},
+                        columnStyles:{0:{cellWidth:39},1:{cellWidth:31},2:{cellWidth:93},3:{cellWidth:29,halign:'right'}},
+                        didDrawPage:()=>dibujarCabecera(ficha, pdf.getNumberOfPages()>inicio)
+                    });
+                    if (pdf.getNumberOfPages()-inicio+1>2) throw new Error('Se superó el máximo de dos páginas por ficha.');
+                });
+                const nombre = cp !== 'S/N' ? `Sugerencia PK CP ${cp}.pdf` : 'Sugerencia PK.pdf';
+                pdf.save(nombre.replace(/[\\/:*?"<>|]/g,'-'));
+            } catch (err) {
+                alert('Error al generar PDF: '+err.message);
+                console.error(err);
+            } finally {boton.disabled=false;}
         });
 
         // ==========================================
