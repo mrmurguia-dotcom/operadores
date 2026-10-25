@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OL - Panel Logístico Completo</title>
+    <title>JDE - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -25,18 +25,24 @@
                 break-before: page !important;
                 page-break-before: always !important;
             }
+            .card-pk-page:first-of-type {
+                break-before: avoid !important;
+                page-break-before: avoid !important;
+            }
         }
 
         .card-pk-page {
             background: #ffffff;
-            padding: 15mm;
+            padding: 10mm;
             box-sizing: border-box;
             width: 100%;
             break-inside: avoid;
             page-break-inside: avoid;
+            margin-bottom: 10px;
         }
 
-        .card-pk-page:not(:first-child) {
+        /* Aplica salto de página únicamente a partir de la segunda ficha para evitar página en blanco inicial */
+        .card-pk-page ~ .card-pk-page {
             break-before: page;
             page-break-before: always;
         }
@@ -44,7 +50,7 @@
         .table-pk {
             width: 100%;
             border-collapse: collapse;
-            font-size: 9.5pt;
+            font-size: 9pt;
         }
 
         .table-pk th {
@@ -53,12 +59,12 @@
             font-weight: bold;
             text-align: left;
             border: 1px solid #cbd5e1;
-            padding: 5px 8px;
+            padding: 4px 6px;
         }
 
         .table-pk td {
             border: 1px solid #cbd5e1;
-            padding: 4px 8px;
+            padding: 3px 6px;
             color: #1e293b;
         }
     </style>
@@ -912,37 +918,37 @@
                         items: itemsPicking
                     });
 
-                    // Estructura limpia y compacta por página A4 (Sin elementos input en el DOM del PDF)
+                    // Estructura limpia y compacta por página A4
                     let cardHtml = `
                         <div class="card-pk-page font-aptos" id="card-pk-${cardIdx}">
                             <!-- Cabecera -->
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 12px; border-bottom: 2px solid #0f172a;">
+                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #0f172a;">
                                 <tr>
-                                    <td style="font-size: 13pt; font-weight: bold; color: #0f172a; text-transform: uppercase; padding-bottom: 4px;">
+                                    <td style="font-size: 12pt; font-weight: bold; color: #0f172a; text-transform: uppercase; padding-bottom: 4px;">
                                         HOJA DE ARMADO DE PICKING
                                     </td>
-                                    <td style="text-align: right; font-size: 10.5pt; font-weight: bold; color: #1e3a8a; padding-bottom: 4px;">
+                                    <td style="text-align: right; font-size: 10pt; font-weight: bold; color: #1e3a8a; padding-bottom: 4px;">
                                         Carta de Porte N°: <span class="carta-porte-display">${currentCP}</span>
                                     </td>
                                 </tr>
                             </table>
 
                             <!-- Datos del Cliente / Orden -->
-                            <table style="width: 100%; border-collapse: collapse; font-size: 9.5pt; margin-bottom: 12px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
+                            <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
                                 <tr>
-                                    <td style="padding: 6px 10px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 8pt; display: block;">Cod / Nombre Cliente:</span>
-                                        <span style="font-weight: bold; color: #0f172a; font-size: 10pt;">${grupo.codCliente} - ${grupo.nomCliente}</span>
+                                    <td style="padding: 5px 8px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
+                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">Cod / Nombre Cliente:</span>
+                                        <span style="font-weight: bold; color: #0f172a; font-size: 9.5pt;">${grupo.codCliente} - ${grupo.nomCliente}</span>
                                     </td>
-                                    <td style="padding: 6px 10px; width: 50%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 8pt; display: block;">OC del Cliente:</span>
-                                        <span style="font-weight: bold; color: #0f172a; font-size: 10pt;">${grupo.ocCliente}</span>
+                                    <td style="padding: 5px 8px; width: 50%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
+                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">OC del Cliente:</span>
+                                        <span style="font-weight: bold; color: #0f172a; font-size: 9.5pt;">${grupo.ocCliente}</span>
                                     </td>
                                 </tr>
                                 <tr>
-                                    <td colspan="2" style="padding: 6px 10px; vertical-align: top;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 8pt; display: block;">N° de Orden(es):</span>
-                                        <span style="font-weight: bold; color: #0f172a;">${listOrdenesStr}</span>
+                                    <td colspan="2" style="padding: 5px 8px; vertical-align: top;">
+                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">N° de Orden(es):</span>
+                                        <span style="font-weight: bold; color: #0f172a; font-size: 9pt;">${listOrdenesStr}</span>
                                     </td>
                                 </tr>
                             </table>
@@ -976,7 +982,7 @@
                     cardHtml += `
                                     <tr style="background-color: #f8fafc; font-weight: bold;">
                                         <td colspan="3" style="text-align: left; text-transform: uppercase; border-top: 2px solid #cbd5e1;">TOTAL CAJAS DE PICKING:</td>
-                                        <td style="text-align: right; color: #065f46; font-size: 10.5pt; border-top: 2px solid #cbd5e1;">${fmtInt(subtotalPk)} CA</td>
+                                        <td style="text-align: right; color: #065f46; font-size: 10pt; border-top: 2px solid #cbd5e1;">${fmtInt(subtotalPk)} CA</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -1029,7 +1035,7 @@
             XLSX.writeFile(wb, fileName);
         });
 
-        // Exportación de PDF robusta (Sin roturas, 1 cliente por página)
+        // Exportación de PDF limpia sin hojas en blanco
         document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
             const container = document.getElementById('pk-cards-container');
             if (!container || container.children.length === 0) {
@@ -1041,12 +1047,12 @@
             let fileName = cp !== 'S/N' ? `Sugerencia PK CP ${cp}.pdf` : `Sugerencia PK.pdf`;
 
             const opt = {
-                margin:       [0, 0, 0, 0],
+                margin:       [5, 5, 5, 5],
                 filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.98 },
                 html2canvas:  { scale: 2, useCORS: true, logging: false },
                 jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
-                pagebreak:    { mode: ['css'], before: '.card-pk-page' }
+                pagebreak:    { mode: ['css', 'legacy'], before: '.card-pk-page' }
             };
 
             html2pdf().set(opt).from(container).save();
