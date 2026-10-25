@@ -560,13 +560,13 @@
             rawMotivos.forEach(row => {
                 let keys = Object.keys(row);
 
-                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
-                let kNomCliente = keys.find(k => norm(k).includes('nombre cliente') || (norm(k).includes('nombre') && !norm(k).includes('vendedor')));
-                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc'));
-                let kFechaEntrega = keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
-                let kTurno = keys.find(k => norm(k).includes('turno'));
+                let kCodCliente = keys[2] || keys.find(k => norm(k).includes('cod de cliente'));
+                let kNomCliente = keys[3] || keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
+                let kOcCliente = keys[6] || keys.find(k => norm(k).includes('oc del cliente') || norm(k) === 'oc');
+                let kFechaEntrega = keys[12] || keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
+                let kTurno = keys[10] || keys.find(k => norm(k).includes('turno'));
                 let kTotalCa = keys[13] || keys.find(k => norm(k).includes('total (ca)') || norm(k) === 'total' || norm(k).includes('cajas'));
-
+                
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
