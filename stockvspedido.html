@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Panel Logístico Completo</title>
+    <title>OL - Cross Interior</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -19,7 +19,16 @@
         }
         @media print {
             .no-print { display: none !important; }
-            .page-break { page-break-after: always; }
+            .page-break { 
+                page-break-before: always !important; 
+                break-before: page !important;
+            }
+        }
+        .card-pk-printable {
+            page-break-after: always;
+            break-after: page;
+            page-break-inside: avoid;
+            break-inside: avoid;
         }
     </style>
 </head>
@@ -229,7 +238,7 @@
                 </div>
             </div>
 
-            <!-- VISTA 3: SUGERENCIA PK (PICKING) -->
+            <!-- VISTA 3: SUGERENCIA PK (PICKING AVANZADO) -->
             <div id="view-sugerencia-pk" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -336,7 +345,7 @@
 
         let fileNames = { stock: '', pedidos: '', motivos: '' };
         let splitsResult = [];
-        let globalPickingDataStore = []; // Almacena datos procesados para exportar a Excel por pestañas
+        let globalPickingDataStore = [];
 
         function norm(str) {
             if (str === null || str === undefined) return '';
@@ -360,6 +369,11 @@
             let name = filename.replace(/\.[^/.]+$/, "");
             name = name.replace(/^copia\s+de\s+/i, '');
             return name.trim();
+        }
+
+        function getCartaDePorteGlobal() {
+            let firstInput = document.querySelector('.carta-porte-input');
+            return firstInput && firstInput.value.trim() !== '' ? firstInput.value.trim() : '';
         }
 
         function leerExcelFile(file, key, statusId, nameId, callback) {
@@ -702,8 +716,6 @@
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
                 googleSheetPositions = [];
-
-                // Exclusiones solicitadas
                 const excludeLocations = ['roturapk', 'destape', 'st000000', 'repropk', 'recepcdb'];
 
                 for (let i = 1; i < rows.length; i++) {
@@ -711,7 +723,7 @@
                     let ubi = r[1] ? String(r[1]).trim() : '';
                     let ubiNorm = norm(ubi);
                     
-                    if (excludeLocations.includes(ubiNorm)) continue; // Omitir ubicaciones no deseadas
+                    if (excludeLocations.includes(ubiNorm)) continue;
 
                     let cantPos = parseFloat(r[4]) || 0;
                     let sku = r[6] ? String(r[6]).trim() : '';
@@ -749,7 +761,6 @@
                 return;
             }
 
-            // Agrupar Pedidos por Cliente + OC (Mapeo corregido columnas H, J, K)
             const agrupadoPicking = {};
 
             rawPedidos.forEach(row => {
@@ -839,16 +850,18 @@
                     }
                 });
 
-                // Ordenar líneas por Ubicación de la A a la Z / menor a mayor
+                // Ordenar por ubicación A-Z / menor a mayor
                 itemsPicking.sort((a, b) => a.sector.localeCompare(b.sector, undefined, {numeric: true, sensitivity: 'base'}));
 
                 if (itemsPicking.length > 0) {
                     totalFichasGeneradas++;
                     let listOrdenesStr = Array.from(grupo.ordenesConTipo).join(', ');
 
-                    // Guardar para exportación Excel con pestañas
+                    // Formato pestaña Excel: CodCliente(OC OCCliente)
+                    let sheetTabTitle = `${grupo.codCliente}(OC ${grupo.ocCliente})`.replace(/[/\\?*[:\]]/g, '').substring(0, 30);
+
                     globalPickingDataStore.push({
-                        clienteName: `${grupo.codClient}_${grupo.ocCliente}`.replace(/[/\\?*[:\]]/g, '_').substring(0, 30),
+                        sheetTabTitle: sheetTabTitle,
                         codCliente: grupo.codCliente,
                         nomCliente: grupo.nomCliente,
                         ocCliente: grupo.ocCliente,
@@ -861,7 +874,7 @@
                             <!-- Cabecera -->
                             <div class="border-b-2 border-slate-800 pb-3 space-y-2">
                                 <div class="flex justify-between items-center">
-                                    <h2 class="text-lg font-bold text-slate-900 uppercase">Hoja de Armado de Picking</h2>
+                                    <h2 class="text-lg font-bold text-slate-900 uppercase">HOJA DE ARMADO DE PICKING</h2>
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs font-bold text-slate-700">Carta de Porte N°:</label>
                                         <input type="text" placeholder="Ingrese N°" class="carta-porte-input border border-slate-300 rounded px-2 py-1 text-xs w-36 font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
@@ -917,7 +930,7 @@
                 }
             });
 
-            // Replicar Carta de Porte en tiempo real
+            // Replicación en tiempo real del campo Carta de Porte
             document.querySelectorAll('.carta-porte-input').forEach(input => {
                 input.addEventListener('input', (e) => {
                     let val = e.target.value;
@@ -930,7 +943,7 @@
             }
         });
 
-        // Exportar Excel con Pestañas por Cliente
+        // Exportar Excel Multitab con Formato CodCliente(OC OCCliente)
         document.getElementById('btn-export-excel-pk').addEventListener('click', () => {
             if (globalPickingDataStore.length === 0) {
                 alert("No hay datos de picking para exportar.");
@@ -939,15 +952,14 @@
 
             const wb = XLSX.utils.book_new();
 
-            globalPickingDataStore.forEach((ficha, idx) => {
+            globalPickingDataStore.forEach((ficha) => {
                 let wsData = [
                     ["HOJA DE ARMADO DE PICKING"],
                     ["Cod Cliente:", ficha.codCliente, "Nombre Cliente:", ficha.nomCliente],
                     ["OC del Cliente:", ficha.ocCliente, "N° de Orden(es):", ficha.ordenes],
-                    [] // Fila vacía
+                    []
                 ];
 
-                // Encabezados tabla
                 wsData.push(["Sector / Ubicación", "Cod de item largo (SKU)", "Descripción", "Total Cajas PK"]);
 
                 let subTotal = 0;
@@ -959,14 +971,16 @@
                 wsData.push(["Total Cajas de Picking", "", "", subTotal]);
 
                 const ws = XLSX.utils.aoa_to_sheet(wsData);
-                let sheetName = `Cliente_${idx + 1}`.substring(0, 31);
-                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+                XLSX.utils.book_append_sheet(wb, ws, ficha.sheetTabTitle);
             });
 
-            XLSX.writeFile(wb, "Fichas_Picking_Clientes.xlsx");
+            let cp = getCartaDePorteGlobal();
+            let fileName = cp ? `Sugerencia PK CP ${cp}.xlsx` : `Sugerencia PK.xlsx`;
+
+            XLSX.writeFile(wb, fileName);
         });
 
-        // Generar PDF Fichas Picking
+        // Generar PDF Fichas Picking (Nombre dinámico + Aislamiento por Cliente)
         document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
             const container = document.getElementById('pk-cards-container');
             if (!container || container.children.length === 0) {
@@ -974,12 +988,16 @@
                 return;
             }
 
+            let cp = getCartaDePorteGlobal();
+            let fileName = cp ? `Sugerencia PK CP ${cp}.pdf` : `Sugerencia PK.pdf`;
+
             const opt = {
-                margin:       10,
-                filename:     'Fichas_Picking_JDE.pdf',
+                margin:       [8, 8, 8, 8],
+                filename:     fileName,
                 image:        { type: 'jpeg', quality: 0.98 },
-                html2canvas:  { scale: 2 },
-                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' }
+                html2canvas:  { scale: 2, useCORS: true },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'] }
             };
 
             html2pdf().set(opt).from(container).save();
