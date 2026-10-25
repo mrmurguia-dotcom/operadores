@@ -239,6 +239,9 @@
                         <button id="btn-sync-sheet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-rotate"></i> Actualizar Posiciones Google Sheet
                         </button>
+                        <button id="btn-export-excel-pk" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-file-excel"></i> Guardar en Excel (Pestañas por Cliente)
+                        </button>
                         <button id="btn-export-pdf-pk" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
                             <i class="fa-solid fa-file-pdf"></i> Guardar Todo en PDF
                         </button>
@@ -333,6 +336,7 @@
 
         let fileNames = { stock: '', pedidos: '', motivos: '' };
         let splitsResult = [];
+        let globalPickingDataStore = []; // Almacena datos procesados para exportar a Excel por pestañas
 
         function norm(str) {
             if (str === null || str === undefined) return '';
@@ -509,7 +513,6 @@
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Pedidos al Portapapeles (Aptos 12pt)
         document.getElementById('btn-copiar-resumen-pedidos').addEventListener('click', () => {
             const titleText = document.getElementById('pedidos-table-title').innerText;
             const tbody = document.getElementById('tbody-resumen-pedidos').cloneNode(true);
@@ -635,7 +638,6 @@
             tbody.appendChild(trTotal);
         });
 
-        // Copiar Resumen Motivos al Portapapeles (Aptos 12pt)
         document.getElementById('btn-copiar-resumen-motivos').addEventListener('click', () => {
             const customVal = document.getElementById('motivos-custom-text').value.trim();
             const titleText = document.getElementById('motivos-table-title').innerText;
@@ -685,7 +687,7 @@
         });
 
         // ==========================================
-        // ACCIÓN 3: SUGERENCIA PK (OPCIÓN B GOOGLE DRIVE)
+        // ACCIÓN 3: SUGERENCIA PK (PICKING AVANZADO)
         // ==========================================
         async function fetchGoogleSheetPositions() {
             const banner = document.getElementById('sheet-status-text');
@@ -695,22 +697,22 @@
                 if (!response.ok) throw new Error("No se pudo obtener la planilla publicada de Google Drive.");
                 const csvText = await response.text();
                 
-                // Parse CSV
                 const workbook = XLSX.read(csvText, { type: 'string' });
                 const sheet = workbook.Sheets[workbook.SheetNames[0]];
                 const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
 
                 googleSheetPositions = [];
 
-                // Mapeo por Posición de Columna:
-                // Col B (idx 1): Ubicación / Sector
-                // Col E (idx 4): Cantidad de cajas en la posición
-                // Col G (idx 6): SKU / Articulo
-                // Col H (idx 7): Descripcion
-                // Col I (idx 8): Palletizado (UM CA / Pallet completo)
+                // Exclusiones solicitadas
+                const excludeLocations = ['roturapk', 'destape', 'st000000', 'repropk', 'recepcdb'];
+
                 for (let i = 1; i < rows.length; i++) {
                     let r = rows[i];
                     let ubi = r[1] ? String(r[1]).trim() : '';
+                    let ubiNorm = norm(ubi);
+                    
+                    if (excludeLocations.includes(ubiNorm)) continue; // Omitir ubicaciones no deseadas
+
                     let cantPos = parseFloat(r[4]) || 0;
                     let sku = r[6] ? String(r[6]).trim() : '';
                     let desc = r[7] ? String(r[7]).trim() : '';
@@ -727,7 +729,7 @@
                     }
                 }
 
-                banner.innerHTML = `<i class="fa-solid fa-circle-check text-green-600"></i> Google Sheet sincronizado correctamente (${googleSheetPositions.length} registros cargados).`;
+                banner.innerHTML = `<i class="fa-solid fa-circle-check text-green-600"></i> Google Sheet sincronizado correctamente (${googleSheetPositions.length} registros cargados, excluyendo zonas especiales).`;
             } catch (err) {
                 banner.innerHTML = `<i class="fa-solid fa-triangle-exclamation text-red-600"></i> Error al conectar con Google Sheet: ${err.message}`;
             }
@@ -747,16 +749,17 @@
                 return;
             }
 
-            // Agrupar Pedidos por Cliente + OC
+            // Agrupar Pedidos por Cliente + OC (Mapeo corregido columnas H, J, K)
             const agrupadoPicking = {};
 
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
 
-                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
+                let kCodCliente = keys[7] || keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
                 let kNomCliente = keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
                 let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k) === 'oc');
-                let kNroOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('orden'));
+                let kTipoOrden = keys[9] || keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo'));
+                let kNroOrden = keys[10] || keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('orden'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion'));
                 let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('cantidad'));
@@ -764,6 +767,7 @@
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
+                let tipoOrden = kTipoOrden ? String(row[kTipoOrden]).trim() : '';
                 let nroOrden = kNroOrden ? String(row[kNroOrden]).trim() : '';
                 let sku = kSku ? String(row[kSku]).trim() : '';
                 let desc = kDesc ? String(row[kDesc]).trim() : '';
@@ -777,12 +781,15 @@
                         codCliente,
                         nomCliente,
                         ocCliente,
-                        ordenes: new Set(),
+                        ordenesConTipo: new Set(),
                         skus: {}
                     };
                 }
 
-                if (nroOrden) agrupadoPicking[keyGroup].ordenes.add(nroOrden);
+                if (nroOrden) {
+                    let ordenCompleta = tipoOrden ? `${nroOrden} (${tipoOrden})` : nroOrden;
+                    agrupadoPicking[keyGroup].ordenesConTipo.add(ordenCompleta);
+                }
 
                 if (!agrupadoPicking[keyGroup].skus[sku]) {
                     agrupadoPicking[keyGroup].skus[sku] = {
@@ -794,7 +801,7 @@
                 agrupadoPicking[keyGroup].skus[sku].totalCajasPedidas += cajasPedidas;
             });
 
-            // Procesamiento de Picking vs Pallet Cerrado usando Google Sheet
+            globalPickingDataStore = [];
             const cardsContainer = document.getElementById('pk-cards-container');
             cardsContainer.innerHTML = '';
 
@@ -804,7 +811,6 @@
                 let itemsPicking = [];
 
                 Object.values(grupo.skus).forEach(item => {
-                    // Buscar Palletizado y Sector en Google Sheet
                     let matchPosiciones = googleSheetPositions.filter(p => p.sku === item.sku);
                     let palletizado = matchPosiciones.length > 0 ? matchPosiciones[0].palletizado : 0;
 
@@ -812,12 +818,10 @@
                     if (palletizado > 0) {
                         cajasPicking = item.totalCajasPedidas % palletizado;
                     } else {
-                        cajasPicking = item.totalCajasPedidas; // Si no hay dato de palletizado, va a picking
+                        cajasPicking = item.totalCajasPedidas;
                     }
 
-                    // Si hay residuo/sobrante, entra en la hoja de picking
                     if (cajasPicking > 0) {
-                        // Buscar Sector / Ubicación que no sea múltiplo exacto de pallet
                         let sectorElegido = 'S/D';
                         let ubiMatch = matchPosiciones.find(p => p.cantPosicion > 0 && (p.cantPosicion % p.palletizado !== 0));
                         if (ubiMatch) {
@@ -835,10 +839,22 @@
                     }
                 });
 
-                // Si hay ítems que van a picking, generamos la ficha imprimible
+                // Ordenar líneas por Ubicación de la A a la Z / menor a mayor
+                itemsPicking.sort((a, b) => a.sector.localeCompare(b.sector, undefined, {numeric: true, sensitivity: 'base'}));
+
                 if (itemsPicking.length > 0) {
                     totalFichasGeneradas++;
-                    let listOrdenesStr = Array.from(grupo.ordenes).join(', ');
+                    let listOrdenesStr = Array.from(grupo.ordenesConTipo).join(', ');
+
+                    // Guardar para exportación Excel con pestañas
+                    globalPickingDataStore.push({
+                        clienteName: `${grupo.codClient}_${grupo.ocCliente}`.replace(/[/\\?*[:\]]/g, '_').substring(0, 30),
+                        codCliente: grupo.codCliente,
+                        nomCliente: grupo.nomCliente,
+                        ocCliente: grupo.ocCliente,
+                        ordenes: listOrdenesStr,
+                        items: itemsPicking
+                    });
 
                     let cardHtml = `
                         <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos page-break card-pk-printable" id="card-pk-${cardIdx}">
@@ -848,7 +864,7 @@
                                     <h2 class="text-lg font-bold text-slate-900 uppercase">Hoja de Armado de Picking</h2>
                                     <div class="flex items-center gap-2">
                                         <label class="text-xs font-bold text-slate-700">Carta de Porte N°:</label>
-                                        <input type="text" placeholder="Ingrese N°" class="border border-slate-300 rounded px-2 py-1 text-xs w-36 font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
+                                        <input type="text" placeholder="Ingrese N°" class="carta-porte-input border border-slate-300 rounded px-2 py-1 text-xs w-36 font-bold text-blue-900 focus:outline-none focus:ring-2 focus:ring-blue-500">
                                     </div>
                                 </div>
                                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-xs pt-1">
@@ -901,9 +917,53 @@
                 }
             });
 
+            // Replicar Carta de Porte en tiempo real
+            document.querySelectorAll('.carta-porte-input').forEach(input => {
+                input.addEventListener('input', (e) => {
+                    let val = e.target.value;
+                    document.querySelectorAll('.carta-porte-input').forEach(inp => inp.value = val);
+                });
+            });
+
             if (totalFichasGeneradas === 0) {
                 cardsContainer.innerHTML = `<div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-500 italic">Todos los pedidos corresponden a pallets completos. No se requirió armado de picking.</div>`;
             }
+        });
+
+        // Exportar Excel con Pestañas por Cliente
+        document.getElementById('btn-export-excel-pk').addEventListener('click', () => {
+            if (globalPickingDataStore.length === 0) {
+                alert("No hay datos de picking para exportar.");
+                return;
+            }
+
+            const wb = XLSX.utils.book_new();
+
+            globalPickingDataStore.forEach((ficha, idx) => {
+                let wsData = [
+                    ["HOJA DE ARMADO DE PICKING"],
+                    ["Cod Cliente:", ficha.codCliente, "Nombre Cliente:", ficha.nomCliente],
+                    ["OC del Cliente:", ficha.ocCliente, "N° de Orden(es):", ficha.ordenes],
+                    [] // Fila vacía
+                ];
+
+                // Encabezados tabla
+                wsData.push(["Sector / Ubicación", "Cod de item largo (SKU)", "Descripción", "Total Cajas PK"]);
+
+                let subTotal = 0;
+                ficha.items.forEach(it => {
+                    subTotal += it.cajasPk;
+                    wsData.push([it.sector, it.sku, it.desc, it.cajasPk]);
+                });
+
+                wsData.push(["Total Cajas de Picking", "", "", subTotal]);
+
+                const ws = XLSX.utils.aoa_to_sheet(wsData);
+                let sheetName = `Cliente_${idx + 1}`.substring(0, 31);
+                XLSX.utils.book_append_sheet(wb, ws, sheetName);
+            });
+
+            XLSX.writeFile(wb, "Fichas_Picking_Clientes.xlsx");
         });
 
         // Generar PDF Fichas Picking
