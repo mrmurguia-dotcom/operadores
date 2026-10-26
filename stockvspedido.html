@@ -41,7 +41,6 @@
             margin-bottom: 10px;
         }
 
-        /* Aplica salto de página únicamente a partir de la segunda ficha para evitar página en blanco inicial */
         .card-pk-page ~ .card-pk-page {
             break-before: page;
             page-break-before: always;
@@ -521,10 +520,10 @@
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
 
-                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('codigo de cliente') || norm(k).includes('cod cliente'));
+                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente' || norm(k).includes('cod de cliente'));
                 let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
                 let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
-                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k).includes('oc cliente'));
+                let kOcCliente = keys.find(k => norm(k) === 'oc del cliente' || norm(k).includes('oc del cliente'));
                 let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('total cajas') || norm(k).includes('cantidad'));
 
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
@@ -533,7 +532,7 @@
                 let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
                 let cajas = kCajas ? parseFloat(row[kCajas]) || 0 : 0;
 
-                if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general') || norm(nomCliente).includes('nombre de cliente')) return;
+                if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general')) return;
 
                 let keyGroup = `${codCliente}_${ocCliente}_${descVendedor}`;
                 if (!agrupado[keyGroup]) {
@@ -814,11 +813,11 @@
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
 
-                let kCodCliente = keys[7] || keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
-                let kNomCliente = keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
-                let kOcCliente = keys.find(k => norm(k).includes('oc del cliente') || norm(k) === 'oc');
-                let kTipoOrden = keys[9] || keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo'));
-                let kNroOrden = keys[10] || keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('orden'));
+                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente' || norm(k).includes('cod de cliente'));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
+                let kOcCliente = keys.find(k => norm(k) === 'oc del cliente' || norm(k).includes('oc del cliente'));
+                let kTipoOrden = keys.find(k => norm(k) === 'tipo de orden' || norm(k).includes('tipo de orden'));
+                let kNroOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k).includes('nro de orden'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion'));
                 let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('cantidad'));
@@ -1050,7 +1049,7 @@
         });
 
         // ==========================================
-        // ACCIÓN 4: SPLIT LÍNEAS (Lógica exacta del adjunto)
+        // ACCIÓN 4: SPLIT LÍNEAS (Con nombres de columnas exactos)
         // ==========================================
         document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
             showView('view-split-lineas');
@@ -1059,7 +1058,6 @@
                 return;
             }
 
-            // 1. Mapear Stock en memoria con cantidades mutables
             const stockMap = {};
             rawStock.forEach(row => {
                 let keys = Object.keys(row);
@@ -1077,7 +1075,7 @@
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                if (estado !== "") return; // Excluir lotes bloqueados
+                if (estado !== "") return;
                 if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
@@ -1087,14 +1085,14 @@
             splitsResult = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
 
-            // 2. Procesar Pedidos Secuencialmente contra el Stock mapeado
             rawPedidos.forEach((row) => {
                 let keys = Object.keys(row);
 
-                let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('nro orden') || norm(k).includes('orden'));
-                let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo orden') || norm(k).includes('tp'));
-                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
-                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
+                // Búsquedas exactas para evitar confusiones con "Fecha de la orden" o "Cod de cliente" vs "OC del cliente"
+                let kOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k) === 'nro orden');
+                let kTp = keys.find(k => norm(k) === 'tipo de orden' || norm(k) === 'tipo orden');
+                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente');
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
                 let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
                 let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
