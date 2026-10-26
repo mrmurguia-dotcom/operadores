@@ -3,16 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>OL - Panel Logístico Completo</title>
+    <title>JDE - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
     <script src="https://cdn.jsdelivr.net/npm/xlsx@0.18.5/dist/xlsx.full.min.js"></script>
     <!-- html2pdf.js -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    <!-- PDF con tablas y paginación controlada -->
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.8.4/jspdf.plugin.autotable.min.js"></script>
     <!-- FontAwesome -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
@@ -81,7 +78,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Gestión Independiente de Pedidos, Motivos, Sugerencia PK y Splits</p>
+                <p class="text-blue-200 text-sm mt-1">Gestión Independiente de Pedidos, Motivos, Sugerencia PK y Validador de Splits</p>
             </div>
         </div>
     </header>
@@ -285,7 +282,6 @@
                         <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Generación de Picking)
                     </h3>
                     <div class="flex items-center gap-3">
-                        <!-- Input global de Carta de Porte para edición inmediata -->
                         <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-300">
                             <span class="text-xs font-bold text-slate-700">Carta de Porte N°:</span>
                             <input type="text" id="global-carta-porte-input" placeholder="Ej: 503-12345" class="text-xs font-bold text-blue-900 border border-slate-300 rounded px-2 py-1 w-28 text-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
@@ -316,7 +312,7 @@
                 </div>
             </div>
 
-            <!-- VISTA 4: SPLIT LINEAS -->
+            <!-- VISTA 4: SPLIT LÍNEAS -->
             <div id="view-split-lineas" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -421,7 +417,6 @@
             return inp && inp.value.trim() !== '' ? inp.value.trim() : 'S/N';
         }
 
-        // Sincronización dinámica de la Carta de Porte en los títulos de pantalla
         document.getElementById('global-carta-porte-input').addEventListener('input', (e) => {
             const val = e.target.value.trim() || 'S/N';
             document.querySelectorAll('.carta-porte-display').forEach(el => {
@@ -904,7 +899,6 @@
                     }
                 });
 
-                // Ordenar por ubicación A-Z
                 itemsPicking.sort((a, b) => a.sector.localeCompare(b.sector, undefined, {numeric: true, sensitivity: 'base'}));
 
                 if (itemsPicking.length > 0) {
@@ -921,10 +915,8 @@
                         items: itemsPicking
                     });
 
-                    // Estructura limpia y compacta por página A4
                     let cardHtml = `
                         <div class="card-pk-page font-aptos" id="card-pk-${cardIdx}">
-                            <!-- Cabecera -->
                             <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #0f172a;">
                                 <tr>
                                     <td style="font-size: 12pt; font-weight: bold; color: #0f172a; text-transform: uppercase; padding-bottom: 4px;">
@@ -936,7 +928,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Datos del Cliente / Orden -->
                             <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
                                 <tr>
                                     <td style="padding: 5px 8px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
@@ -956,7 +947,6 @@
                                 </tr>
                             </table>
 
-                            <!-- Tabla de Picking -->
                             <table class="table-pk">
                                 <thead>
                                     <tr>
@@ -1001,7 +991,6 @@
             }
         });
 
-        // Exportar a Excel multitabla
         document.getElementById('btn-export-excel-pk').addEventListener('click', () => {
             if (globalPickingDataStore.length === 0) {
                 alert("No hay datos de picking para exportar.");
@@ -1038,99 +1027,30 @@
             XLSX.writeFile(wb, fileName);
         });
 
-        // Exportación PDF: cada ficha ocupa una o dos páginas físicas como máximo.
-        document.getElementById('btn-export-pdf-pk').addEventListener('click', async () => {
-            if (!globalPickingDataStore.length) {
-                alert('No hay fichas de picking para exportar.');
+        document.getElementById('btn-export-pdf-pk').addEventListener('click', () => {
+            const container = document.getElementById('pk-cards-container');
+            if (!container || container.children.length === 0) {
+                alert("No hay fichas de picking para exportar.");
                 return;
             }
-            if (!window.jspdf || !window.jspdf.jsPDF) {
-                alert('No se pudo cargar el generador PDF. Revisá la conexión a Internet.');
-                return;
-            }
-            const boton = document.getElementById('btn-export-pdf-pk');
-            boton.disabled = true;
-            try {
-                const { jsPDF } = window.jspdf;
-                const pdf = new jsPDF({orientation:'portrait', unit:'mm', format:'a4'});
-                const cp = getCartaDePorteGlobal();
-                const margen = 9;
-                const ancho = 210 - 2 * margen;
-                const fondo = [248,250,252];
-                const azul = [30,58,95];
-                const verde = [6,95,70];
-                const dibujarCabecera = (ficha, continuacion=false) => {
-                    pdf.setFont('helvetica','bold');
-                    pdf.setFontSize(11);
-                    pdf.setTextColor(...azul);
-                    pdf.text('HOJA DE ARMADO DE PICKING' + (continuacion ? ' (CONTINUACION)' : ''), margen, 13);
-                    pdf.setFontSize(8);
-                    pdf.text('Carta de Porte N°: ' + cp, 201, 13, {align:'right'});
-                    pdf.setDrawColor(...azul);
-                    pdf.line(margen, 16, 201, 16);
-                    pdf.setFillColor(...fondo);
-                    pdf.rect(margen, 19, ancho, 24, 'F');
-                    pdf.setTextColor(35,45,60);
-                    pdf.setFontSize(7);
-                    pdf.text('COD / NOMBRE CLIENTE:', margen+2, 23);
-                    pdf.text('OC DEL CLIENTE:', 119, 23);
-                    pdf.text('N° DE ORDEN(ES):', margen+2, 34);
-                    pdf.setFontSize(8);
-                    pdf.setFont('helvetica','bold');
-                    const nombre = `${ficha.codCliente} - ${ficha.nomCliente}`;
-                    pdf.text(pdf.splitTextToSize(nombre, 105).slice(0,2), margen+2, 27);
-                    pdf.text(pdf.splitTextToSize(String(ficha.ocCliente||''), 78).slice(0,2),119,27);
-                    pdf.text(pdf.splitTextToSize(String(ficha.ordenes||''), 184).slice(0,1), margen+2, 38);
-                    pdf.setFont('helvetica','normal');
-                };
-                globalPickingDataStore.forEach((ficha, indice) => {
-                    if (indice > 0) pdf.addPage();
-                    const inicio = pdf.getNumberOfPages();
-                    const total = ficha.items.reduce((sum,it)=>sum+(Number(it.cajasPk)||0),0);
-                    const filas = ficha.items.map(it=>[
-                        String(it.sector??''),String(it.sku??''),String(it.desc??''),
-                        fmtInt(it.cajasPk)+' CA'
-                    ]);
-                    filas.push([{content:'TOTAL CAJAS DE PICKING:',colSpan:3,styles:{fontStyle:'bold',fillColor:fondo}},
-                        {content:fmtInt(total)+' CA',styles:{fontStyle:'bold',textColor:verde,fillColor:fondo}}]);
-                    // Buscar un tamaño de letra que mantenga la ficha dentro de dos hojas.
-                    let elegido=null;
-                    for (const tam of [8.5,8,7.5,7,6.5,6,5.5,5]) {
-                        const prueba = new jsPDF({orientation:'portrait',unit:'mm',format:'a4'});
-                        prueba.autoTable({
-                            startY:47,margin:{left:margen,right:margen,top:47,bottom:12},
-                            head:[['Sector / Ubicación','Cod SKU','Descripción','Total Cajas PK']],
-                            body:filas,theme:'grid',
-                            styles:{font:'helvetica',fontSize:tam,cellPadding:1.4,overflow:'linebreak',lineWidth:0.1},
-                            headStyles:{fillColor:[241,245,249],textColor:[15,23,42],fontStyle:'bold'},
-                            columnStyles:{0:{cellWidth:39},1:{cellWidth:31},2:{cellWidth:93},3:{cellWidth:29,halign:'right'}},
-                        });
-                        if (prueba.getNumberOfPages()<=2) {elegido=tam;break;}
-                    }
-                    if (elegido===null) {
-                        throw new Error(`La ficha ${indice+1} tiene demasiadas líneas para dos hojas legibles. No se exportó un PDF incompleto.`);
-                    }
-                    pdf.autoTable({
-                        startY:47,margin:{left:margen,right:margen,top:47,bottom:12},
-                        head:[['Sector / Ubicación','Cod SKU','Descripción','Total Cajas PK']],
-                        body:filas,theme:'grid',
-                        styles:{font:'helvetica',fontSize:elegido,cellPadding:1.4,overflow:'linebreak',lineWidth:0.1,textColor:[30,41,59]},
-                        headStyles:{fillColor:[241,245,249],textColor:[15,23,42],fontStyle:'bold'},
-                        columnStyles:{0:{cellWidth:39},1:{cellWidth:31},2:{cellWidth:93},3:{cellWidth:29,halign:'right'}},
-                        didDrawPage:()=>dibujarCabecera(ficha, pdf.getNumberOfPages()>inicio)
-                    });
-                    if (pdf.getNumberOfPages()-inicio+1>2) throw new Error('Se superó el máximo de dos páginas por ficha.');
-                });
-                const nombre = cp !== 'S/N' ? `Sugerencia PK CP ${cp}.pdf` : 'Sugerencia PK.pdf';
-                pdf.save(nombre.replace(/[\\/:*?"<>|]/g,'-'));
-            } catch (err) {
-                alert('Error al generar PDF: '+err.message);
-                console.error(err);
-            } finally {boton.disabled=false;}
+
+            let cp = getCartaDePorteGlobal();
+            let fileName = cp !== 'S/N' ? `Sugerencia PK CP ${cp}.pdf` : `Sugerencia PK.pdf`;
+
+            const opt = {
+                margin:       [5, 5, 5, 5],
+                filename:     fileName,
+                image:        { type: 'jpeg', quality: 0.98 },
+                html2canvas:  { scale: 2, useCORS: true, logging: false },
+                jsPDF:        { unit: 'mm', format: 'a4', orientation: 'portrait' },
+                pagebreak:    { mode: ['css', 'legacy'], before: '.card-pk-page' }
+            };
+
+            html2pdf().set(opt).from(container).save();
         });
 
         // ==========================================
-        // ACCIÓN 4: SPLIT LÍNEAS
+        // ACCIÓN 4: SPLIT LÍNEAS (Lógica exacta del adjunto)
         // ==========================================
         document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
             showView('view-split-lineas');
@@ -1139,6 +1059,7 @@
                 return;
             }
 
+            // 1. Mapear Stock en memoria con cantidades mutables
             const stockMap = {};
             rawStock.forEach(row => {
                 let keys = Object.keys(row);
@@ -1156,7 +1077,7 @@
                 let lote = kLote ? String(row[kLote]).trim() : "S/L";
                 let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
 
-                if (estado !== "") return;
+                if (estado !== "") return; // Excluir lotes bloqueados
                 if (dispCajas <= 0) return;
 
                 if (!stockMap[sku]) stockMap[sku] = [];
@@ -1166,16 +1087,17 @@
             splitsResult = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
 
+            // 2. Procesar Pedidos Secuencialmente contra el Stock mapeado
             rawPedidos.forEach((row) => {
                 let keys = Object.keys(row);
 
-                let kOrden = keys.find(k => norm(k).includes('orden'));
-                let kTp = keys.find(k => norm(k).includes('tipo'));
-                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || norm(k).includes('cliente'));
-                let kNomCliente = keys.find(k => norm(k).includes('nombre'));
+                let kOrden = keys.find(k => norm(k).includes('nro de orden') || norm(k).includes('nro orden') || norm(k).includes('orden'));
+                let kTp = keys.find(k => norm(k).includes('tipo de orden') || norm(k).includes('tipo orden') || norm(k).includes('tp'));
+                let kCodCliente = keys.find(k => norm(k).includes('cod de cliente') || (norm(k).includes('cliente') && !norm(k).includes('nombre')));
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre'));
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
-                let kDesc = keys.find(k => norm(k).includes('descripcion'));
-                let kCant = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cantidad'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
+                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
 
                 let orden = kOrden ? row[kOrden] : "";
                 let tpOrd = kTp ? row[kTp] : "";
@@ -1188,16 +1110,16 @@
                 if (!sku || cajasPedidas <= 0) return;
 
                 let lotesDisponibles = stockMap[sku] || [];
-                let stockTotalActual = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
+                let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
 
                 let estadoItem = "";
                 let detalleSplit = [];
 
-                if (stockTotalActual < cajasPedidas) {
+                if (stockTotalActualCA < cajasPedidas) {
                     estadoItem = "Falta Stock";
                     countMissing++;
                     detalleSplit.push({ 
-                        texto: `Stock insuficiente (${fmtInt(stockTotalActual)} CA dispon. vs ${fmtInt(cajasPedidas)} CA pedidas)`, 
+                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. vs ${cajasPedidas} CA pedidas)`, 
                         clase: "text-red-600 font-semibold" 
                     });
                 } else {
@@ -1207,7 +1129,7 @@
                         countOk++;
                         loteUnico.disponibleCajas -= cajasPedidas;
                         detalleSplit.push({ 
-                            texto: `1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion})`, 
+                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
                             clase: "text-green-600 font-medium" 
                         });
                     } else {
@@ -1224,8 +1146,12 @@
                             let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
                             l.disponibleCajas -= tomarCajas;
 
+                            let notaAgotamiento = (l.disponibleCajas === 0) 
+                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
+                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA)</span>`;
+
                             detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar <b>${fmtInt(tomarCajas)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})`,
+                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
                                 clase: "text-amber-700 font-medium"
                             });
                             restoRequerido -= tomarCajas;
@@ -1274,7 +1200,7 @@
                     <td class="p-3">${item.cliente}</td>
                     <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
                     <td class="p-3">${item.desc}</td>
-                    <td class="p-3 text-right font-bold">${fmtInt(item.cajasPedidas)} CA</td>
+                    <td class="p-3 text-right font-bold">${item.cajasPedidas} CA</td>
                     <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
                     <td class="p-3 space-y-0.5">${detalleHtml}</td>
                 `;
