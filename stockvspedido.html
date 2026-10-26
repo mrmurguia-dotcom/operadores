@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Panel Logístico Completo</title>
+    <title>OL - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -151,7 +151,7 @@
             </div>
         </div>
 
-        <!-- Botones de Acción (5 Botones Reordenados) -->
+        <!-- Botones de Acción (5 Botones) -->
         <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 no-print">
             <button id="btn-action-resumen-pedidos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
                 <i class="fa-solid fa-list-check"></i> 1. Resumen Pedidos
@@ -315,7 +315,7 @@
                 </div>
             </div>
 
-            <!-- VISTA 4: ASIGNACIÓN (ACTUALIZADA) -->
+            <!-- VISTA 4: ASIGNACIÓN (ACTUALIZADA CON DESCRIPCIÓN Y TOTALES) -->
             <div id="view-asignacion" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
@@ -340,6 +340,7 @@
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700 font-semibold">
                                     <th class="p-2.5 border border-slate-300 bg-slate-100">Cod SKU</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Descripción</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100 text-right">Cantidad Pedida</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100 text-center">Observación</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100 text-center no-print">Acción</th>
@@ -347,7 +348,7 @@
                             </thead>
                             <tbody id="tbody-asignacion" class="divide-y divide-slate-200 text-slate-700">
                                 <tr>
-                                    <td colspan="4" class="p-6 text-center text-slate-400 italic">Cargue Stock y Pedidos y presione "4. Asignación".</td>
+                                    <td colspan="5" class="p-6 text-center text-slate-400 italic">Cargue Stock y Pedidos y presione "4. Asignación".</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -1098,7 +1099,7 @@
         });
 
         // ==========================================
-        // ACCIÓN 4: ASIGNACIÓN (ACTUALIZADA)
+        // ACCIÓN 4: ASIGNACIÓN (ACTUALIZADA CON DESCRIPCIÓN Y TOTALES)
         // ==========================================
         document.getElementById('btn-action-asignacion').addEventListener('click', () => {
             showView('view-asignacion');
@@ -1136,15 +1137,17 @@
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
                 let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
                 let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
 
                 let sku = kSku ? String(row[kSku]).trim() : "";
+                let desc = kDesc ? String(row[kDesc]).trim() : "";
                 let cajas = kCant ? parseFloat(row[kCant]) || 0 : 0;
 
                 if (!sku || cajas <= 0) return;
 
                 if (!pedidosSkuMap[sku]) {
-                    pedidosSkuMap[sku] = { sku, totalCajas: 0 };
+                    pedidosSkuMap[sku] = { sku, desc, totalCajas: 0 };
                 }
                 pedidosSkuMap[sku].totalCajas += cajas;
             });
@@ -1158,6 +1161,7 @@
 
                 asignacionDataStore.push({
                     sku: item.sku,
+                    desc: item.desc,
                     totalCajas: item.totalCajas,
                     observacion: observacion
                 });
@@ -1171,18 +1175,22 @@
             tbody.innerHTML = '';
 
             if (asignacionDataStore.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No hay registros de asignación.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="5" class="p-6 text-center text-slate-400">No hay registros de asignación.</td></tr>`;
                 return;
             }
 
             asignacionDataStore.sort((a, b) => a.sku.localeCompare(b.sku, undefined, {numeric: true, sensitivity: 'base'}));
 
+            let sumaTotalCajas = 0;
+
             asignacionDataStore.forEach((item, index) => {
+                sumaTotalCajas += item.totalCajas;
                 let badgeClass = item.observacion === "OK" ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800 font-bold';
 
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.sku}</td>
+                    <td class="p-2.5 border border-slate-300">${item.desc}</td>
                     <td class="p-2.5 border border-slate-300 text-right font-bold">${fmtInt(item.totalCajas)}</td>
                     <td class="p-2.5 border border-slate-300 text-center"><span class="px-2.5 py-1 rounded text-xs ${badgeClass}">${item.observacion}</span></td>
                     <td class="p-2.5 border border-slate-300 text-center no-print">
@@ -1193,6 +1201,16 @@
                 `;
                 tbody.appendChild(tr);
             });
+
+            // Fila de Total de Cajas
+            let trTotal = document.createElement('tr');
+            trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
+            trTotal.innerHTML = `
+                <td colspan="2" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total Cajas:</td>
+                <td class="p-2.5 border border-slate-300 text-right text-teal-900 text-sm font-bold bg-slate-100">${fmtInt(sumaTotalCajas)}</td>
+                <td colspan="2" class="bg-slate-100 border border-slate-300"></td>
+            `;
+            tbody.appendChild(trTotal);
         }
 
         function eliminarFilaAsignacion(index) {
@@ -1203,7 +1221,7 @@
         document.getElementById('btn-copiar-asignacion').addEventListener('click', () => {
             const fileNameClean = cleanFileName(fileNames.pedidos) || "Sin archivo";
             
-            // Construir tabla solo con SKU y Cantidad Pedida para Teams
+            // Construir tabla solo con SKU y Cantidad Pedida para Teams (sin descripción ni observaciones)
             let tableStyled = `
                 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
                     <thead>
@@ -1215,7 +1233,9 @@
                     <tbody>
             `;
 
+            let sumaCopiar = 0;
             asignacionDataStore.forEach(item => {
+                sumaCopiar += item.totalCajas;
                 tableStyled += `
                     <tr>
                         <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif; font-weight: bold;">${item.sku}</td>
@@ -1223,6 +1243,14 @@
                     </tr>
                 `;
             });
+
+            // Fila total en el portapapeles
+            tableStyled += `
+                <tr style="background-color: #f1f5f9; font-weight: bold;">
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif; text-transform: uppercase;">Total Cajas:</td>
+                    <td style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-family: 'Aptos', 'Calibri', sans-serif;">${fmtInt(sumaCopiar)}</td>
+                </tr>
+            `;
 
             tableStyled += `</tbody></table>`;
 
@@ -1234,7 +1262,7 @@
                     'text/plain': new Blob([`Estimados, les detallo lo recepcionado en el cross ${fileNameClean} lo podrian asignar por favor?\n\nAsignación de SKU (${fileNameClean})\n\n[Tabla Asignación]\n\nSaludos`], { type: 'text/plain' })
                 })
             ]).then(() => {
-                showToast("¡Mensaje de Asignación copiado correctamente para Teams (sin observaciones)!");
+                showToast("¡Mensaje de Asignación copiado correctamente para Teams!");
             }).catch(err => alert("Error al copiar: " + err));
         });
 
