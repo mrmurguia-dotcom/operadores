@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JDE - Panel Logístico Completo</title>
+    <title>OL - Panel Logístico Completo</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- SheetJS (Excel) -->
@@ -77,7 +77,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Gestión Independiente de Pedidos, Motivos, Sugerencia PK y Validador de Splits</p>
+                <p class="text-blue-200 text-sm mt-1">Gestión Independiente de Pedidos, Motivos, Splits, Asignación y Sugerencia PK</p>
             </div>
         </div>
     </header>
@@ -151,22 +151,26 @@
             </div>
         </div>
 
-        <!-- Botones de Acción (4 Botones) -->
-        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 no-print">
-            <button id="btn-action-resumen-pedidos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+        <!-- Botones de Acción (5 Botones) -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 no-print">
+            <button id="btn-action-resumen-pedidos" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
                 <i class="fa-solid fa-list-check"></i> 1. Resumen Pedidos
             </button>
 
-            <button id="btn-action-resumen-motivos" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
+            <button id="btn-action-resumen-motivos" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
                 <i class="fa-solid fa-clipboard-list"></i> 2. Resumen Motivos
             </button>
 
-            <button id="btn-action-sugerencia-pk" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-boxes-packing"></i> 3. Sugerencia PK
+            <button id="btn-action-split-lineas" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-arrows-split-up-and-left"></i> 3. Split Líneas
             </button>
 
-            <button id="btn-action-split-lineas" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-4 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer">
-                <i class="fa-solid fa-arrows-split-up-and-left"></i> 4. Split Líneas
+            <button id="btn-action-asignacion" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-clipboard-check"></i> 4. Asignación
+            </button>
+
+            <button id="btn-action-sugerencia-pk" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
+                <i class="fa-solid fa-boxes-packing"></i> 5. Sugerencia PK
             </button>
         </div>
 
@@ -274,44 +278,7 @@
                 </div>
             </div>
 
-            <!-- VISTA 3: SUGERENCIA PK (PICKING AVANZADO) -->
-            <div id="view-sugerencia-pk" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
-                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Generación de Picking)
-                    </h3>
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-300">
-                            <span class="text-xs font-bold text-slate-700">Carta de Porte N°:</span>
-                            <input type="text" id="global-carta-porte-input" placeholder="Ej: 503-12345" class="text-xs font-bold text-blue-900 border border-slate-300 rounded px-2 py-1 w-28 text-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <button id="btn-sync-sheet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-rotate"></i> Actualizar Posiciones Google Sheet
-                        </button>
-                        <button id="btn-export-excel-pk" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-file-excel"></i> Guardar Excel
-                        </button>
-                        <button id="btn-export-pdf-pk" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-file-pdf"></i> Guardar PDF
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Banner Estado Sincronización Sheet -->
-                <div id="sheet-status-banner" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-xs font-semibold flex items-center gap-2 no-print">
-                    <i class="fa-solid fa-circle-info text-base"></i>
-                    <span id="sheet-status-text">Listo para leer la planilla publicada de Google Drive (503 - App SKU Villanueva).</span>
-                </div>
-
-                <!-- Panel Contenedor de Fichas de Picking por Cliente / OC -->
-                <div id="pk-cards-container" class="space-y-6">
-                    <div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-400 italic">
-                        Cargue la Bajada de Pedidos y presione "3. Sugerencia PK" para generar las fichas de picking por Cliente y OC.
-                    </div>
-                </div>
-            </div>
-
-            <!-- VISTA 4: SPLIT LÍNEAS -->
+            <!-- VISTA 3: SPLIT LÍNEAS -->
             <div id="view-split-lineas" class="hidden space-y-6">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 no-print">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -369,6 +336,87 @@
                 </div>
             </div>
 
+            <!-- VISTA 4: ASIGNACIÓN (NUEVA VISTA) -->
+            <div id="view-asignacion" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-check text-teal-600"></i> Vista: Asignación por SKU (Sin Lotes)
+                    </h3>
+                    <button id="btn-copiar-asignacion" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                        <i class="fa-solid fa-copy"></i> Copiar Mensaje Teams y Tabla
+                    </button>
+                </div>
+
+                <div id="copyable-asignacion" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos">
+                    <div id="asignacion-mail-text" class="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 leading-relaxed">
+                        Estimados, les detallo lo recepcionado en el cross CP <span id="asignacion-file-placeholder" class="font-semibold text-teal-700">Sin archivo</span> lo podrian asignar por favor?
+                    </div>
+
+                    <h2 id="asignacion-table-title" class="font-bold text-slate-800 pt-2 border-t border-slate-100">
+                        Asignación de SKU ( <span id="asignacion-title-placeholder">Sin archivo</span> )
+                    </h2>
+
+                    <div class="overflow-x-auto">
+                        <table class="w-full text-left border-collapse font-aptos" id="tabla-asignacion-export" style="border-collapse: collapse; width: 100%;">
+                            <thead>
+                                <tr class="bg-slate-100 text-slate-700 font-semibold">
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Cod SKU</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Descripción</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100 text-right">Cantidad Pedida</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100 text-center">Observación</th>
+                                </tr>
+                            </thead>
+                            <tbody id="tbody-asignacion" class="divide-y divide-slate-200 text-slate-700">
+                                <tr>
+                                    <td colspan="4" class="p-6 text-center text-slate-400 italic">Cargue Stock y Pedidos y presione "4. Asignación".</td>
+                                </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="text-slate-700 pt-1">
+                        Saludos
+                    </div>
+                </div>
+            </div>
+
+            <!-- VISTA 5: SUGERENCIA PK (PICKING AVANZADO) -->
+            <div id="view-sugerencia-pk" class="hidden space-y-4">
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Generación de Picking)
+                    </h3>
+                    <div class="flex items-center gap-3">
+                        <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-300">
+                            <span class="text-xs font-bold text-slate-700">Carta de Porte N°:</span>
+                            <input type="text" id="global-carta-porte-input" placeholder="Ej: 503-12345" class="text-xs font-bold text-blue-900 border border-slate-300 rounded px-2 py-1 w-28 text-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
+                        </div>
+                        <button id="btn-sync-sheet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-rotate"></i> Actualizar Posiciones Google Sheet
+                        </button>
+                        <button id="btn-export-excel-pk" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-file-excel"></i> Guardar Excel
+                        </button>
+                        <button id="btn-export-pdf-pk" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
+                            <i class="fa-solid fa-file-pdf"></i> Guardar PDF
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Banner Estado Sincronización Sheet -->
+                <div id="sheet-status-banner" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-xs font-semibold flex items-center gap-2 no-print">
+                    <i class="fa-solid fa-circle-info text-base"></i>
+                    <span id="sheet-status-text">Listo para leer la planilla publicada de Google Drive (503 - App SKU Villanueva).</span>
+                </div>
+
+                <!-- Panel Contenedor de Fichas de Picking por Cliente / OC -->
+                <div id="pk-cards-container" class="space-y-6">
+                    <div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-400 italic">
+                        Cargue la Bajada de Pedidos y presione "5. Sugerencia PK" para generar las fichas de picking por Cliente y OC.
+                    </div>
+                </div>
+            </div>
+
         </div>
 
     </main>
@@ -386,6 +434,7 @@
         let fileNames = { stock: '', pedidos: '', motivos: '' };
         let splitsResult = [];
         let globalPickingDataStore = [];
+        let asignacionDataStore = [];
 
         function norm(str) {
             if (str === null || str === undefined) return '';
@@ -496,7 +545,7 @@
         });
 
         function showView(viewId) {
-            ['view-resumen-pedidos', 'view-resumen-motivos', 'view-sugerencia-pk', 'view-split-lineas'].forEach(id => {
+            ['view-resumen-pedidos', 'view-resumen-motivos', 'view-split-lineas', 'view-asignacion', 'view-sugerencia-pk'].forEach(id => {
                 document.getElementById(id).classList.add('hidden');
             });
             document.getElementById(viewId).classList.remove('hidden');
@@ -748,7 +797,325 @@
         });
 
         // ==========================================
-        // ACCIÓN 3: SUGERENCIA PK (PICKING AVANZADO)
+        // ACCIÓN 3: SPLIT LÍNEAS
+        // ==========================================
+        document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
+            showView('view-split-lineas');
+            if (rawStock.length === 0 || rawPedidos.length === 0) {
+                alert("Para la función de Split Líneas debe cargar el archivo de Stock y el de Pedidos.");
+                return;
+            }
+
+            const stockMap = {};
+            rawStock.forEach(row => {
+                let keys = Object.keys(row);
+                let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
+                let kDisp = keys.find(k => norm(k).includes('disponible'));
+                let kEst = keys.find(k => norm(k).includes('estado') || norm(k).includes('codigo'));
+                let kLote = keys.find(k => norm(k).includes('lote') || norm(k).includes('serie'));
+                let kUbi = keys.find(k => norm(k).includes('ubicacion'));
+
+                if (!kArt || !kDisp) return;
+
+                let sku = String(row[kArt]).trim();
+                let dispCajas = parseFloat(row[kDisp]) || 0;
+                let estado = kEst ? String(row[kEst]).trim() : "";
+                let lote = kLote ? String(row[kLote]).trim() : "S/L";
+                let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
+
+                if (estado !== "") return;
+                if (dispCajas <= 0) return;
+
+                if (!stockMap[sku]) stockMap[sku] = [];
+                stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
+            });
+
+            splitsResult = [];
+            let countOk = 0, countSplit = 0, countMissing = 0;
+
+            rawPedidos.forEach((row) => {
+                let keys = Object.keys(row);
+
+                let kOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k) === 'nro orden');
+                let kTp = keys.find(k => norm(k) === 'tipo de orden' || norm(k) === 'tipo orden');
+                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente');
+                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
+                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
+                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
+
+                let orden = kOrden ? row[kOrden] : "";
+                let tpOrd = kTp ? row[kTp] : "";
+                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
+                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
+                let sku = kSku ? String(row[kSku]).trim() : "";
+                let desc = kDesc ? String(row[kDesc]) : "";
+                let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
+
+                if (!sku || cajasPedidas <= 0) return;
+
+                let lotesDisponibles = stockMap[sku] || [];
+                let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
+
+                let estadoItem = "";
+                let detalleSplit = [];
+
+                if (stockTotalActualCA < cajasPedidas) {
+                    estadoItem = "Falta Stock";
+                    countMissing++;
+                    detalleSplit.push({ 
+                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. vs ${cajasPedidas} CA pedidas)`, 
+                        clase: "text-red-600 font-semibold" 
+                    });
+                } else {
+                    let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasPedidas);
+                    if (loteUnico) {
+                        estadoItem = "OK";
+                        countOk++;
+                        loteUnico.disponibleCajas -= cajasPedidas;
+                        detalleSplit.push({ 
+                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
+                            clase: "text-green-600 font-medium" 
+                        });
+                    } else {
+                        estadoItem = "Requiere Split";
+                        countSplit++;
+                        let restoRequerido = cajasPedidas;
+                        let subIndex = 1;
+
+                        for (let i = 0; i < lotesDisponibles.length; i++) {
+                            if (restoRequerido <= 0) break;
+                            let l = lotesDisponibles[i];
+                            if (l.disponibleCajas <= 0) continue;
+
+                            let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
+                            l.disponibleCajas -= tomarCajas;
+
+                            let notaAgotamiento = (l.disponibleCajas === 0) 
+                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
+                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA)</span>`;
+
+                            detalleSplit.push({
+                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
+                                clase: "text-amber-700 font-medium"
+                            });
+                            restoRequerido -= tomarCajas;
+                            subIndex++;
+                        }
+                    }
+                }
+
+                splitsResult.push({ 
+                    orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
+                });
+            });
+
+            document.getElementById('kpi-total').textContent = splitsResult.length;
+            document.getElementById('kpi-ok').textContent = countOk;
+            document.getElementById('kpi-split').textContent = countSplit;
+            document.getElementById('kpi-faltantes').textContent = countMissing;
+
+            renderTablaSplits(splitsResult);
+        });
+
+        function renderTablaSplits(datos, filtro = 'all') {
+            const tbody = document.getElementById('tabla-splits');
+            tbody.innerHTML = '';
+
+            let filtrados = datos.filter(item => {
+                if (filtro === 'split') return item.estadoItem === 'Requiere Split';
+                if (filtro === 'ok') return item.estadoItem === 'OK';
+                if (filtro === 'missing') return item.estadoItem === 'Falta Stock';
+                return true;
+            });
+
+            if (filtrados.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros con el filtro seleccionado.</td></tr>`;
+                return;
+            }
+
+            filtrados.forEach(item => {
+                let badgeClass = item.estadoItem === 'OK' ? 'bg-green-100 text-green-800' : (item.estadoItem === 'Requiere Split' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
+                let detalleHtml = item.detalleSplit.map(d => `<div class="${d.clase}">• ${d.texto}</div>`).join('');
+                let tr = document.createElement('tr');
+                tr.className = "hover:bg-slate-50 border-b border-slate-100";
+                tr.innerHTML = `
+                    <td class="p-3 font-semibold text-slate-700">${item.orden}</td>
+                    <td class="p-3">${item.tpOrd}</td>
+                    <td class="p-3">${item.cliente}</td>
+                    <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
+                    <td class="p-3">${item.desc}</td>
+                    <td class="p-3 text-right font-bold">${item.cajasPedidas} CA</td>
+                    <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
+                    <td class="p-3 space-y-0.5">${detalleHtml}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('.filter-btn').forEach(b => {
+                    b.classList.remove('bg-blue-600', 'text-white');
+                    b.classList.add('bg-slate-200', 'text-slate-700');
+                });
+                e.target.classList.remove('bg-slate-200', 'text-slate-700');
+                e.target.classList.add('bg-blue-600', 'text-white');
+                renderTablaSplits(splitsResult, e.target.getAttribute('data-filter'));
+            });
+        });
+
+        document.getElementById('btn-exportar-splits').addEventListener('click', () => {
+            if (splitsResult.length === 0) return;
+            let exportData = splitsResult.map(i => ({
+                "Nro Orden": i.orden,
+                "Tipo Ord": i.tpOrd,
+                "Cliente": i.cliente,
+                "Cod Item Largo (SKU)": i.sku,
+                "Descripción de línea": i.desc,
+                "Cajas Pedidas": i.cajasPedidas,
+                "Estado": i.estadoItem,
+                "Sugerencia Split / Lotes": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
+            }));
+            let ws = XLSX.utils.json_to_sheet(exportData);
+            let wb = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
+            XLSX.writeFile(wb, "Reporte_Splits_JDE.xlsx");
+        });
+
+        // ==========================================
+        // ACCIÓN 4: ASIGNACIÓN (NUEVA FUNCIONALIDAD)
+        // ==========================================
+        document.getElementById('btn-action-asignacion').addEventListener('click', () => {
+            showView('view-asignacion');
+            if (rawStock.length === 0 || rawPedidos.length === 0) {
+                alert("Para la función de Asignación debe cargar los archivos de Stock y Pedidos.");
+                return;
+            }
+
+            const fileNameClean = cleanFileName(fileNames.pedidos) || "Sin archivo";
+            document.getElementById('asignacion-file-placeholder').textContent = fileNameClean;
+            document.getElementById('asignacion-title-placeholder').textContent = fileNameClean;
+
+            // 1. Mapear Stock Total Disponible por SKU (ignorando lotes)
+            const stockTotalSku = {};
+            rawStock.forEach(row => {
+                let keys = Object.keys(row);
+                let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
+                let kDisp = keys.find(k => norm(k).includes('disponible'));
+                let kEst = keys.find(k => norm(k).includes('estado') || norm(k).includes('codigo'));
+
+                if (!kArt || !kDisp) return;
+                let sku = String(row[kArt]).trim();
+                let dispCajas = parseFloat(row[kDisp]) || 0;
+                let estado = kEst ? String(row[kEst]).trim() : "";
+
+                if (estado !== "") return; // Excluir lotes bloqueados
+                if (dispCajas <= 0) return;
+
+                if (!stockTotalSku[sku]) stockTotalSku[sku] = 0;
+                stockTotalSku[sku] += dispCajas;
+            });
+
+            // 2. Consolidar Pedidos por SKU (agrupando cantidades y guardando descripción)
+            const pedidosSkuMap = {};
+            rawPedidos.forEach(row => {
+                let keys = Object.keys(row);
+                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
+                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
+                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
+
+                let sku = kSku ? String(row[kSku]).trim() : "";
+                let desc = kDesc ? String(row[kDesc]).trim() : "";
+                let cajas = kCant ? parseFloat(row[kCant]) || 0 : 0;
+
+                if (!sku || cajas <= 0) return;
+
+                if (!pedidosSkuMap[sku]) {
+                    pedidosSkuMap[sku] = { sku, desc, totalCajas: 0 };
+                }
+                pedidosSkuMap[sku].totalCajas += cajas;
+            });
+
+            asignacionDataStore = [];
+            const tbody = document.getElementById('tbody-asignacion');
+            tbody.innerHTML = '';
+
+            const skusList = Object.values(pedidosSkuMap);
+            if (skusList.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="4" class="p-6 text-center text-slate-400">No se encontraron ítems válidos en los pedidos.</td></tr>`;
+                return;
+            }
+
+            skusList.sort((a, b) => a.sku.localeCompare(b.sku, undefined, {numeric: true, sensitivity: 'base'}));
+
+            skusList.forEach(item => {
+                let stockDisponible = stockTotalSku[item.sku] || 0;
+                let observacion = stockDisponible >= item.totalCajas ? "OK" : "S/ STOCK";
+
+                asignacionDataStore.push({
+                    sku: item.sku,
+                    desc: item.desc,
+                    totalCajas: item.totalCajas,
+                    observacion: observacion
+                });
+
+                let badgeClass = observacion === "OK" ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800 font-bold';
+
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.sku}</td>
+                    <td class="p-2.5 border border-slate-300">${item.desc}</td>
+                    <td class="p-2.5 border border-slate-300 text-right font-bold">${fmtInt(item.totalCajas)} CA</td>
+                    <td class="p-2.5 border border-slate-300 text-center"><span class="px-2.5 py-1 rounded text-xs ${badgeClass}">${observacion}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        });
+
+        document.getElementById('btn-copiar-asignacion').addEventListener('click', () => {
+            const fileNameClean = cleanFileName(fileNames.pedidos) || "Sin archivo";
+            const tbody = document.getElementById('tbody-asignacion').cloneNode(true);
+            
+            let tableStyled = `
+                <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
+                    <thead>
+                        <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Cod SKU</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Descripción</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-family: 'Aptos', 'Calibri', sans-serif;">Cantidad Pedida</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: center; font-family: 'Aptos', 'Calibri', sans-serif;">Observación</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+            `;
+
+            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
+                tableStyled += `<tr>`;
+                Array.from(tr.querySelectorAll('td')).forEach(td => {
+                    let align = td.classList.contains('text-right') ? 'text-align: right;' : (td.classList.contains('text-center') ? 'text-align: center;' : 'text-align: left;');
+                    let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
+                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 6px; ${align} font-family: 'Aptos', 'Calibri', sans-serif;">${td.innerHTML}</td>`;
+                });
+                tableStyled += `</tr>`;
+            });
+
+            tableStyled += `</tbody></table>`;
+
+            const fullHtml = `<div style="font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; color: #000; line-height: 1.3;">Estimados, les detallo lo recepcionado en el cross CP <b>${fileNameClean}</b> lo podrian asignar por favor?<br><br><b>Asignación de SKU (${fileNameClean})</b><br>${tableStyled}Saludos</div>`;
+
+            navigator.clipboard.write([
+                new ClipboardItem({
+                    'text/html': new Blob([fullHtml], { type: 'text/html' }),
+                    'text/plain': new Blob([`Estimados, les detallo lo recepcionado en el cross CP ${fileNameClean} lo podrian asignar por favor?\n\nAsignación de SKU (${fileNameClean})\n\n[Tabla Asignación]\n\nSaludos`], { type: 'text/plain' })
+                })
+            ]).then(() => {
+                showToast("¡Mensaje de Asignación copiado correctamente para Teams!");
+            }).catch(err => alert("Error al copiar: " + err));
+        });
+
+        // ==========================================
+        // ACCIÓN 5: SUGERENCIA PK (PICKING AVANZADO)
         // ==========================================
         async function fetchGoogleSheetPositions() {
             const banner = document.getElementById('sheet-status-text');
@@ -1046,194 +1413,6 @@
             };
 
             html2pdf().set(opt).from(container).save();
-        });
-
-        // ==========================================
-        // ACCIÓN 4: SPLIT LÍNEAS (Con nombres de columnas exactos)
-        // ==========================================
-        document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
-            showView('view-split-lineas');
-            if (rawStock.length === 0 || rawPedidos.length === 0) {
-                alert("Para la función de Split Líneas debe cargar el archivo de Stock y el de Pedidos.");
-                return;
-            }
-
-            const stockMap = {};
-            rawStock.forEach(row => {
-                let keys = Object.keys(row);
-                let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
-                let kDisp = keys.find(k => norm(k).includes('disponible'));
-                let kEst = keys.find(k => norm(k).includes('estado') || norm(k).includes('codigo'));
-                let kLote = keys.find(k => norm(k).includes('lote') || norm(k).includes('serie'));
-                let kUbi = keys.find(k => norm(k).includes('ubicacion'));
-
-                if (!kArt || !kDisp) return;
-
-                let sku = String(row[kArt]).trim();
-                let dispCajas = parseFloat(row[kDisp]) || 0;
-                let estado = kEst ? String(row[kEst]).trim() : "";
-                let lote = kLote ? String(row[kLote]).trim() : "S/L";
-                let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
-
-                if (estado !== "") return;
-                if (dispCajas <= 0) return;
-
-                if (!stockMap[sku]) stockMap[sku] = [];
-                stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
-            });
-
-            splitsResult = [];
-            let countOk = 0, countSplit = 0, countMissing = 0;
-
-            rawPedidos.forEach((row) => {
-                let keys = Object.keys(row);
-
-                // Búsquedas exactas para evitar confusiones con "Fecha de la orden" o "Cod de cliente" vs "OC del cliente"
-                let kOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k) === 'nro orden');
-                let kTp = keys.find(k => norm(k) === 'tipo de orden' || norm(k) === 'tipo orden');
-                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente');
-                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
-                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
-                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
-                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
-
-                let orden = kOrden ? row[kOrden] : "";
-                let tpOrd = kTp ? row[kTp] : "";
-                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
-                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
-                let sku = kSku ? String(row[kSku]).trim() : "";
-                let desc = kDesc ? String(row[kDesc]) : "";
-                let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
-
-                if (!sku || cajasPedidas <= 0) return;
-
-                let lotesDisponibles = stockMap[sku] || [];
-                let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
-
-                let estadoItem = "";
-                let detalleSplit = [];
-
-                if (stockTotalActualCA < cajasPedidas) {
-                    estadoItem = "Falta Stock";
-                    countMissing++;
-                    detalleSplit.push({ 
-                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. vs ${cajasPedidas} CA pedidas)`, 
-                        clase: "text-red-600 font-semibold" 
-                    });
-                } else {
-                    let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasPedidas);
-                    if (loteUnico) {
-                        estadoItem = "OK";
-                        countOk++;
-                        loteUnico.disponibleCajas -= cajasPedidas;
-                        detalleSplit.push({ 
-                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
-                            clase: "text-green-600 font-medium" 
-                        });
-                    } else {
-                        estadoItem = "Requiere Split";
-                        countSplit++;
-                        let restoRequerido = cajasPedidas;
-                        let subIndex = 1;
-
-                        for (let i = 0; i < lotesDisponibles.length; i++) {
-                            if (restoRequerido <= 0) break;
-                            let l = lotesDisponibles[i];
-                            if (l.disponibleCajas <= 0) continue;
-
-                            let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
-                            l.disponibleCajas -= tomarCajas;
-
-                            let notaAgotamiento = (l.disponibleCajas === 0) 
-                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
-                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA)</span>`;
-
-                            detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
-                                clase: "text-amber-700 font-medium"
-                            });
-                            restoRequerido -= tomarCajas;
-                            subIndex++;
-                        }
-                    }
-                }
-
-                splitsResult.push({ 
-                    orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
-                });
-            });
-
-            document.getElementById('kpi-total').textContent = splitsResult.length;
-            document.getElementById('kpi-ok').textContent = countOk;
-            document.getElementById('kpi-split').textContent = countSplit;
-            document.getElementById('kpi-faltantes').textContent = countMissing;
-
-            renderTablaSplits(splitsResult);
-        });
-
-        function renderTablaSplits(datos, filtro = 'all') {
-            const tbody = document.getElementById('tabla-splits');
-            tbody.innerHTML = '';
-
-            let filtrados = datos.filter(item => {
-                if (filtro === 'split') return item.estadoItem === 'Requiere Split';
-                if (filtro === 'ok') return item.estadoItem === 'OK';
-                if (filtro === 'missing') return item.estadoItem === 'Falta Stock';
-                return true;
-            });
-
-            if (filtrados.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="8" class="p-6 text-center text-slate-400">No hay registros con el filtro seleccionado.</td></tr>`;
-                return;
-            }
-
-            filtrados.forEach(item => {
-                let badgeClass = item.estadoItem === 'OK' ? 'bg-green-100 text-green-800' : (item.estadoItem === 'Requiere Split' ? 'bg-amber-100 text-amber-800' : 'bg-red-100 text-red-800');
-                let detalleHtml = item.detalleSplit.map(d => `<div class="${d.clase}">• ${d.texto}</div>`).join('');
-                let tr = document.createElement('tr');
-                tr.className = "hover:bg-slate-50 border-b border-slate-100";
-                tr.innerHTML = `
-                    <td class="p-3 font-semibold text-slate-700">${item.orden}</td>
-                    <td class="p-3">${item.tpOrd}</td>
-                    <td class="p-3">${item.cliente}</td>
-                    <td class="p-3 font-mono font-bold text-blue-600">${item.sku}</td>
-                    <td class="p-3">${item.desc}</td>
-                    <td class="p-3 text-right font-bold">${item.cajasPedidas} CA</td>
-                    <td class="p-3"><span class="px-2 py-1 rounded text-[10px] ${badgeClass}">${item.estadoItem}</span></td>
-                    <td class="p-3 space-y-0.5">${detalleHtml}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        document.querySelectorAll('.filter-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                document.querySelectorAll('.filter-btn').forEach(b => {
-                    b.classList.remove('bg-blue-600', 'text-white');
-                    b.classList.add('bg-slate-200', 'text-slate-700');
-                });
-                e.target.classList.remove('bg-slate-200', 'text-slate-700');
-                e.target.classList.add('bg-blue-600', 'text-white');
-                renderTablaSplits(splitsResult, e.target.getAttribute('data-filter'));
-            });
-        });
-
-        document.getElementById('btn-exportar-splits').addEventListener('click', () => {
-            if (splitsResult.length === 0) return;
-            let exportData = splitsResult.map(i => ({
-                "Nro Orden": i.orden,
-                "Tipo Ord": i.tpOrd,
-                "Cliente": i.cliente,
-                "Cod Item Largo (SKU)": i.sku,
-                "Descripción de línea": i.desc,
-                "Cajas Pedidas": i.cajasPedidas,
-                "Estado": i.estadoItem,
-                "Sugerencia Split / Lotes": i.detalleSplit.map(d => d.texto.replace(/<[^>]*>?/gm, '')).join(' | ')
-            }));
-            let ws = XLSX.utils.json_to_sheet(exportData);
-            let wb = XLSX.utils.book_new();
-            XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
-            XLSX.writeFile(wb, "Reporte_Splits_JDE.xlsx");
         });
     </script>
 </body>
