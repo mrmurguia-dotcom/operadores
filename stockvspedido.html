@@ -1055,7 +1055,7 @@
                 return;
             }
 
-            // Función robusta para normalizar SKUs (elimina .0 y espacios de JDE)
+            // Función auxiliar para normalizar SKU (elimina ceros decimales y espacios)
             const cleanSku = (val) => {
                 if (val === null || val === undefined) return '';
                 let s = String(val).trim();
@@ -1063,34 +1063,39 @@
                 return s.toUpperCase();
             };
 
-            // 1. Procesar y agrupar Bajada ST (desde rawMotivos)
+            // 1. TABLA DINÁMICA ST / PENDIENTES: Filtrar por Tipo doc == 'RI'
             const stMap = new Map();
+            let countRI = 0;
+
             rawMotivos.forEach(row => {
+                const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
+                if (tipoDoc.toUpperCase() !== 'RI') return; // Exclusivamente Tipo doc RI
+
                 const rawSku = getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Cod de item largo']);
                 const sku = cleanSku(rawSku);
                 if (!sku) return;
+
                 const qty = numberVal(getField(row, ['Cantidad', 'Cantidad solicitada', 'Cantidad enviada']));
                 const desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
                 
                 if (!stMap.has(sku)) stMap.set(sku, { sku, desc, totalQty: 0, lines: 0 });
                 stMap.get(sku).totalQty += qty;
                 stMap.get(sku).lines++;
+                countRI++;
             });
 
-            // 2. Procesar y agrupar Cardex filtrando estrictamente por Tipo doc = OV
+            // 2. TABLA DINÁMICA CARDEX: Filtrar por Tipo doc == 'OV'
             const cardexMap = new Map();
             const detailRows = [];
-            let processedLines = 0;
+            let countOV = 0;
 
             rawCardex.forEach(row => {
                 const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
-                const rawSku = getField(row, ['2º número de artículo', '2o nro articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
-                const sku = cleanSku(rawSku);
-                
-                if (!sku) return;
+                if (tipoDoc.toUpperCase() !== 'OV') return; // Exclusivamente Tipo doc OV
 
-                // Considerar exclusivamente Tipo doc = OV
-                if (tipoDoc.toUpperCase() !== 'OV') return;
+                const rawSku = getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
+                const sku = cleanSku(rawSku);
+                if (!sku) return;
 
                 const qty = numberVal(getField(row, ['Cantidad de la transacción', 'Cantidad de transaccion', 'Cantidad']));
                 const desc = textVal(getField(row, ['Descripción', 'Descripcion', 'Descripción 1'])) || '';
@@ -1101,12 +1106,12 @@
                 }
                 cardexMap.get(sku).totalQty += qty;
                 cardexMap.get(sku).lines++;
-                processedLines++;
+                countOV++;
 
-                detailRows.push({ ...row, 'Validación': 'OV Procesado', 'Cantidad interpretada': qty });
+                detailRows.push({ ...row, 'Validación': 'RI/OV Procesado', 'Cantidad interpretada': qty });
             });
 
-            // 3. Cruzar ST vs Cardex unificando por las claves normalizadas de las tablas
+            // 3. COMPARATIVA Y CRUCE (Unificación de ambas tablas dinámicas por SKU normalizado)
             const keys = new Set([...stMap.keys(), ...cardexMap.keys()]);
             cruceSTOTData = Array.from(keys).map(k => {
                 const st = stMap.get(k);
@@ -1119,35 +1124,35 @@
                     'Artículo': k,
                     'Descripción': (st && st.desc) || (cd && cd.desc) || '',
                     'UM de trans': (cd ? cd.uom : 'CA'),
-                    'Cantidad ST (Despachado)': qSt,
+                    'Cantidad ST (RI)': qSt,
                     'Líneas Cardex (OV)': cd ? cd.lines : 0,
-                    'Cantidad Cardex OV (Ingresado)': qCd,
+                    'Cantidad Cardex (OV)': qCd,
                     'Diferencia (Cardex - ST)': delta,
                     'Resultado': Math.abs(delta) < 0.000001 ? 'OK' : (delta > 0 ? 'SOBRANTE EN CARDEX' : 'FALTANTE EN CARDEX')
                 };
             }).sort((a, b) => a['Artículo'].localeCompare(b['Artículo'], undefined, { numeric: true }));
 
             const diffs = cruceSTOTData.filter(x => x.Resultado !== 'OK');
-            const cols = ['Artículo', 'Descripción', 'UM de trans', 'Cantidad ST (Despachado)', 'Líneas Cardex (OV)', 'Cantidad Cardex OV (Ingresado)', 'Diferencia (Cardex - ST)', 'Resultado'];
+            const cols = ['Artículo', 'Descripción', 'UM de trans', 'Cantidad ST (RI)', 'Líneas Cardex (OV)', 'Cantidad Cardex (OV)', 'Diferencia (Cardex - ST)', 'Resultado'];
 
-            // Poblar tablas visibles en la interfaz
+            // Poblar las tablas en la interfaz
             createTableHead('thead-cruce-st-ot', cols); 
             fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No hay datos para cruzar.');
             
             createTableHead('thead-diferencias-st-ot', cols); 
-            fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST y Cardex (OV).');
+            fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST (RI) y Cardex (OV).');
 
             const rawCols = Object.keys(rawCardex[0] || {});
             if (!rawCols.includes('Validación')) rawCols.push('Validación', 'Cantidad interpretada');
             createTableHead('thead-detalle-cardex', rawCols); 
             fillTableBody('tbody-detalle-cardex', detailRows, rawCols, 'Sin movimientos OV en el Cardex.');
 
-            const totalSt = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad ST (Despachado)']), 0);
-            const totalCd = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad Cardex OV (Ingresado)']), 0);
+            const totalSt = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad ST (RI)']), 0);
+            const totalCd = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad Cardex (OV)']), 0);
 
             document.getElementById('status-cruce-st-ot').textContent = diffs.length ? 
-                `Se analizaron ${stMap.size} artículos ST y ${processedLines} líneas Cardex (OV) · ${diffs.length} diferencias · Total ST: ${fmtInt(totalSt)} CA · Total Cardex OV: ${fmtInt(totalCd)} CA.` : 
-                `Cruce correcto: se compararon ${stMap.size} artículos sin diferencias. Total ST: ${fmtInt(totalSt)} CA · Total Cardex OV: ${fmtInt(totalCd)} CA.`;
+                `Análisis completado: ${countRI} líneas ST (RI) · ${countOV} líneas Cardex (OV) · ${diffs.length} diferencias · Total ST (RI): ${fmtInt(totalSt)} CA · Total Cardex (OV): ${fmtInt(totalCd)} CA.` : 
+                `¡Cruce exacto! Se compararon ${stMap.size} artículos sin diferencias (ST Tipo doc RI vs Cardex Tipo doc OV). Total: ${fmtInt(totalSt)} CA.`;
         }
         function processCruceSTPedido() {
             if (!rawPedidos.length || !rawMotivos.length) {
