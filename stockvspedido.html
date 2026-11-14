@@ -1055,7 +1055,7 @@
                 return;
             }
 
-            // Función auxiliar para normalizar SKU (quita .0 y espacios)
+            // Función robusta para normalizar SKUs (elimina .0 y espacios de JDE)
             const cleanSku = (val) => {
                 if (val === null || val === undefined) return '';
                 let s = String(val).trim();
@@ -1063,7 +1063,7 @@
                 return s.toUpperCase();
             };
 
-            // 1. Agrupar cantidades de ST por artículo
+            // 1. Procesar y agrupar Bajada ST (desde rawMotivos)
             const stMap = new Map();
             rawMotivos.forEach(row => {
                 const rawSku = getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Cod de item largo']);
@@ -1077,14 +1077,14 @@
                 stMap.get(sku).lines++;
             });
 
-            // 2. Agrupar cantidades del Cardex filtrando por Tipo doc = OV
+            // 2. Procesar y agrupar Cardex filtrando estrictamente por Tipo doc = OV
             const cardexMap = new Map();
             const detailRows = [];
             let processedLines = 0;
 
             rawCardex.forEach(row => {
                 const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
-                const rawSku = getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
+                const rawSku = getField(row, ['2º número de artículo', '2o nro articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
                 const sku = cleanSku(rawSku);
                 
                 if (!sku) return;
@@ -1106,7 +1106,7 @@
                 detailRows.push({ ...row, 'Validación': 'OV Procesado', 'Cantidad interpretada': qty });
             });
 
-            // 3. Cruzar ST vs Cardex (OV) normalizando claves
+            // 3. Cruzar ST vs Cardex unificando por las claves normalizadas de las tablas
             const keys = new Set([...stMap.keys(), ...cardexMap.keys()]);
             cruceSTOTData = Array.from(keys).map(k => {
                 const st = stMap.get(k);
@@ -1130,6 +1130,7 @@
             const diffs = cruceSTOTData.filter(x => x.Resultado !== 'OK');
             const cols = ['Artículo', 'Descripción', 'UM de trans', 'Cantidad ST (Despachado)', 'Líneas Cardex (OV)', 'Cantidad Cardex OV (Ingresado)', 'Diferencia (Cardex - ST)', 'Resultado'];
 
+            // Poblar tablas visibles en la interfaz
             createTableHead('thead-cruce-st-ot', cols); 
             fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No hay datos para cruzar.');
             
