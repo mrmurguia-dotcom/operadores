@@ -1048,98 +1048,73 @@
             setCruceTab('stot');
         });
 
-        function processCruceSTOT() {
-            if (!rawCardex.length) {
-                document.getElementById('status-cruce-st-ot').textContent = 'Cargue la Bajada del Cardex con selección.';
-                cruceSTOTData = [];
-                return;
-            }
-            const map = new Map();
-            const detailRows = [];
-            let stLines = 0, otLines = 0, ignored = 0;
+       function processCruceSTOT() {
+    if (!rawCardex.length) {
+        document.getElementById('status-cruce-st-ot').textContent = 'Cargue la Bajada del Cardex con selección.';
+        cruceSTOTData = [];
+        return;
+    }
+    const map = new Map();
+    const detailRows = [];
+    let processedLines = 0, ignored = 0;
 
-            rawCardex.forEach(row => {
-                const rowString = Object.values(row).join(' ').toUpperCase();
-                const tp = textVal(getField(row, ['Tp or','Tipo orden','Tipo de orden','Tipo','Tp']));
-                const td = textVal(getField(row, ['Tipo doc','Tipo documento','Doc','Documento','TD']));
-                const sku = textVal(getField(row, ['2º número de artículo','2o numero de articulo','2º nº artículo','2o nro articulo','Artículo','Articulo','SKU','Cod de item largo']));
-                
-                if (!sku) { ignored++; return; }
+    rawCardex.forEach(row => {
+        const tpOr = textVal(getField(row, ['Tp or', 'Tipo orden', 'Tipo de orden']));
+        const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
+        const sku = textVal(getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo', 'SKU', 'Cod de item largo']));
+        
+        if (!sku) { ignored++; return; }
 
-                let side = '';
-                const tokens = `${tp} ${td} ${rowString}`.toUpperCase().match(/[A-Z0-9]+/g) || [];
-                
-                if (tokens.includes('ST') || tokens.some(t => t.startsWith('ST'))) {
-                    side = 'ST';
-                } else if (tokens.includes('OT') || tokens.some(t => t.startsWith('OT'))) {
-                    side = 'OT';
-                }
-
-                if (!side) { ignored++; return; }
-
-                const qtyRaw = getField(row, ['Cantidad de la transacción','Cantidad de transaccion','Cantidad','Cant.','Qty']);
-                const qty = textVal(qtyRaw) === '' ? 0 : numberVal(qtyRaw);
-                const uom = textVal(getField(row, ['UM de trans','UM','Unidad de medida'])) || 'CA';
-                const desc = textVal(getField(row, ['Descripción','Descripcion','Descripción 1','Descripcion de linea'])) || '';
-                
-                const key = `${idNorm(sku)}|${idNorm(uom)}`;
-                if (!map.has(key)) {
-                    map.set(key, {sku, desc, uom, stSigned:0, otSigned:0, stLines:0, otLines:0, stDetails:[], otDetails:[]});
-                }
-                const item = map.get(key);
-                if (side === 'ST') { 
-                    item.stSigned += qty; 
-                    item.stLines++; 
-                    stLines++; 
-                    item.stDetails.push(row); 
-                } else { 
-                    item.otSigned += qty; 
-                    item.otLines++; 
-                    otLines++; 
-                    item.otDetails.push(row); 
-                }
-                detailRows.push({...row, 'Lado detectado': side, 'Cantidad interpretada': qty});
-            });
-
-            const cols = ['Artículo','Descripción','UM de trans','Líneas ST','Cantidad ST neta','Líneas OT','Cantidad OT neta','Diferencia (OT - ST)','Resultado'];
-            cruceSTOTData = Array.from(map.values()).map(x => {
-                const st = Math.abs(x.stSigned), ot = Math.abs(x.otSigned), delta = ot - st;
-                return {
-                    'Artículo': x.sku,
-                    'Descripción': x.desc,
-                    'UM de trans': x.uom,
-                    'Líneas ST': x.stLines,
-                    'Cantidad ST neta': st,
-                    'Líneas OT': x.otLines,
-                    'Cantidad OT neta': ot,
-                    'Diferencia (OT - ST)': delta,
-                    'Resultado': Math.abs(delta) < 0.000001 ? 'OK' : (delta > 0 ? 'SOBRANTE EN OT' : 'FALTANTE EN OT')
-                };
-            }).sort((a,b) => a['Artículo'].localeCompare(b['Artículo'], undefined, {numeric: true}));
-
-            const diffs = cruceSTOTData.filter(x => x.Resultado !== 'OK');
-            
-            createTableHead('thead-cruce-st-ot', cols); 
-            fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No se detectaron diferencias.');
-            
-            createTableHead('thead-diferencias-st-ot', cols); 
-            fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST y OT.');
-            
-            const rawCols = Object.keys(rawCardex[0] || {});
-            if (!rawCols.includes('Lado detectado')) rawCols.push('Lado detectado', 'Cantidad interpretada');
-            
-            createTableHead('thead-detalle-cardex', rawCols); 
-            fillTableBody('tbody-detalle-cardex', detailRows, rawCols, 'No hay movimientos ST u OT en el archivo.');
-            
-            const totalST = cruceSTOTData.reduce((a,x) => a + numberVal(x['Cantidad ST neta']), 0);
-            const totalOT = cruceSTOTData.reduce((a,x) => a + numberVal(x['Cantidad OT neta']), 0);
-            
-            const msg = diffs.length ? 
-                `${stLines} líneas ST y ${otLines} líneas OT analizadas · ${diffs.length} diferencias · Total ST: ${fmtInt(totalST)} CA · Total OT: ${fmtInt(totalOT)} CA · ${ignored} filas no clasificadas/ignoradas.` : 
-                `Se analizaron ${stLines} líneas ST y ${otlines = otLines} líneas OT y no se encontraron diferencias. Total ST: ${fmtInt(totalST)} CA · Total OT: ${fmtInt(totalOT)} CA.`;
-            
-            document.getElementById('status-cruce-st-ot').textContent = msg;
+        // Considerar líneas donde el Tipo doc sea OV o Tp or sea OT/ST según corresponda
+        if (tipoDoc.toUpperCase() !== 'OV' && tpOr.toUpperCase() !== 'OT' && tpOr.toUpperCase() !== 'ST') {
+            ignored++;
+            return;
         }
+
+        const qtyRaw = getField(row, ['Cantidad de la transacción', 'Cantidad de transaccion', 'Cantidad', 'Cant.']);
+        const qty = textVal(qtyRaw) === '' ? 0 : numberVal(qtyRaw);
+        const uom = textVal(getField(row, ['UM de trans', 'UM', 'Unidad de medida'])) || 'CA';
+        const desc = textVal(getField(row, ['Descripción', 'Descripcion', 'Descripción 1', 'Descripcion de linea'])) || '';
+        
+        const key = `${idNorm(sku)}|${idNorm(uom)}`;
+        if (!map.has(key)) {
+            map.set(key, { sku, desc, uom, totalQty: 0, lines: 0, details: [] });
+        }
+        
+        const item = map.get(key);
+        item.totalQty += qty;
+        item.lines++;
+        processedLines++;
+        
+        detailRows.push({ ...row, 'Validación Cardex': 'Procesado OV/OT/ST', 'Cantidad interpretada': qty });
+    });
+
+    const cols = ['Artículo', 'Descripción', 'UM de trans', 'Líneas Cardex', 'Cantidad Total Transacción', 'Resultado'];
+    cruceSTOTData = Array.from(map.values()).map(x => {
+        return {
+            'Artículo': x.sku,
+            'Descripción': x.desc,
+            'UM de trans': x.uom,
+            'Líneas Cardex': x.lines,
+            'Cantidad Total Transacción': x.totalQty,
+            'Resultado': x.totalQty > 0 ? 'OK / CONSOLIDADO' : 'REVISAR CANTIDAD'
+        };
+    }).sort((a, b) => a['Artículo'].localeCompare(b['Artículo'], undefined, { numeric: true }));
+
+    createTableHead('thead-cruce-st-ot', cols); 
+    fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No se encontraron registros bajo los filtros de OV / OT / ST.');
+    
+    createTableHead('thead-diferencias-st-ot', cols); 
+    fillTableBody('tbody-diferencias-st-ot', [], cols, 'No hay diferencias registradas.');
+
+    const rawCols = Object.keys(rawCardex[0] || {});
+    if (!rawCols.includes('Validación Cardex')) rawCols.push('Validación Cardex', 'Cantidad interpretada');
+    
+    createTableHead('thead-detalle-cardex', rawCols); 
+    fillTableBody('tbody-detalle-cardex', detailRows, rawCols, 'Sin datos en el detalle del Cardex.');
+
+    document.getElementById('status-cruce-st-ot').textContent = `Se procesaron ${processedLines} líneas válidas del Cardex (filtradas por Tipo doc OV / OT / ST) · ${ignored} filas ignoradas por no cumplir el criterio.`;
+}
 
         function processCruceSTPedido() {
             if (!rawPedidos.length || !rawMotivos.length) {
