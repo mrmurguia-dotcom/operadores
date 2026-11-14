@@ -184,7 +184,7 @@
             </button>
 
             <button id="btn-action-asignacion" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
-                <i class="fa-solid fa-clipboard-check"></i> 4. Asignación
+                <i class="fa-solid fa-clipboard-check"></i> 4. Asignación (Stock vs Pedidos Customer)
             </button>
 
             <button id="btn-action-split-lineas" class="bg-amber-600 hover:bg-amber-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
@@ -287,12 +287,13 @@
                 </div>
                 <section id="panel-cruce-st-ot" class="space-y-4">
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3">
-                        <div><h4 class="font-bold text-slate-800">ST vs OT - Cardex con selección</h4><p class="text-xs text-slate-500 mt-1">Se agrupa por artículo y se comparan las cantidades de transacciones ST y OT.</p></div>
+                        <div><h4 class="font-bold text-slate-800">ST despachado vs ingreso OV recibido</h4><p class="text-xs text-slate-500 mt-1">Origen: bajada 4211 con Tp ord = ST, Tipo doc = RI y Cantidad (H) informada. Los estados J (Último estado) y K (Estado sig.) quedan como referencia, pero no filtran el cruce porque pueden variar. Destino: Cardex con Tipo doc = OV. Se compara artículo y UM, acumulando cantidades y compensando reversas negativas.</p></div>
                         <button id="btn-copiar-cruce-st-ot" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar tabla visible</button>
                     </div>
                     <div id="status-cruce-st-ot" class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3">Cargue el Cardex con selección para ejecutar este cruce.</div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Resultado del cruce</h5><div class="overflow-x-auto"><table id="tabla-cruce-st-ot" class="w-full text-left border-collapse text-xs"><thead id="thead-cruce-st-ot"></thead><tbody id="tbody-cruce-st-ot"><tr><td class="p-6 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div></div>
-                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de movimientos del Cardex</h5><p class="text-xs text-slate-500 mb-2">Se muestran los movimientos originales clasificados como ST y OT, incluso los que tienen cantidad en blanco.</p><div class="overflow-x-auto"><table id="tabla-detalle-cardex" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-cardex"></thead><tbody id="tbody-detalle-cardex"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-cardex" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar detalle Cardex</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de líneas ST despachadas (Pendientes 4211)</h5><p class="text-xs text-slate-500 mb-2">Se consideran exclusivamente ST con Tipo doc = RI. Los estados J y K se muestran como referencia, pero no son filtros obligatorios. H (Cantidad) debe estar informada; si está vacía, la línea se considera anulada y se excluye.</p><div class="overflow-x-auto"><table id="tabla-detalle-st-pendientes" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-st-pendientes"></thead><tbody id="tbody-detalle-st-pendientes"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-st-pendientes" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar detalle ST</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de ingresos del Cardex (Tipo doc = OV)</h5><p class="text-xs text-slate-500 mb-2">Solo se muestran los movimientos OV utilizados en la comparación.</p><div class="overflow-x-auto"><table id="tabla-detalle-cardex" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-cardex"></thead><tbody id="tbody-detalle-cardex"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-cardex" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar detalle OV</button></div>
                     <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-red-700 mb-2">Diferencias ST vs OT</h5><div class="overflow-x-auto"><table id="tabla-diferencias-st-ot" class="w-full text-left border-collapse text-xs"><thead id="thead-diferencias-st-ot"></thead><tbody id="tbody-diferencias-st-ot"><tr><td class="p-6 text-center text-slate-400">Sin diferencias.</td></tr></tbody></table></div><button id="btn-copiar-diferencias-st-ot" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar diferencias</button></div>
                 </section>
                 <section id="panel-cruce-st-pedido" class="hidden space-y-4">
@@ -498,8 +499,7 @@
                 ['Número orden', ['Número orden','Numero orden']], ['Tp ord', ['Tp ord']],
                 ['2º nº artículo', ['2º nº artículo','2o nro articulo','2º número de artículo','2o numero de articulo']],
                 ['Descripción 1', ['Descripción 1','Descripcion 1']], ['Cantidad', ['Cantidad']],
-                ['Estado sig', ['Estado sig','Estado siguiente']], ['Cantidad enviada', ['Cantidad enviada']],
-                ['Cant órdenes pendientes', ['Cant órdenes pendientes','Cant ordenes pendientes']]
+                ['Estado sig', ['Estado sig','Estado sig.']], ['Tipo doc', ['Tipo doc']]
             ],
             cardex: [
                 ['Unidad de negocios', ['Unidad de negocios']], ['Tp or', ['Tp or']],
@@ -526,10 +526,11 @@
             const missing = (FORMAT_REQUIREMENTS[key] || []).filter(([label, aliases]) =>
                 !aliases.some(a => normalized.some(h => h === norm(a) || h.includes(norm(a))))
             ).map(x => x[0]);
-            // Algunos reportes 4211 tienen encabezados de cantidad variables; al menos una columna de cantidad debe existir.
+            // Para 4211 la columna H debe tener el encabezado exacto Cantidad; no se aceptan columnas sustitutas.
             if (key === 'motivos') {
-                const qty = ['Cantidad','Cantidad solicitada','Cantidad enviada','Cant órdenes pendientes','Cant ordenes pendientes'];
-                if (!qty.some(a => normalized.some(h => h === norm(a) || h.includes(norm(a)))) && !missing.includes('Cantidad')) missing.push('Cantidad / cantidad enviada / cantidad pendiente');
+                if (!normalized.some(h => h === norm('Cantidad')) && !missing.includes('Cantidad')) missing.push('Cantidad (columna H)');
+                if (!normalized.some(h => h === norm('Estado sig') || h === norm('Estado sig.')) && !missing.includes('Estado sig')) missing.push('Estado sig (columna K)');
+                if (!normalized.some(h => h === norm('Tipo doc')) && !missing.includes('Tipo doc')) missing.push('Tipo doc (debe identificar RI)');
             }
             return missing;
         }
@@ -553,10 +554,18 @@
                         throw new Error(`FORMATO INCORRECTO para ${key.toUpperCase()}. No se cargó el archivo. Faltan columnas: ${missing.join(', ')}. Verifique que haya seleccionado el Excel correcto.`);
                     }
                     const jsonResult = [];
+                    // Preservar encabezados repetidos. En el Cardex hay dos columnas
+                    // llamadas "2º número de artículo"; la segunda no debe pisar la primera.
+                    const headerOccurrences = {};
+                    const uniqueHeaders = headerRow.map((header, index) => {
+                        const base = header || `Col_${index}`;
+                        headerOccurrences[base] = (headerOccurrences[base] || 0) + 1;
+                        return headerOccurrences[base] === 1 ? base : `${base} [${headerOccurrences[base]}]`;
+                    });
                     for (let i=headerRowIndex+1; i<rows.length; i++) {
                         const obj = {}; let hasData = false;
-                        for (let j=0; j<headerRow.length; j++) {
-                            const rawKey = headerRow[j] || `Col_${j}`;
+                        for (let j=0; j<uniqueHeaders.length; j++) {
+                            const rawKey = uniqueHeaders[j];
                             const val = rows[i][j] !== undefined ? rows[i][j] : '';
                             obj[rawKey] = val;
                             if (val !== '') hasData = true;
@@ -761,6 +770,18 @@
             return null;
         }
 
+        // Busca exclusivamente encabezados exactos. Se usa en 4211 para respetar
+        // las columnas H (Cantidad) y K (Estado sig), sin tomar columnas parecidas.
+        function getExactFieldKey(row, names) {
+            const keys = Object.keys(row || {});
+            for (const name of names) {
+                const target = norm(name);
+                const found = keys.find(k => norm(k) === target);
+                if (found) return found;
+            }
+            return null;
+        }
+
         function textVal(v) {
             if (v === null || v === undefined) return '';
             return String(v).trim();
@@ -806,11 +827,15 @@
 
         function getPending4211Rows() {
             if (!rawMotivos.length) return [];
-            const hasNextState = rawMotivos.some(r => getFieldKey(r, ['Estado sig', 'Estado siguiente', 'Estado siguiente pedido']));
-            if (!hasNextState) return rawMotivos.slice();
-            return rawMotivos.filter(r => {
-                const st = textVal(getField(r, ['Estado sig', 'Estado siguiente', 'Estado siguiente pedido']));
-                return /^545(?:\.0+)?$/.test(st.trim());
+            const stateKey = getExactFieldKey(rawMotivos[0], ['Estado sig', 'Estado sig.']);
+            const qtyKey = getExactFieldKey(rawMotivos[0], ['Cantidad']);
+            // No asumir que todas las filas están pendientes si faltan los encabezados requeridos.
+            if (!stateKey || !qtyKey) return [];
+            return rawMotivos.filter(row => {
+                const state = textVal(row[stateKey]).replace(/\s/g, '');
+                const qty = row[qtyKey];
+                const quantityIsPresent = qty !== null && qty !== undefined && String(qty).trim() !== '';
+                return /^545(?:\.0+)?$/.test(state) && quantityIsPresent;
             });
         }
 
@@ -819,11 +844,11 @@
             const order = textVal(getField(row, isPending ? ['Número orden', 'Numero orden', 'Nro de orden', 'Nro orden'] : ['Nro de orden', 'Nro orden', 'Número orden', 'Numero orden']));
             const type = textVal(getField(row, isPending ? ['Tp ord', 'Tipo de orden', 'Tipo orden'] : ['Tipo de orden', 'Tipo orden', 'Tp ord']));
             const sku = textVal(getField(row, isPending ? ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', '2º nº articulo', 'Cod de item largo', 'Artículo', 'Articulo'] : ['Cod de item largo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo', 'SKU']));
-            // En la bajada 4211, 'Cant órdenes pendientes' es un contador y puede ser 0
-            // aunque la línea esté seleccionada por Estado sig. = 545. La cantidad a cruzar
-            // para esas líneas es la columna 'Cantidad' (no el contador de órdenes pendientes).
+            // En 4211 la cantidad válida es siempre la columna H, encabezado exacto "Cantidad".
+            // No se reemplaza por Cantidad enviada ni por Cant órdenes pendientes.
+            const pendingQtyKey = isPending ? getExactFieldKey(row, ['Cantidad']) : null;
             const qty = isPending
-                ? numberVal(getField(row, ['Cantidad', 'Cantidad solicitada']))
+                ? (pendingQtyKey ? numberVal(row[pendingQtyKey]) : 0)
                 : numberVal(getField(row, ['Cajas', 'Cantidad', 'Cantidad de cajas']));
             const desc = textVal(getField(row, isPending ? ['Descripción 1', 'Descripción', 'Descripcion'] : ['Descripción de línea', 'Descripcion de linea', 'Descripción', 'Descripcion']));
             const key = `${idNorm(type)}|${idNorm(order)}|${idNorm(sku)}`;
@@ -970,8 +995,8 @@
                 const key = `${idNorm(type)}|${idNorm(order)}`;
                 if (!pendingTotals.has(key)) pendingTotals.set(key, {type, order, qty:0, row, shipments:new Set()});
                 const item = pendingTotals.get(key);
-                const q = getField(row, ['Cant órdenes pendientes','Cant ordenes pendientes']);
-                item.qty += textVal(q) !== '' ? numberVal(q) : numberVal(getField(row, ['Cantidad']));
+                const qtyKey = getExactFieldKey(row, ['Cantidad']);
+                item.qty += qtyKey ? numberVal(row[qtyKey]) : 0;
                 const ship = textVal(getField(row, ['Número envío','Numero envio'])); if (ship) item.shipments.add(ship);
             });
             const orderKeys = new Set([...orderTotals.keys(), ...pendingTotals.keys()]);
@@ -1048,112 +1073,222 @@
             setCruceTab('stot');
         });
 
-       function processCruceSTOT() {
-            if (!rawCardex.length || !rawMotivos.length) {
-                document.getElementById('status-cruce-st-ot').textContent = 'Cargue la Bajada ST y el Cardex con selección.';
-                cruceSTOTData = [];
-                return;
-            }
+function processCruceSTOT() {
+    const status = document.getElementById('status-cruce-st-ot');
 
-            // Función auxiliar para normalizar SKU (elimina ceros decimales y espacios)
-            const cleanSku = (val) => {
-                if (val === null || val === undefined) return '';
-                let s = String(val).trim();
-                if (s.endsWith('.0')) s = s.substring(0, s.length - 2);
-                return s.toUpperCase();
-            };
+    if (!rawMotivos.length || !rawCardex.length) {
+        status.textContent = 'Para este cruce debe cargar la Bajada 4211 que contiene las ST y el Cardex.';
+        cruceSTOTData = [];
+        return;
+    }
 
-            // 1. TABLA DINÁMICA ST / PENDIENTES: Filtrar por Tipo doc == 'RI'
-            const stMap = new Map();
-            let countRI = 0;
+    const cleanSku = (value) => textVal(value).replace(/\.0+$/, '').replace(/\s+/g, '').toUpperCase();
+    const cleanCode = (value) => textVal(value).replace(/\s+/g, '').toUpperCase().replace(/\.0+$/, '');
+    const isBlank = (value) => value === null || value === undefined || String(value).trim() === '';
+    const firstPendingRow = rawMotivos[0] || {};
 
-            rawMotivos.forEach(row => {
-                const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
-                if (tipoDoc.toUpperCase() !== 'RI') return; // Exclusivamente Tipo doc RI
+    // La cantidad ST siempre sale de H (encabezado exacto Cantidad).
+    // Tipo doc = RI es el identificador estable del despacho; J/K se muestran
+    // como referencia pero no se usan como filtros obligatorios.
+    const qtyKey = getExactFieldKey(firstPendingRow, ['Cantidad']);
+    const tpKey = getExactFieldKey(firstPendingRow, ['Tp ord']);
+    const typeDocKey = getExactFieldKey(firstPendingRow, ['Tipo doc']);
+    const nextStateKey = getExactFieldKey(firstPendingRow, ['Estado sig', 'Estado sig.']);
+    const lastStateKey = getExactFieldKey(firstPendingRow, ['Último estado', 'Ultimo estado']);
 
-                const rawSku = getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Cod de item largo']);
-                const sku = cleanSku(rawSku);
-                if (!sku) return;
+    const cols = [
+        'Artículo', 'Descripción', 'UM',
+        'Líneas ST utilizadas', 'Cantidad ST (col. H)',
+        'Líneas Cardex OV', 'Cantidad OV neta recibida',
+        'Diferencia (OV - ST)', 'Resultado'
+    ];
 
-                const qty = numberVal(getField(row, ['Cantidad', 'Cantidad solicitada', 'Cantidad enviada']));
-                const desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
-                
-                if (!stMap.has(sku)) stMap.set(sku, { sku, desc, totalQty: 0, lines: 0 });
-                stMap.get(sku).totalQty += qty;
-                stMap.get(sku).lines++;
-                countRI++;
-            });
+    if (!qtyKey || !tpKey || !typeDocKey) {
+        cruceSTOTData = [];
+        const missing = [
+            !tpKey ? 'Tp ord (columna B)' : '',
+            !qtyKey ? 'Cantidad (columna H)' : '',
+            !typeDocKey ? 'Tipo doc (debe contener RI)' : ''
+        ].filter(Boolean);
+        status.textContent = `No se puede ejecutar el cruce: faltan encabezados requeridos en 4211: ${missing.join(', ')}.`;
+        createTableHead('thead-cruce-st-ot', cols);
+        fillTableBody('tbody-cruce-st-ot', [], cols, 'No se ejecutó la comparación por falta de columnas requeridas.');
+        createTableHead('thead-diferencias-st-ot', cols);
+        fillTableBody('tbody-diferencias-st-ot', [], cols, 'No se puede determinar si existen diferencias.');
+        return;
+    }
 
-            // 2. TABLA DINÁMICA CARDEX: Filtrar por Tipo doc == 'OV'
-            const cardexMap = new Map();
-            const detailRows = [];
-            let countOV = 0;
+    const availableTpOrd = new Set();
+    const availablePendingTypeDoc = new Set();
+    rawMotivos.forEach(row => {
+        const tp = cleanCode(row[tpKey]);
+        const doc = cleanCode(row[typeDocKey]);
+        if (tp) availableTpOrd.add(tp);
+        if (doc) availablePendingTypeDoc.add(doc);
+    });
 
-            rawCardex.forEach(row => {
-                const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
-                if (tipoDoc.toUpperCase() !== 'OV') return; // Exclusivamente Tipo doc OV
+    // ST despachadas: Tp ord = ST y Tipo doc = RI.
+    // No se filtra por estado J/K porque sus valores pueden variar entre bajadas.
+    const stTpRows = rawMotivos.filter(row => cleanCode(row[tpKey]) === 'ST');
+    const stRIRows = stTpRows.filter(row => cleanCode(row[typeDocKey]) === 'RI');
+    const stBlankQuantityRows = stRIRows.filter(row => isBlank(row[qtyKey]));
+    const stSourceRows = stRIRows.filter(row => !isBlank(row[qtyKey]));
+    const stRowsWithOtherStates = stSourceRows.filter(row =>
+        (lastStateKey && cleanCode(row[lastStateKey]) !== '620') ||
+        (nextStateKey && cleanCode(row[nextStateKey]) !== '999')
+    );
 
-                const rawSku = getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
-                const sku = cleanSku(rawSku);
-                if (!sku) return;
+    // Cardex: solo Tipo doc = OV; mantener signos para compensar reversas.
+    const availableTipoDoc = new Set();
+    const ovSourceRows = rawCardex.filter(row => {
+        const tipoDoc = cleanCode(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
+        if (tipoDoc) availableTipoDoc.add(tipoDoc);
+        return tipoDoc === 'OV';
+    });
 
-                const qty = numberVal(getField(row, ['Cantidad de la transacción', 'Cantidad de transaccion', 'Cantidad']));
-                const desc = textVal(getField(row, ['Descripción', 'Descripcion', 'Descripción 1'])) || '';
-                const uom = textVal(getField(row, ['UM de trans', 'UM'])) || 'CA';
-                
-                if (!cardexMap.has(sku)) {
-                    cardexMap.set(sku, { sku, desc, uom, totalQty: 0, lines: 0 });
-                }
-                cardexMap.get(sku).totalQty += qty;
-                cardexMap.get(sku).lines++;
-                countOV++;
+    const stMap = new Map();
+    const ovMap = new Map();
+    const stDetailRows = [];
+    const ovDetailRows = [];
+    let stLinesUsed = 0;
+    let ovLinesUsed = 0;
+    let stRowsWithoutSku = 0;
+    let ovRowsWithoutSku = 0;
+    let ovRowsWithoutQuantity = 0;
 
-                detailRows.push({ ...row, 'Validación': 'RI/OV Procesado', 'Cantidad interpretada': qty });
-            });
+    stSourceRows.forEach(row => {
+        const skuOriginal = getField(row, [
+            '2º nº artículo', '2o nro articulo', '2º número de artículo',
+            '2o numero de articulo', 'Artículo', 'Articulo'
+        ]);
+        const sku = cleanSku(skuOriginal);
+        if (!sku) { stRowsWithoutSku++; return; }
 
-            // 3. COMPARATIVA Y CRUCE (Unificación de ambas tablas dinámicas por SKU normalizado)
-            const keys = new Set([...stMap.keys(), ...cardexMap.keys()]);
-            cruceSTOTData = Array.from(keys).map(k => {
-                const st = stMap.get(k);
-                const cd = cardexMap.get(k);
-                const qSt = st ? st.totalQty : 0;
-                const qCd = cd ? cd.totalQty : 0;
-                const delta = qCd - qSt;
+        const qty = numberVal(row[qtyKey]); // Únicamente H.
+        const uom = textVal(getField(row, ['UM', 'Unidad de medida'])) || 'CA';
+        const desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
+        const key = `${idNorm(sku)}|${idNorm(uom)}`;
+        if (!stMap.has(key)) stMap.set(key, { sku: textVal(skuOriginal), desc, uom, signedQty: 0, lines: 0 });
+        const item = stMap.get(key);
+        item.signedQty += qty;
+        item.lines++;
+        stLinesUsed++;
+        stDetailRows.push({
+            ...row,
+            'Cantidad considerada (H - Cantidad)': qty,
+            'Tipo doc validado': 'RI',
+            'Último estado (J)': lastStateKey ? textVal(row[lastStateKey]) : '',
+            'Estado sig. (K)': nextStateKey ? textVal(row[nextStateKey]) : '',
+            'Criterio aplicado': 'Tp ord=ST + Tipo doc=RI + Cantidad H informada',
+            'Origen del cruce': 'ST - Despachado'
+        });
+    });
 
-                return {
-                    'Artículo': k,
-                    'Descripción': (st && st.desc) || (cd && cd.desc) || '',
-                    'UM de trans': (cd ? cd.uom : 'CA'),
-                    'Cantidad ST (RI)': qSt,
-                    'Líneas Cardex (OV)': cd ? cd.lines : 0,
-                    'Cantidad Cardex (OV)': qCd,
-                    'Diferencia (Cardex - ST)': delta,
-                    'Resultado': Math.abs(delta) < 0.000001 ? 'OK' : (delta > 0 ? 'SOBRANTE EN CARDEX' : 'FALTANTE EN CARDEX')
-                };
-            }).sort((a, b) => a['Artículo'].localeCompare(b['Artículo'], undefined, { numeric: true }));
+    ovSourceRows.forEach(row => {
+        // En el Cardex hay dos encabezados iguales para artículo. El lector
+        // conserva el primero (columna D) y lo usamos como SKU.
+        const skuOriginal = getField(row, [
+            '2º número de artículo', '2o numero de articulo',
+            '2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo'
+        ]);
+        const sku = cleanSku(skuOriginal);
+        if (!sku) { ovRowsWithoutSku++; return; }
 
-            const diffs = cruceSTOTData.filter(x => x.Resultado !== 'OK');
-            const cols = ['Artículo', 'Descripción', 'UM de trans', 'Cantidad ST (RI)', 'Líneas Cardex (OV)', 'Cantidad Cardex (OV)', 'Diferencia (Cardex - ST)', 'Resultado'];
+        const qtyRaw = getField(row, [
+            'Cantidad de la transacción', 'Cantidad de transaccion', 'Cantidad'
+        ]);
+        if (isBlank(qtyRaw)) { ovRowsWithoutQuantity++; return; }
+        const qty = numberVal(qtyRaw);
+        const uom = textVal(getField(row, ['UM de trans', 'UM'])) || 'CA';
+        const desc = textVal(getField(row, ['Descripción', 'Descripcion', 'Descripción 1']));
+        const key = `${idNorm(sku)}|${idNorm(uom)}`;
+        if (!ovMap.has(key)) ovMap.set(key, { sku: textVal(skuOriginal), desc, uom, signedQty: 0, lines: 0 });
+        const item = ovMap.get(key);
+        item.signedQty += qty;
+        item.lines++;
+        ovLinesUsed++;
+        ovDetailRows.push({
+            ...row,
+            'Cantidad considerada (OV)': qty,
+            'Origen del cruce': 'OV - Recepcionado'
+        });
+    });
 
-            // Poblar las tablas en la interfaz
-            createTableHead('thead-cruce-st-ot', cols); 
-            fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No hay datos para cruzar.');
-            
-            createTableHead('thead-diferencias-st-ot', cols); 
-            fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST (RI) y Cardex (OV).');
+    // Detalle de las líneas incluidas efectivamente en el cruce.
+    const stDetailCols = Object.keys(rawMotivos[0] || {});
+    ['Cantidad considerada (H - Cantidad)', 'Tipo doc validado', 'Último estado (J)', 'Estado sig. (K)', 'Criterio aplicado', 'Origen del cruce'].forEach(c => {
+        if (!stDetailCols.includes(c)) stDetailCols.push(c);
+    });
+    createTableHead('thead-detalle-st-pendientes', stDetailCols);
+    fillTableBody('tbody-detalle-st-pendientes', stDetailRows, stDetailCols,
+        'No hay filas ST que cumplan Tp ord = ST, Tipo doc = RI y Cantidad (H) informada.');
 
-            const rawCols = Object.keys(rawCardex[0] || {});
-            if (!rawCols.includes('Validación')) rawCols.push('Validación', 'Cantidad interpretada');
-            createTableHead('thead-detalle-cardex', rawCols); 
-            fillTableBody('tbody-detalle-cardex', detailRows, rawCols, 'Sin movimientos OV en el Cardex.');
+    const ovDetailCols = Object.keys(rawCardex[0] || {});
+    ['Cantidad considerada (OV)', 'Origen del cruce'].forEach(c => {
+        if (!ovDetailCols.includes(c)) ovDetailCols.push(c);
+    });
+    createTableHead('thead-detalle-cardex', ovDetailCols);
+    fillTableBody('tbody-detalle-cardex', ovDetailRows, ovDetailCols,
+        'No hay filas Cardex con Tipo doc = OV y artículo/cantidad válidos.');
 
-            const totalSt = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad ST (RI)']), 0);
-            const totalCd = cruceSTOTData.reduce((a, x) => a + numberVal(x['Cantidad Cardex (OV)']), 0);
-
-            document.getElementById('status-cruce-st-ot').textContent = diffs.length ? 
-                `Análisis completado: ${countRI} líneas ST (RI) · ${countOV} líneas Cardex (OV) · ${diffs.length} diferencias · Total ST (RI): ${fmtInt(totalSt)} CA · Total Cardex (OV): ${fmtInt(totalCd)} CA.` : 
-                `¡Cruce exacto! Se compararon ${stMap.size} artículos sin diferencias (ST Tipo doc RI vs Cardex Tipo doc OV). Total: ${fmtInt(totalSt)} CA.`;
+    if (!stLinesUsed || !ovLinesUsed) {
+        cruceSTOTData = [];
+        const pendingDocTypes = Array.from(availablePendingTypeDoc).sort().join(', ') || 'ninguno';
+        const cardexDocTypes = Array.from(availableTipoDoc).sort().join(', ') || 'ninguno';
+        const msg = [];
+        if (!stLinesUsed) {
+            msg.push(`No hay líneas ST válidas: Tp ord=ST (${stTpRows.length}) · Tipo doc=RI (${stRIRows.length}) · RI con Cantidad H informada (${stLinesUsed}) · RI con Cantidad H vacía/anulada (${stBlankQuantityRows.length}).`);
         }
+        if (!ovLinesUsed) {
+            msg.push(`No se encontraron ingresos OV con artículo y cantidad válidos. Tipos doc Cardex: ${cardexDocTypes} · OV detectadas: ${ovSourceRows.length} · OV sin artículo: ${ovRowsWithoutSku} · OV sin cantidad: ${ovRowsWithoutQuantity}.`);
+        }
+        msg.push(`Tipos doc en 4211: ${pendingDocTypes} · Filas ST utilizadas: ${stLinesUsed} · Filas OV utilizadas: ${ovLinesUsed}.`);
+        status.textContent = msg.join(' ');
+        createTableHead('thead-cruce-st-ot', cols);
+        fillTableBody('tbody-cruce-st-ot', [], cols, 'No se ejecutó la comparación porque falta información válida en uno de los dos archivos.');
+        createTableHead('thead-diferencias-st-ot', cols);
+        fillTableBody('tbody-diferencias-st-ot', [], cols, 'No se puede determinar si existen diferencias hasta cargar ambos lados.');
+        return;
+    }
+
+    // Las ST (RI) y las OV son espejos. Se comparan por artículo y UM;
+    // la cantidad OV se netea con signo para descontar reversas negativas.
+    const keys = new Set([...stMap.keys(), ...ovMap.keys()]);
+    cruceSTOTData = Array.from(keys).map(key => {
+        const st = stMap.get(key);
+        const ov = ovMap.get(key);
+        const qtyST = st ? st.signedQty : 0;
+        const qtyOV = ov ? ov.signedQty : 0;
+        const delta = qtyOV - qtyST;
+        return {
+            'Artículo': (st || ov).sku,
+            'Descripción': (st && st.desc) || (ov && ov.desc) || '',
+            'UM': (st && st.uom) || (ov && ov.uom) || 'CA',
+            'Líneas ST utilizadas': st ? st.lines : 0,
+            'Cantidad ST (col. H)': qtyST,
+            'Líneas Cardex OV': ov ? ov.lines : 0,
+            'Cantidad OV neta recibida': qtyOV,
+            'Diferencia (OV - ST)': delta,
+            'Resultado': Math.abs(delta) < 0.000001 ? 'OK' : (delta > 0 ? 'SOBRANTE EN OV' : 'FALTANTE EN OV')
+        };
+    }).sort((a, b) => a['Artículo'].localeCompare(b['Artículo'], undefined, { numeric: true }));
+
+    const diffs = cruceSTOTData.filter(row => row.Resultado !== 'OK');
+    createTableHead('thead-cruce-st-ot', cols);
+    fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No hay artículos para comparar.');
+    createTableHead('thead-diferencias-st-ot', cols);
+    fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST con RI y OV recibidas.');
+
+    const totalST = cruceSTOTData.reduce((sum, row) => sum + numberVal(row['Cantidad ST (col. H)']), 0);
+    const totalOV = cruceSTOTData.reduce((sum, row) => sum + numberVal(row['Cantidad OV neta recibida']), 0);
+    const statusVariantText = stRowsWithOtherStates.length
+        ? ` · ${stRowsWithOtherStates.length} líneas RI se incluyeron aunque J/K no fueran 620/999 (estados variables)`
+        : ' · Todas las líneas RI utilizadas también tienen J=620/K=999';
+    const extra = ` · ${stBlankQuantityRows.length} líneas RI con Cantidad H vacía/anuladas excluidas · OV sin artículo: ${ovRowsWithoutSku} · OV sin cantidad: ${ovRowsWithoutQuantity}`;
+    status.textContent = diffs.length
+        ? `Se compararon ${stLinesUsed} líneas 4211 (Tp ord=ST, Tipo doc=RI, Cantidad H informada) contra ${ovLinesUsed} líneas Cardex (Tipo doc=OV) · ${cruceSTOTData.length} combinaciones artículo/UM · ${diffs.length} diferencias · Total ST (RI): ${fmtInt(totalST)} CA · Total OV neta: ${fmtInt(totalOV)} CA${statusVariantText}${extra}.`
+        : `Cruce correcto: ${stLinesUsed} líneas ST con RI y ${ovLinesUsed} ingresos OV · ${cruceSTOTData.length} combinaciones artículo/UM sin diferencias · Total ST (RI): ${fmtInt(totalST)} CA · Total OV neta: ${fmtInt(totalOV)} CA${statusVariantText}${extra}.`;
+}
         function processCruceSTPedido() {
             if (!rawPedidos.length || !rawMotivos.length) {
                 document.getElementById('status-cruce-st-pedido').textContent = 'Cargue Bajada de pedidos y Bajada de pendientes (4211).';
@@ -1194,6 +1329,7 @@
         document.getElementById('btn-copiar-diferencias-st-ot').addEventListener('click', () => copyTableById('tabla-diferencias-st-ot'));
         document.getElementById('btn-copiar-cruce-st-pedido').addEventListener('click', () => copyTableById('tabla-cruce-st-pedido'));
         document.getElementById('btn-copiar-diferencias-st-pedido').addEventListener('click', () => copyTableById('tabla-diferencias-st-pedido'));
+        document.getElementById('btn-copiar-detalle-st-pendientes').addEventListener('click', () => copyTableById('tabla-detalle-st-pendientes'));
         document.getElementById('btn-copiar-detalle-cardex').addEventListener('click', () => copyTableById('tabla-detalle-cardex'));
         document.getElementById('btn-copiar-detalle-pedidos-cruce').addEventListener('click', () => copyTableById('tabla-detalle-pedidos-cruce'));
         document.getElementById('btn-copiar-detalle-4211-cruce').addEventListener('click', () => copyTableById('tabla-detalle-4211-cruce'));
@@ -1532,8 +1668,8 @@
                 let nomCliente = getField(row, ['Nombre venta', 'Nombre de cliente', 'Nombre cliente']);
                 let sku = textVal(getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Articulo']));
                 let desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
-                let qtyPendingKey = getFieldKey(row, ['Cant órdenes pendientes', 'Cant ordenes pendientes', 'Cantidad pendiente']);
-                let cajasPedidas = qtyPendingKey && textVal(row[qtyPendingKey]) !== '' ? numberVal(row[qtyPendingKey]) : numberVal(getField(row, ['Cantidad']));
+                let qtyPendingKey = getExactFieldKey(row, ['Cantidad']);
+                let cajasPedidas = qtyPendingKey ? numberVal(row[qtyPendingKey]) : 0;
                 if (!sku || cajasPedidas <= 0) return;
 
                 let lotesDisponibles = stockMap[sku] || [];
