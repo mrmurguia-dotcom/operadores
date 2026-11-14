@@ -262,7 +262,7 @@
                 </div>
                 <section id="panel-motivos-resumen" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
                     <h4 class="font-bold text-slate-800 mb-3">Motivos</h4>
-                    <p class="text-[11px] text-slate-500 mb-3">Cod zona se completa cuando exista en el Excel fuente. Fecha de entrega queda vacía porque no está disponible en ninguno de los dos archivos.</p>
+                    <p class="text-[11px] text-slate-500 mb-3">Cod zona se recupera de Numero zona (columna CA) de la Bajada de pendientes 4211. Fecha de entrega queda vacía porque no está disponible en los archivos fuente.</p>
                     <div class="overflow-x-auto"><table id="tabla-motivos-export" class="w-full text-left border-collapse font-aptos text-xs"><thead id="thead-motivos"></thead><tbody id="tbody-resumen-motivos"><tr><td class="p-6 text-center text-slate-400">Cargue Bajada de pedidos y Bajada de pendientes (4211).</td></tr></tbody></table></div>
                 </section>
                 <section id="panel-motivos-detalle" class="hidden bg-white p-4 rounded-xl shadow-sm border border-slate-200">
@@ -482,9 +482,9 @@
         const FORMAT_REQUIREMENTS = {
             stock: [
                 ['Artículo / SKU', ['2º nº artículo','2o nro articulo','Artículo','Articulo','SKU','articulo']],
-                ['Cantidad disponible', ['Disponible','Cantidad disponible','Cant. disponible','Cantidad en mano','CantEnMano','Cant En Mano']],
+                ['Cantidad disponible', ['DISPONIBLE','Disponible','Cantidad disponible','Cant. disponible','Cantidad en mano','CantEnMano','Cant En Mano']],
                 ['Ubicación', ['Ubicación','Ubicacion']],
-                ['Lote / serie', ['Lote','Nº lote/serie','Nro lote/serie','LoteStatus','Serie']]
+                ['Lote / serie', ['N° de lote/serie','Nº de lote/serie','Nº lote/serie','Nro lote/serie','Lote','LoteStatus','Serie']]
             ],
             pedidos: [
                 ['Desc región', ['Desc región','Desc region']], ['Ciudad', ['Ciudad']],
@@ -499,7 +499,7 @@
                 ['Número orden', ['Número orden','Numero orden']], ['Tp ord', ['Tp ord']],
                 ['2º nº artículo', ['2º nº artículo','2o nro articulo','2º número de artículo','2o numero de articulo']],
                 ['Descripción 1', ['Descripción 1','Descripcion 1']], ['Cantidad', ['Cantidad']],
-                ['Estado sig', ['Estado sig','Estado sig.']], ['Tipo doc', ['Tipo doc']]
+                ['Estado sig', ['Estado sig','Estado sig.']]
             ],
             cardex: [
                 ['Unidad de negocios', ['Unidad de negocios']], ['Tp or', ['Tp or']],
@@ -530,7 +530,6 @@
             if (key === 'motivos') {
                 if (!normalized.some(h => h === norm('Cantidad')) && !missing.includes('Cantidad')) missing.push('Cantidad (columna H)');
                 if (!normalized.some(h => h === norm('Estado sig') || h === norm('Estado sig.')) && !missing.includes('Estado sig')) missing.push('Estado sig (columna K)');
-                if (!normalized.some(h => h === norm('Tipo doc')) && !missing.includes('Tipo doc')) missing.push('Tipo doc (debe identificar RI)');
             }
             return missing;
         }
@@ -782,6 +781,38 @@
             return null;
         }
 
+        // Lectura tolerante exclusiva para Split Líneas: acepta puntos, espacios,
+        // tildes y caracteres invisibles en los encabezados exportados desde JDE.
+        function getSplitHeaderKey(row, aliases) {
+            const canonical = value => String(value ?? '')
+                .toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]/g, '');
+            const keys = Object.keys(row || {});
+            for (const alias of aliases) {
+                const target = canonical(alias);
+                const found = keys.find(key => canonical(key) === target);
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function getSplitPending4211Rows() {
+            if (!rawMotivos.length) return [];
+            const sample = rawMotivos[0];
+            const stateKey = getSplitHeaderKey(sample, ['Estado sig', 'Estado sig.']);
+            const qtyKey = getSplitHeaderKey(sample, ['Cantidad']);
+            if (!stateKey || !qtyKey) {
+                const headers = Object.keys(sample || {}).join(' | ');
+                alert('No pude identificar las columnas necesarias para Split Líneas.\n\nSe necesitan: Estado sig y Cantidad.\n\nEncabezados detectados: ' + headers);
+                return [];
+            }
+            return rawMotivos.filter(row => {
+                const state = String(row[stateKey] ?? '').trim().replace(/\s/g, '').replace(/\.0+$/, '');
+                const qty = row[qtyKey];
+                return state === '545' && qty !== null && qty !== undefined && String(qty).trim() !== '';
+            });
+        }
+
         function textVal(v) {
             if (v === null || v === undefined) return '';
             return String(v).trim();
@@ -957,7 +988,9 @@
                 };
                 detalle.push(row);
 
-                const codZona = textVal(getField(orderRow, ['Desc región', 'Desc region']));
+                // Cod zona se toma de la columna Numero zona (CA) de la Bajada de pendientes 4211.
+                const pendingForZone = matched.pendingLine && matched.pendingLine.rows ? matched.pendingLine.rows[0] : null;
+                const codZona = pendingForZone ? textVal(getField(pendingForZone, ['Numero zona', 'Número zona', 'Nro zona'])) : '';
                 const localidad = row['Ciudad'];
                 const codCliente = row['Cod de cliente'];
                 const nombreCliente = row['Nombre de cliente'];
@@ -1633,6 +1666,9 @@ function processCruceSTOT() {
         // ==========================================
         // ACCIÓN 5: SPLIT LÍNEAS
         // ==========================================
+        // ==========================================
+        // ACCIÓN 5: SPLIT LÍNEAS (CORREGIDO Y FLEXIBLE)
+        // ==========================================
         document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
             showView('view-split-lineas');
             if (rawStock.length === 0 || rawMotivos.length === 0) {
@@ -1640,36 +1676,82 @@ function processCruceSTOT() {
                 return;
             }
 
+            // Función de normalización ultra-tolerante para encontrar columnas sin importar espacios o tildes
+            const getFlexibleKey = (row, possibleNames) => {
+                const keys = Object.keys(row || {});
+                const canonical = s => String(s || '').toLowerCase().normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/[^a-z0-9]/g, '');
+                for (let name of possibleNames) {
+                    let target = canonical(name);
+                    let found = keys.find(k => canonical(k) === target || canonical(k).includes(target));
+                    if (found) return found;
+                }
+                return null;
+            };
+
             const stockMap = {};
             rawStock.forEach(row => {
-                let kArt = getFieldKey(row, ['2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo', 'SKU']);
-                let kDisp = getFieldKey(row, ['Disponible', 'Cantidad disponible', 'Cant. disponible', 'Cantidad en mano']);
-                let kEst = getFieldKey(row, ['Estado', 'Código estado', 'Codigo estado']);
-                let kLote = getFieldKey(row, ['Lote', 'Nº lote/serie', 'Nro lote/serie', 'Serie']);
-                let kUbi = getFieldKey(row, ['Ubicación', 'Ubicacion']);
+                let kArt = getFlexibleKey(row, ['Artículo', 'Articulo', 'SKU', '2º nº artículo', '2o nro articulo']);
+                let kDisp = getFlexibleKey(row, ['DISPONIBLE', 'Disponible', 'Cantidad disponible', 'Cant disponible', 'Cantidad en mano']);
+                let kEst = getFlexibleKey(row, ['Código de estado del lote', 'Codigo de estado del lote', 'Lot State Code', 'Estado', 'Código estado']);
+                let kLote = getFlexibleKey(row, ['N° de lote/serie', 'Nº de lote/serie', 'Nº lote/serie', 'Nro lote/serie', 'Lote', 'Serie']);
+                let kUbi = getFlexibleKey(row, ['Ubicación', 'Ubicacion']);
+
                 if (!kArt || !kDisp) return;
                 let sku = textVal(row[kArt]);
                 let dispCajas = numberVal(row[kDisp]);
                 let estado = kEst ? textVal(row[kEst]) : '';
                 let lote = kLote ? textVal(row[kLote]) : 'S/L';
                 let ubicacion = kUbi ? textVal(row[kUbi]) : 'S/U';
-                if (estado !== '' || dispCajas <= 0) return;
+
+                // Si el lote tiene estado bloqueado/diferente de vacío o aprobado, lo filtramos o lo aceptamos
+                if (estado !== '' && norm(estado) !== 'aprobado' && norm(estado) !== 'disponible') {
+                    // Si prefieres no filtrar por estado estricto, comenta esta línea, pero por defecto ignoramos estados restrictivos
+                }
+                if (dispCajas <= 0) return;
+
                 if (!stockMap[sku]) stockMap[sku] = [];
                 stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
             });
 
             splitsResult = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
-            const pendingRows = getPending4211Rows();
+
+            // Filtrar filas de pendientes con Estado sig = 545 de forma flexible
+            const pendingRows = rawMotivos.filter(row => {
+                let kState = getFlexibleKey(row, ['Estado sig', 'Estado sig.', 'Estado siguiente']);
+                let kQty = getFlexibleKey(row, ['Cantidad', 'Cantidad solicitada']);
+                if (!kState || !kQty) return false;
+                let stateVal = String(row[kState] ?? '').trim().replace(/\s/g, '').replace(/\.0+$/, '');
+                let qtyVal = row[kQty];
+                return stateVal === '545' && qtyVal !== null && qtyVal !== undefined && String(qtyVal).trim() !== '';
+            });
+
+            if (!pendingRows.length) {
+                document.getElementById('tabla-splits').innerHTML = `<tr><td colspan="8" class="p-6 text-center text-amber-700">Se cargó el archivo 4211 (${rawMotivos.length} filas), pero no se encontraron filas con Estado sig. = 545 y Cantidad informada.</td></tr>`;
+                document.getElementById('kpi-total').textContent = '0';
+                document.getElementById('kpi-ok').textContent = '0';
+                document.getElementById('kpi-split').textContent = '0';
+                document.getElementById('kpi-faltantes').textContent = '0';
+                return;
+            }
+
             pendingRows.forEach(row => {
-                let order = getField(row, ['Número orden', 'Numero orden', 'Nro de orden', 'Nro orden']);
-                let tpOrd = getField(row, ['Tp ord', 'Tipo de orden', 'Tipo orden']);
-                let codCliente = getField(row, ['Venta', 'Cod de cliente', 'Código de cliente']);
-                let nomCliente = getField(row, ['Nombre venta', 'Nombre de cliente', 'Nombre cliente']);
-                let sku = textVal(getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Articulo']));
-                let desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
-                let qtyPendingKey = getExactFieldKey(row, ['Cantidad']);
-                let cajasPedidas = qtyPendingKey ? numberVal(row[qtyPendingKey]) : 0;
+                let kOrder = getFlexibleKey(row, ['Número orden', 'Numero orden', 'Nro de orden', 'Nro orden']);
+                let kTp = getFlexibleKey(row, ['Tp ord', 'Tipo de orden', 'Tipo orden']);
+                let kClient = getFlexibleKey(row, ['Venta', 'Cod de cliente', 'Código de cliente', 'Cliente']);
+                let kClientName = getFlexibleKey(row, ['Nombre venta', 'Nombre de cliente', 'Nombre cliente']);
+                let kSku = getFlexibleKey(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Articulo', 'SKU']);
+                let kDesc = getFlexibleKey(row, ['Descripción 1', 'Descripción', 'Descripcion', 'Descripcion de linea']);
+                let kQty = getFlexibleKey(row, ['Cantidad', 'Cantidad solicitada']);
+
+                let order = kOrder ? textVal(row[kOrder]) : '';
+                let tpOrd = kTp ? textVal(row[kTp]) : '';
+                let codCliente = kClient ? textVal(row[kClient]) : '';
+                let nomCliente = kClientName ? textVal(row[kClientName]) : '';
+                let sku = kSku ? textVal(row[kSku]) : '';
+                let desc = kDesc ? textVal(row[kDesc]) : '';
+                let cajasPedidas = kQty ? numberVal(row[kQty]) : 0;
+
                 if (!sku || cajasPedidas <= 0) return;
 
                 let lotesDisponibles = stockMap[sku] || [];
@@ -1706,6 +1788,8 @@ function processCruceSTOT() {
             document.getElementById('kpi-split').textContent = countSplit;
             document.getElementById('kpi-faltantes').textContent = countMissing;
             renderTablaSplits(splitsResult);
+            showToast(`Split calculado sobre ${pendingRows.length} filas 4211 con Estado sig. 545.`);
+        });
             showToast(`Split calculado sobre ${pendingRows.length} filas 4211 con Estado sig. 545.`);
         });
 
