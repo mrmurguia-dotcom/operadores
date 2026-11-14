@@ -1055,48 +1055,58 @@
                 return;
             }
 
+            // Función auxiliar para normalizar SKU (quita .0 y espacios)
+            const cleanSku = (val) => {
+                if (val === null || val === undefined) return '';
+                let s = String(val).trim();
+                if (s.endsWith('.0')) s = s.substring(0, s.length - 2);
+                return s.toUpperCase();
+            };
+
             // 1. Agrupar cantidades de ST por artículo
             const stMap = new Map();
             rawMotivos.forEach(row => {
-                const sku = textVal(getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Cod de item largo']));
+                const rawSku = getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Cod de item largo']);
+                const sku = cleanSku(rawSku);
                 if (!sku) return;
                 const qty = numberVal(getField(row, ['Cantidad', 'Cantidad solicitada', 'Cantidad enviada']));
                 const desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
-                const k = idNorm(sku);
-                if (!stMap.has(k)) stMap.set(k, { sku, desc, totalQty: 0, lines: 0 });
-                stMap.get(k).totalQty += qty;
-                stMap.get(k).lines++;
+                
+                if (!stMap.has(sku)) stMap.set(sku, { sku, desc, totalQty: 0, lines: 0 });
+                stMap.get(sku).totalQty += qty;
+                stMap.get(sku).lines++;
             });
 
-            // 2. Agrupar cantidades del Cardex filtrando por Tipo doc = OV (ingresos/salidas operativas)
+            // 2. Agrupar cantidades del Cardex filtrando por Tipo doc = OV
             const cardexMap = new Map();
             const detailRows = [];
             let processedLines = 0;
 
             rawCardex.forEach(row => {
                 const tipoDoc = textVal(getField(row, ['Tipo doc', 'Tipo documento', 'TD']));
-                const sku = textVal(getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']));
+                const rawSku = getField(row, ['2º número de artículo', '2o numero de articulo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Cod de item largo']);
+                const sku = cleanSku(rawSku);
+                
                 if (!sku) return;
 
-                // Considerar exclusivamente Tipo doc = OV o equivalente operativo
+                // Considerar exclusivamente Tipo doc = OV
                 if (tipoDoc.toUpperCase() !== 'OV') return;
 
                 const qty = numberVal(getField(row, ['Cantidad de la transacción', 'Cantidad de transaccion', 'Cantidad']));
                 const desc = textVal(getField(row, ['Descripción', 'Descripcion', 'Descripción 1'])) || '';
                 const uom = textVal(getField(row, ['UM de trans', 'UM'])) || 'CA';
                 
-                const k = idNorm(sku);
-                if (!cardexMap.has(k)) {
-                    cardexMap.set(k, { sku, desc, uom, totalQty: 0, lines: 0 });
+                if (!cardexMap.has(sku)) {
+                    cardexMap.set(sku, { sku, desc, uom, totalQty: 0, lines: 0 });
                 }
-                cardexMap.get(k).totalQty += qty;
-                cardexMap.get(k).lines++;
+                cardexMap.get(sku).totalQty += qty;
+                cardexMap.get(sku).lines++;
                 processedLines++;
 
                 detailRows.push({ ...row, 'Validación': 'OV Procesado', 'Cantidad interpretada': qty });
             });
 
-            // 3. Cruzar ST vs Cardex (OV)
+            // 3. Cruzar ST vs Cardex (OV) normalizando claves
             const keys = new Set([...stMap.keys(), ...cardexMap.keys()]);
             cruceSTOTData = Array.from(keys).map(k => {
                 const st = stMap.get(k);
@@ -1106,7 +1116,7 @@
                 const delta = qCd - qSt;
 
                 return {
-                    'Artículo': (st || cd).sku,
+                    'Artículo': k,
                     'Descripción': (st && st.desc) || (cd && cd.desc) || '',
                     'UM de trans': (cd ? cd.uom : 'CA'),
                     'Cantidad ST (Despachado)': qSt,
