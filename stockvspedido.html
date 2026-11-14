@@ -77,7 +77,7 @@
                 <h1 class="text-2xl font-bold flex items-center gap-2">
                     <i class="fa-solid fa-boxes-stacked"></i> JDE Ship Confirmation - Panel Logístico
                 </h1>
-                <p class="text-blue-200 text-sm mt-1">Gestión Independiente de Pedidos, Motivos, Sugerencia PK, Asignación y Splits</p>
+                <p class="text-blue-200 text-sm mt-1">Gestión de Pedidos, Pendientes 4211, Cruces, Asignación y Splits</p>
             </div>
         </div>
     </header>
@@ -92,7 +92,7 @@
         </div>
 
         <!-- Carga de Archivos Independientes (3 Secciones) -->
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 no-print">
+        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-6 no-print">
             <!-- Card Stock -->
             <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
                 <div>
@@ -136,18 +136,36 @@
                 <div>
                     <h2 class="text-md font-bold text-slate-700 flex items-center gap-2 mb-2">
                         <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">3</span> 
-                        Bajada de pendientes y control ST (4211)
+                        Bajada de pendientes (4211)
                     </h2>
-                    <p class="text-xs text-slate-500 mb-3">Bajada de la 4211 en 545 (pendientes)</p>
+                    <p class="text-xs text-slate-500 mb-3">Bajada de consulta de pedidos JDE. Se utilizarán las líneas con Estado sig. = 545.</p>
                     
                     <input type="file" id="file-motivos" class="hidden" accept=".xlsx, .xls, .csv">
                     <label for="file-motivos" id="drop-motivos" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
                         <i class="fa-solid fa-file-excel text-3xl text-green-600 mb-2"></i>
-                        <span id="motivos-name" class="text-xs font-semibold text-slate-700 text-center">Seleccionar archivo Motivos</span>
+                        <span id="motivos-name" class="text-xs font-semibold text-slate-700 text-center">Seleccionar Bajada de pendientes (4211)</span>
                         <span class="text-[10px] text-slate-400 mt-1">.xlsx, .xls, .csv</span>
                     </label>
                 </div>
                 <div id="status-motivos" class="mt-3 text-[11px] font-semibold"></div>
+            </div>
+
+            <!-- Card Cardex -->
+            <div class="bg-white p-5 rounded-xl shadow-sm border border-slate-200 flex flex-col justify-between">
+                <div>
+                    <h2 class="text-md font-bold text-slate-700 flex items-center gap-2 mb-2">
+                        <span class="bg-blue-100 text-blue-800 text-xs font-bold px-2.5 py-1 rounded-full">4</span>
+                        Bajada del Cardex con selección
+                    </h2>
+                    <p class="text-xs text-slate-500 mb-3">Movimientos para controlar ST contra OT.</p>
+                    <input type="file" id="file-cardex" class="hidden" accept=".xlsx, .xls, .csv">
+                    <label for="file-cardex" id="drop-cardex" class="border-2 border-dashed border-slate-300 hover:border-blue-500 rounded-lg p-5 flex flex-col items-center justify-center cursor-pointer bg-slate-50 transition">
+                        <i class="fa-solid fa-file-excel text-3xl text-green-600 mb-2"></i>
+                        <span id="cardex-name" class="text-xs font-semibold text-slate-700 text-center">Seleccionar archivo Cardex</span>
+                        <span class="text-[10px] text-slate-400 mt-1">.xlsx, .xls, .csv</span>
+                    </label>
+                </div>
+                <div id="status-cardex" class="mt-3 text-[11px] font-semibold"></div>
             </div>
         </div>
 
@@ -162,7 +180,7 @@
             </button>
 
             <button id="btn-action-sugerencia-pk" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
-                <i class="fa-solid fa-boxes-packing"></i> 3. Sugerencia PK
+                <i class="fa-solid fa-code-compare"></i> 3. Cruces
             </button>
 
             <button id="btn-action-asignacion" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-3 px-3 rounded-xl shadow-md transition flex items-center justify-center gap-2 cursor-pointer text-xs">
@@ -222,97 +240,76 @@
                 </div>
             </div>
 
-            <!-- VISTA 2: RESUMEN MOTIVOS -->
+            <!-- VISTA 2: MOTIVOS CONSOLIDADOS -->
             <div id="view-resumen-motivos" class="hidden space-y-4">
                 <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
-                    <div class="flex items-center gap-3">
-                        <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                            <i class="fa-solid fa-clipboard-list text-indigo-600"></i> Vista: Resumen Motivos
-                        </h3>
-                    </div>
-                    
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
+                        <i class="fa-solid fa-clipboard-list text-indigo-600"></i> Motivos (Pedidos Customer vs Pendientes 545)
+                    </h3>
                     <button id="btn-copiar-resumen-motivos" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                        <i class="fa-solid fa-copy"></i> Copiar Cuerpo de Mail y Tabla
+                        <i class="fa-solid fa-copy"></i> Copiar tabla visible
                     </button>
                 </div>
-
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex items-center gap-3 no-print">
-                    <label for="motivos-custom-text" class="text-xs font-bold text-slate-600 whitespace-nowrap">
-                        Texto personalizado (XXXXX):
-                    </label>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-3 no-print">
+                    <label for="motivos-custom-text" class="text-xs font-bold text-slate-600 whitespace-nowrap">Texto personalizado:</label>
                     <input type="text" id="motivos-custom-text" placeholder="Ej: LITORAL Y NEA 21/10" class="border border-slate-300 rounded-lg px-3 py-1.5 text-xs w-full max-w-md focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <span id="motivos-consolidacion-status" class="text-xs text-slate-500">Cruce entre Bajada de pedidos y 4211 (Estado sig. 545).</span>
                 </div>
-
-                <div id="copyable-resumen-motivos" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 space-y-4 font-aptos">
-                    <div id="motivos-mail-text" class="text-slate-700 bg-slate-50 p-4 rounded-lg border border-slate-200 leading-relaxed">
-                        Estimados,<br>adjunto los motivos correspondientes a <span id="motivos-dynamic-placeholder" class="font-semibold text-indigo-700"></span>.
-                    </div>
-
-                    <h2 id="motivos-table-title" class="font-bold text-slate-800 pt-2 border-t border-slate-100">
-                        Resumen motivos ( <span id="motivos-title-placeholder"></span> )
-                    </h2>
-
-                    <div class="overflow-x-auto">
-                        <table class="w-full text-left border-collapse font-aptos" id="tabla-motivos-export" style="border-collapse: collapse; width: 100%;">
-                            <thead>
-                                <tr class="bg-slate-100 text-slate-700 font-semibold">
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Cod de cliente</th>
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Nombre de cliente</th>
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100">OC del cliente</th>
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Fecha de entrega</th>
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Turno</th>
-                                    <th class="p-2.5 border border-slate-300 bg-slate-100 text-right">Total Cajas</th>
-                                </tr>
-                            </thead>
-                            <tbody id="tbody-resumen-motivos" class="divide-y divide-slate-200 text-slate-700">
-                                <tr>
-                                    <td colspan="6" class="p-6 text-center text-slate-400 italic">Cargue el archivo de Motivos y presione "2. Resumen Motivos".</td>
-                                </tr>
-                            </tbody>
-                        </table>
-                    </div>
-
-                    <div class="text-slate-700 pt-1">
-                        Saludos
-                    </div>
+                <div class="flex flex-wrap gap-2 no-print">
+                    <button class="motivos-tab-btn bg-indigo-600 text-white px-4 py-2 rounded-lg text-xs font-bold" data-tab="motivos">Motivos</button>
+                    <button class="motivos-tab-btn bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold" data-tab="detalle">Motivos con detalle</button>
+                    <button class="motivos-tab-btn bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold" data-tab="diferencias">Diferencias</button>
                 </div>
+                <section id="panel-motivos-resumen" class="bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">Motivos</h4>
+                    <p class="text-[11px] text-slate-500 mb-3">Cod zona se completa cuando exista en el Excel fuente. Fecha de entrega queda vacía porque no está disponible en ninguno de los dos archivos.</p>
+                    <div class="overflow-x-auto"><table id="tabla-motivos-export" class="w-full text-left border-collapse font-aptos text-xs"><thead id="thead-motivos"></thead><tbody id="tbody-resumen-motivos"><tr><td class="p-6 text-center text-slate-400">Cargue Bajada de pedidos y Bajada de pendientes (4211).</td></tr></tbody></table></div>
+                </section>
+                <section id="panel-motivos-detalle" class="hidden bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">Motivos con detalle</h4>
+                    <div class="overflow-x-auto"><table id="tabla-motivos-detalle" class="w-full text-left border-collapse font-aptos text-xs"><thead id="thead-motivos-detalle"></thead><tbody id="tbody-motivos-detalle"><tr><td class="p-6 text-center text-slate-400">Sin datos.</td></tr></tbody></table></div>
+                </section>
+                <section id="panel-motivos-diferencias" class="hidden bg-white p-4 rounded-xl shadow-sm border border-slate-200">
+                    <h4 class="font-bold text-slate-800 mb-3">Diferencias entre Bajada de pedidos y 4211</h4>
+                    <div class="overflow-x-auto"><table id="tabla-motivos-diferencias" class="w-full text-left border-collapse font-aptos text-xs"><thead id="thead-motivos-diferencias"></thead><tbody id="tbody-motivos-diferencias"><tr><td class="p-6 text-center text-slate-400">Sin datos.</td></tr></tbody></table></div>
+                </section>
             </div>
 
-            <!-- VISTA 3: SUGERENCIA PK (PICKING AVANZADO) -->
+            <!-- VISTA 3: CRUCES -->
             <div id="view-sugerencia-pk" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
-                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
-                        <i class="fa-solid fa-boxes-packing text-emerald-600"></i> Sugerencia PK (Generación de Picking)
-                    </h3>
-                    <div class="flex items-center gap-3">
-                        <div class="flex items-center gap-2 bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-300">
-                            <span class="text-xs font-bold text-slate-700">Carta de Porte N°:</span>
-                            <input type="text" id="global-carta-porte-input" placeholder="Ej: 503-12345" class="text-xs font-bold text-blue-900 border border-slate-300 rounded px-2 py-1 w-28 text-center bg-white focus:outline-none focus:ring-1 focus:ring-blue-500">
-                        </div>
-                        <button id="btn-sync-sheet" class="bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-rotate"></i> Actualizar Posiciones Google Sheet
-                        </button>
-                        <button id="btn-export-excel-pk" class="bg-green-600 hover:bg-green-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-file-excel"></i> Guardar Excel
-                        </button>
-                        <button id="btn-export-pdf-pk" class="bg-red-600 hover:bg-red-700 text-white font-bold text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
-                            <i class="fa-solid fa-file-pdf"></i> Guardar PDF
-                        </button>
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
+                    <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2"><i class="fa-solid fa-code-compare text-emerald-600"></i> Cruces y control de diferencias</h3>
+                    <span class="text-xs text-slate-500">Las diferencias se muestran por separado y se pueden copiar como tabla.</span>
+                </div>
+                <div class="flex flex-wrap gap-2 no-print">
+                    <button id="btn-tab-cruce-st-ot" class="cruce-tab-btn bg-emerald-600 text-white px-4 py-2 rounded-lg text-xs font-bold" data-tab="stot">Cruce ST vs OT</button>
+                    <button id="btn-tab-cruce-st-pedido" class="cruce-tab-btn bg-slate-200 text-slate-700 px-4 py-2 rounded-lg text-xs font-bold" data-tab="stpedido">Cruce ST contra pedido</button>
+                </div>
+                <section id="panel-cruce-st-ot" class="space-y-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                        <div><h4 class="font-bold text-slate-800">ST vs OT - Cardex con selección</h4><p class="text-xs text-slate-500 mt-1">Se agrupa por artículo y se comparan las cantidades de transacciones ST y OT.</p></div>
+                        <button id="btn-copiar-cruce-st-ot" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar tabla visible</button>
                     </div>
-                </div>
-
-                <!-- Banner Estado Sincronización Sheet -->
-                <div id="sheet-status-banner" class="p-3 bg-blue-50 border border-blue-200 rounded-xl text-blue-800 text-xs font-semibold flex items-center gap-2 no-print">
-                    <i class="fa-solid fa-circle-info text-base"></i>
-                    <span id="sheet-status-text">Listo para leer la planilla publicada de Google Drive (503 - App SKU Villanueva).</span>
-                </div>
-
-                <!-- Panel Contenedor de Fichas de Picking por Cliente / OC -->
-                <div id="pk-cards-container" class="space-y-6">
-                    <div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-400 italic">
-                        Cargue la Bajada de Pedidos y presione "3. Sugerencia PK" para generar las fichas de picking por Cliente y OC.
+                    <div id="status-cruce-st-ot" class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3">Cargue el Cardex con selección para ejecutar este cruce.</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Resultado del cruce</h5><div class="overflow-x-auto"><table id="tabla-cruce-st-ot" class="w-full text-left border-collapse text-xs"><thead id="thead-cruce-st-ot"></thead><tbody id="tbody-cruce-st-ot"><tr><td class="p-6 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de movimientos del Cardex</h5><p class="text-xs text-slate-500 mb-2">Se muestran los movimientos originales clasificados como ST y OT, incluso los que tienen cantidad en blanco.</p><div class="overflow-x-auto"><table id="tabla-detalle-cardex" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-cardex"></thead><tbody id="tbody-detalle-cardex"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-cardex" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar detalle Cardex</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-red-700 mb-2">Diferencias ST vs OT</h5><div class="overflow-x-auto"><table id="tabla-diferencias-st-ot" class="w-full text-left border-collapse text-xs"><thead id="thead-diferencias-st-ot"></thead><tbody id="tbody-diferencias-st-ot"><tr><td class="p-6 text-center text-slate-400">Sin diferencias.</td></tr></tbody></table></div><button id="btn-copiar-diferencias-st-ot" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar diferencias</button></div>
+                </section>
+                <section id="panel-cruce-st-pedido" class="hidden space-y-4">
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3">
+                        <div><h4 class="font-bold text-slate-800">ST contra pedido - Bajada de pedidos vs 4211</h4><p class="text-xs text-slate-500 mt-1">Cruce por tipo de orden, número de orden y artículo. Cantidades pendientes 4211 contra Cajas del pedido.</p></div>
+                        <button id="btn-copiar-cruce-st-pedido" class="bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar tabla visible</button>
                     </div>
-                </div>
+                    <div id="status-cruce-st-pedido" class="text-xs text-slate-600 bg-blue-50 border border-blue-100 rounded-lg p-3">Cargue Bajada de pedidos y Bajada de pendientes (4211).</div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Resultado del cruce</h5><div class="overflow-x-auto"><table id="tabla-cruce-st-pedido" class="w-full text-left border-collapse text-xs"><thead id="thead-cruce-st-pedido"></thead><tbody id="tbody-cruce-st-pedido"><tr><td class="p-6 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de Bajada de pedidos</h5><div class="overflow-x-auto"><table id="tabla-detalle-pedidos-cruce" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-pedidos-cruce"></thead><tbody id="tbody-detalle-pedidos-cruce"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-pedidos-cruce" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar Bajada de pedidos</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-slate-700 mb-2">Detalle de Bajada 4211 (ST)</h5><div class="overflow-x-auto"><table id="tabla-detalle-4211-cruce" class="w-full text-left border-collapse text-xs"><thead id="thead-detalle-4211-cruce"></thead><tbody id="tbody-detalle-4211-cruce"><tr><td class="p-5 text-center text-slate-400">Sin procesar.</td></tr></tbody></table></div><button id="btn-copiar-detalle-4211-cruce" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print">Copiar Bajada 4211</button></div>
+                    <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200"><h5 class="font-bold text-red-700 mb-2">Diferencias ST contra pedido</h5><div class="overflow-x-auto"><table id="tabla-diferencias-st-pedido" class="w-full text-left border-collapse text-xs"><thead id="thead-diferencias-st-pedido"></thead><tbody id="tbody-diferencias-st-pedido"><tr><td class="p-6 text-center text-slate-400">Sin diferencias.</td></tr></tbody></table></div><button id="btn-copiar-diferencias-st-pedido" class="mt-3 bg-emerald-600 hover:bg-emerald-700 text-white px-4 py-2 rounded-lg text-xs font-bold no-print"><i class="fa-solid fa-copy mr-1"></i> Copiar diferencias</button></div>
+                </section>
+            </div>
+            <!-- Compatibilidad interna: elementos de la antigua Sugerencia PK, ocultos -->
+            <div class="hidden" aria-hidden="true">
+                <input id="global-carta-porte-input" type="text"><button id="btn-sync-sheet" type="button"></button><button id="btn-export-excel-pk" type="button"></button><button id="btn-export-pdf-pk" type="button"></button><div id="pk-cards-container"></div><span id="sheet-status-text"></span>
             </div>
 
             <!-- VISTA 4: ASIGNACIÓN (ACTUALIZADA CON DESCRIPCIÓN Y TOTALES) -->
@@ -321,6 +318,7 @@
                     <h3 class="font-bold text-slate-800 text-lg flex items-center gap-2">
                         <i class="fa-solid fa-clipboard-check text-teal-600"></i> Vista: Asignación por SKU (Sin Lotes)
                     </h3>
+                    <button id="btn-copiar-tabla-asignacion" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-lg shadow transition flex items-center gap-2 cursor-pointer no-print"><i class="fa-solid fa-copy"></i> Copiar tabla visible</button>
                     <button id="btn-copiar-asignacion" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-lg shadow transition flex items-center gap-2 cursor-pointer">
                         <i class="fa-solid fa-copy"></i> Copiar Mensaje Teams y Tabla
                     </button>
@@ -388,6 +386,7 @@
                         <button class="filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="ok">OK</button>
                         <button class="filter-btn px-3 py-1.5 text-xs font-semibold rounded-lg bg-slate-200 text-slate-700 hover:bg-slate-300" data-filter="missing">Falta Stock</button>
                     </div>
+                    <button id="btn-copiar-splits" class="bg-emerald-600 hover:bg-emerald-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2"><i class="fa-solid fa-copy"></i> Copiar tabla visible</button>
                     <button id="btn-exportar-splits" class="bg-green-600 hover:bg-green-700 text-white font-medium text-xs px-4 py-2 rounded-lg shadow transition flex items-center gap-2">
                         <i class="fa-solid fa-file-excel"></i> Descargar Reporte Splits Excel
                     </button>
@@ -410,7 +409,7 @@
                             </thead>
                             <tbody id="tabla-splits" class="divide-y divide-slate-100">
                                 <tr>
-                                    <td colspan="8" class="p-6 text-center text-slate-400 italic">Cargue los archivos de Stock y Pedidos para procesar Splits.</td>
+                                    <td colspan="8" class="p-6 text-center text-slate-400 italic">Cargue Stock y Bajada de pendientes (4211) para procesar Splits.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -426,13 +425,19 @@
     <script>
         let rawStock = [];
         let rawPedidos = [];
-        let rawMotivos = [];
+        let rawMotivos = []; // Bajada de pendientes 4211
+        let rawCardex = [];
+        let motivosDataStore = { resumen: [], detalle: [], diferencias: [] };
+        let cruceSTOTData = [];
+        let cruceSTPedidoData = [];
+        let motivosActiveTab = 'motivos';
+        let cruceActiveTab = 'stot';
 
         // Google Sheet Publicado Data
         const GOOGLE_SHEET_PUB_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vQBxHEW3zAPqMgY6nXXk_HvMuCzYTzV6GwDOy60sUST3sXqgG9s_WRdg5-puvrBUQ/pub?output=csv';
         let googleSheetPositions = [];
 
-        let fileNames = { stock: '', pedidos: '', motivos: '' };
+        let fileNames = { stock: '', pedidos: '', motivos: '', cardex: '' };
         let splitsResult = [];
         let globalPickingDataStore = [];
         let asignacionDataStore = [];
@@ -473,63 +478,107 @@
             });
         });
 
+        const FORMAT_REQUIREMENTS = {
+            stock: [
+                ['Artículo / SKU', ['2º nº artículo','2o nro articulo','Artículo','Articulo','SKU','articulo']],
+                ['Cantidad disponible', ['Disponible','Cantidad disponible','Cant. disponible','Cantidad en mano','CantEnMano','Cant En Mano']],
+                ['Ubicación', ['Ubicación','Ubicacion']],
+                ['Lote / serie', ['Lote','Nº lote/serie','Nro lote/serie','LoteStatus','Serie']]
+            ],
+            pedidos: [
+                ['Desc región', ['Desc región','Desc region']], ['Ciudad', ['Ciudad']],
+                ['Nombre de cliente', ['Nombre de cliente']], ['Desc Vendedor', ['Desc Vendedor']],
+                ['Fecha de la orden', ['Fecha de la orden']], ['OC del cliente', ['OC del cliente']],
+                ['Cod de cliente', ['Cod de cliente']], ['Estado Pedido', ['Estado Pedido']],
+                ['Tipo de orden', ['Tipo de orden']], ['Nro de orden', ['Nro de orden']],
+                ['Depósito/Planta', ['Depósito/Planta','Deposito/Planta']], ['Cod de item largo', ['Cod de item largo']],
+                ['Descripción de línea', ['Descripción de línea','Descripcion de linea']], ['Cajas', ['Cajas']], ['Peso', ['Peso']], ['Pallets', ['Pallets']]
+            ],
+            motivos: [
+                ['Número orden', ['Número orden','Numero orden']], ['Tp ord', ['Tp ord']],
+                ['2º nº artículo', ['2º nº artículo','2o nro articulo','2º número de artículo','2o numero de articulo']],
+                ['Descripción 1', ['Descripción 1','Descripcion 1']], ['Cantidad', ['Cantidad']],
+                ['Estado sig', ['Estado sig','Estado siguiente']], ['Cantidad enviada', ['Cantidad enviada']],
+                ['Cant órdenes pendientes', ['Cant órdenes pendientes','Cant ordenes pendientes']]
+            ],
+            cardex: [
+                ['Unidad de negocios', ['Unidad de negocios']], ['Tp or', ['Tp or']],
+                ['Nº de la orden', ['Nº de la orden','Nº de la orden','Numero de la orden']],
+                ['2º número de artículo', ['2º número de artículo','2o numero de articulo','2º nº artículo','2o nro articulo']],
+                ['Cantidad de la transacción', ['Cantidad de la transacción','Cantidad de transaccion']],
+                ['UM de trans', ['UM de trans']], ['Tipo doc', ['Tipo doc']], ['D H', ['D H','D/H']]
+            ]
+        };
+
+        function findHeaderRow(rows, key) {
+            const req = FORMAT_REQUIREMENTS[key] || [];
+            let bestIndex = 0, bestScore = -1;
+            for (let i=0; i<Math.min(rows.length, 15); i++) {
+                const headers = rows[i].map(x => norm(x)).filter(Boolean);
+                const score = req.reduce((sum, item) => sum + (item[1].some(a => headers.some(h => h === norm(a) || h.includes(norm(a)))) ? 1 : 0), 0);
+                if (score > bestScore) { bestScore = score; bestIndex = i; }
+            }
+            return bestIndex;
+        }
+
+        function validateFileHeaders(headers, key) {
+            const normalized = headers.map(h => norm(h)).filter(Boolean);
+            const missing = (FORMAT_REQUIREMENTS[key] || []).filter(([label, aliases]) =>
+                !aliases.some(a => normalized.some(h => h === norm(a) || h.includes(norm(a))))
+            ).map(x => x[0]);
+            // Algunos reportes 4211 tienen encabezados de cantidad variables; al menos una columna de cantidad debe existir.
+            if (key === 'motivos') {
+                const qty = ['Cantidad','Cantidad solicitada','Cantidad enviada','Cant órdenes pendientes','Cant ordenes pendientes'];
+                if (!qty.some(a => normalized.some(h => h === norm(a) || h.includes(norm(a)))) && !missing.includes('Cantidad')) missing.push('Cantidad / cantidad enviada / cantidad pendiente');
+            }
+            return missing;
+        }
+
         function leerExcelFile(file, key, statusId, nameId, callback) {
             const statusElem = document.getElementById(statusId);
             const nameElem = document.getElementById(nameId);
-
             statusElem.className = "mt-3 text-[11px] font-semibold text-blue-600";
-            statusElem.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Procesando archivo...';
-
+            statusElem.textContent = 'Procesando y validando formato del archivo...';
             const reader = new FileReader();
             reader.onload = function(e) {
                 try {
-                    const data = new Uint8Array(e.target.result);
-                    const workbook = XLSX.read(data, { type: 'array' });
+                    const workbook = XLSX.read(new Uint8Array(e.target.result), { type: 'array', nodim: true });
                     const sheet = workbook.Sheets[workbook.SheetNames[0]];
                     const rows = XLSX.utils.sheet_to_json(sheet, { header: 1, defval: "" });
-
-                    if (!rows || rows.length === 0) throw new Error("El archivo está vacío.");
-
-                    let headerRowIndex = 0;
-                    let maxMatches = -1;
-                    const keywords = ['articulo', 'sku', 'cajas', 'orden', 'lote', 'disponible', 'ubicacion', 'cliente', 'total', 'turno', 'zona', 'localidad', 'entrega'];
-
-                    for (let i = 0; i < Math.min(rows.length, 10); i++) {
-                        let rowStr = rows[i].map(cell => norm(cell)).join(' ');
-                        let matches = keywords.filter(kw => rowStr.includes(kw)).length;
-                        if (matches > maxMatches) {
-                            maxMatches = matches;
-                            headerRowIndex = i;
-                        }
+                    if (!rows || !rows.length) throw new Error('El archivo está vacío.');
+                    const headerRowIndex = findHeaderRow(rows, key);
+                    const headerRow = rows[headerRowIndex].map(x => String(x || '').trim());
+                    const missing = validateFileHeaders(headerRow, key);
+                    if (missing.length) {
+                        throw new Error(`FORMATO INCORRECTO para ${key.toUpperCase()}. No se cargó el archivo. Faltan columnas: ${missing.join(', ')}. Verifique que haya seleccionado el Excel correcto.`);
                     }
-
-                    const headerRow = rows[headerRowIndex];
                     const jsonResult = [];
-
-                    for (let i = headerRowIndex + 1; i < rows.length; i++) {
-                        let rowData = rows[i];
-                        let obj = {};
-                        let hasData = false;
-                        for (let j = 0; j < headerRow.length; j++) {
-                            let rawKey = headerRow[j] ? String(headerRow[j]).trim() : `Col_${j}`;
-                            let val = rowData[j] !== undefined ? rowData[j] : "";
+                    for (let i=headerRowIndex+1; i<rows.length; i++) {
+                        const obj = {}; let hasData = false;
+                        for (let j=0; j<headerRow.length; j++) {
+                            const rawKey = headerRow[j] || `Col_${j}`;
+                            const val = rows[i][j] !== undefined ? rows[i][j] : '';
                             obj[rawKey] = val;
-                            if (val !== "") hasData = true;
+                            if (val !== '') hasData = true;
                         }
                         if (hasData) jsonResult.push(obj);
                     }
-
+                    if (!jsonResult.length) throw new Error('Se reconocieron los encabezados, pero el archivo no contiene filas de datos.');
                     fileNames[key] = file.name;
                     nameElem.textContent = file.name;
-                    statusElem.className = "mt-3 text-[11px] font-semibold text-green-600";
-                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> ${jsonResult.length} filas cargadas correctamente.`;
-
+                    statusElem.className = 'mt-3 text-[11px] font-semibold text-green-600';
+                    statusElem.innerHTML = `<i class="fa-solid fa-circle-check"></i> Formato correcto · ${jsonResult.length} filas.`;
                     callback(jsonResult);
                 } catch (err) {
-                    statusElem.className = "mt-3 text-[11px] font-semibold text-red-600";
-                    statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> Error: ${err.message}`;
+                    callback([]);
+                    fileNames[key] = '';
+                    nameElem.textContent = 'Archivo no válido - seleccionar nuevamente';
+                    statusElem.className = 'mt-3 text-[11px] font-semibold text-red-600';
+                    statusElem.innerHTML = `<i class="fa-solid fa-triangle-exclamation"></i> ${safeHtml(err.message)}`;
+                    alert(err.message);
                 }
             };
+            reader.onerror = () => { callback([]); statusElem.className='mt-3 text-[11px] font-semibold text-red-600'; statusElem.textContent='No se pudo leer el archivo.'; };
             reader.readAsArrayBuffer(file);
         }
 
@@ -543,6 +592,10 @@
 
         document.getElementById('file-motivos').addEventListener('change', function(e) {
             if (e.target.files.length > 0) leerExcelFile(e.target.files[0], 'motivos', 'status-motivos', 'motivos-name', data => { rawMotivos = data; });
+        });
+
+        document.getElementById('file-cardex').addEventListener('change', function(e) {
+            if (e.target.files.length > 0) leerExcelFile(e.target.files[0], 'cardex', 'status-cardex', 'cardex-name', data => { rawCardex = data; });
         });
 
         function showView(viewId) {
@@ -674,128 +727,484 @@
         // ACCIÓN 2: RESUMEN MOTIVOS
         // ==========================================
         const inputCustomMotivos = document.getElementById('motivos-custom-text');
-        inputCustomMotivos.addEventListener('input', (e) => {
-            const val = e.target.value.trim();
-            document.getElementById('motivos-dynamic-placeholder').textContent = val || 'xxxxx';
-            document.getElementById('motivos-title-placeholder').textContent = val;
-        });
 
+        function getField(row, aliases, fallback = '') {
+            const keys = Object.keys(row || {});
+            const normalized = keys.map(k => ({ key: k, n: norm(k) }));
+            for (const alias of aliases) {
+                const a = norm(alias);
+                const exact = normalized.find(x => x.n === a);
+                if (exact) return row[exact.key] ?? fallback;
+            }
+            for (const alias of aliases) {
+                const a = norm(alias);
+                if (a.length < 3) continue;
+                const found = normalized.find(x => x.n.includes(a));
+                if (found) return row[found.key] ?? fallback;
+            }
+            return fallback;
+        }
+
+        function getFieldKey(row, aliases) {
+            const keys = Object.keys(row || {});
+            for (const alias of aliases) {
+                const a = norm(alias);
+                const exact = keys.find(k => norm(k) === a);
+                if (exact) return exact;
+            }
+            for (const alias of aliases) {
+                const a = norm(alias);
+                if (a.length < 3) continue;
+                const found = keys.find(k => norm(k).includes(a));
+                if (found) return found;
+            }
+            return null;
+        }
+
+        function textVal(v) {
+            if (v === null || v === undefined) return '';
+            return String(v).trim();
+        }
+
+        function numberVal(v) {
+            if (typeof v === 'number') return Number.isFinite(v) ? v : 0;
+            if (v === null || v === undefined || String(v).trim() === '') return 0;
+            let s = String(v).trim().replace(/\s/g, '');
+            if (s.includes(',') && s.includes('.')) s = s.replace(/\./g, '').replace(',', '.');
+            else if (s.includes(',')) s = s.replace(',', '.');
+            const n = Number(s);
+            return Number.isFinite(n) ? n : 0;
+        }
+
+        function idNorm(v) {
+            return textVal(v).toLowerCase().replace(/\s+/g, '').replace(/\.0+$/, '').replace(/[^a-z0-9]/g, '');
+        }
+
+        function safeHtml(value) {
+            return textVal(value).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+        }
+
+        function formatExcelDate(value) {
+            if (value === null || value === undefined || value === '') return '';
+            if (typeof value === 'number' && value > 20000 && value < 80000) {
+                const d = XLSX.SSF.parse_date_code(value);
+                if (d) return `${String(d.d).padStart(2,'0')}/${String(d.m).padStart(2,'0')}/${d.y}`;
+            }
+            if (value instanceof Date && !isNaN(value)) return value.toLocaleDateString('es-AR');
+            const s = String(value).trim();
+            if (/^\d{4}-\d{1,2}-\d{1,2}/.test(s)) {
+                const d = new Date(s);
+                if (!isNaN(d)) return d.toLocaleDateString('es-AR');
+            }
+            return s;
+        }
+
+        function todayAR() {
+            const d = new Date();
+            return `${String(d.getDate()).padStart(2,'0')}/${String(d.getMonth()+1).padStart(2,'0')}/${d.getFullYear()}`;
+        }
+
+        function getPending4211Rows() {
+            if (!rawMotivos.length) return [];
+            const hasNextState = rawMotivos.some(r => getFieldKey(r, ['Estado sig', 'Estado siguiente', 'Estado siguiente pedido']));
+            if (!hasNextState) return rawMotivos.slice();
+            return rawMotivos.filter(r => {
+                const st = textVal(getField(r, ['Estado sig', 'Estado siguiente', 'Estado siguiente pedido']));
+                return /^545(?:\.0+)?$/.test(st.trim());
+            });
+        }
+
+        function buildOrderLine(row, source) {
+            const isPending = source === 'pending';
+            const order = textVal(getField(row, isPending ? ['Número orden', 'Numero orden', 'Nro de orden', 'Nro orden'] : ['Nro de orden', 'Nro orden', 'Número orden', 'Numero orden']));
+            const type = textVal(getField(row, isPending ? ['Tp ord', 'Tipo de orden', 'Tipo orden'] : ['Tipo de orden', 'Tipo orden', 'Tp ord']));
+            const sku = textVal(getField(row, isPending ? ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', '2º nº articulo', 'Cod de item largo', 'Artículo', 'Articulo'] : ['Cod de item largo', '2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo', 'SKU']));
+            // En la bajada 4211, 'Cant órdenes pendientes' es un contador y puede ser 0
+            // aunque la línea esté seleccionada por Estado sig. = 545. La cantidad a cruzar
+            // para esas líneas es la columna 'Cantidad' (no el contador de órdenes pendientes).
+            const qty = isPending
+                ? numberVal(getField(row, ['Cantidad', 'Cantidad solicitada']))
+                : numberVal(getField(row, ['Cajas', 'Cantidad', 'Cantidad de cajas']));
+            const desc = textVal(getField(row, isPending ? ['Descripción 1', 'Descripción', 'Descripcion'] : ['Descripción de línea', 'Descripcion de linea', 'Descripción', 'Descripcion']));
+            const key = `${idNorm(type)}|${idNorm(order)}|${idNorm(sku)}`;
+            return { row, order, type, sku, qty, desc, key };
+        }
+
+        function aggregateOrderLines(rows, source) {
+            const map = new Map();
+            rows.forEach(row => {
+                const line = buildOrderLine(row, source);
+                if (!line.order || !line.sku) return;
+                if (!map.has(line.key)) map.set(line.key, { ...line, qty: 0, rows: [], descriptions: new Set() });
+                const item = map.get(line.key);
+                item.qty += line.qty;
+                item.rows.push(row);
+                if (line.desc) item.descriptions.add(line.desc);
+            });
+            return map;
+        }
+
+        function joinOrderSources() {
+            const pendingRows = getPending4211Rows();
+            const orderMap = aggregateOrderLines(rawPedidos, 'orders');
+            const pendingMap = aggregateOrderLines(pendingRows, 'pending');
+            const keys = new Set([...orderMap.keys(), ...pendingMap.keys()]);
+            const all = [];
+            keys.forEach(key => {
+                const o = orderMap.get(key);
+                const p = pendingMap.get(key);
+                all.push({ key, orderLine: o || null, pendingLine: p || null,
+                    order: (o || p).order, type: (o || p).type, sku: (o || p).sku,
+                    desc: (o && Array.from(o.descriptions)[0]) || (p && Array.from(p.descriptions)[0]) || '',
+                    qtyOrder: o ? o.qty : 0, qtyPending: p ? p.qty : 0,
+                    shipments: p ? Array.from(new Set(p.rows.map(r => textVal(getField(r, ['Número envío', 'Numero envio', 'Nro envío', 'Nro de envío']))).filter(Boolean))).join(', ') : ''
+                });
+            });
+            return { all, orderMap, pendingMap, pendingRows };
+        }
+
+        function createTableHead(tableHeadId, cols) {
+            const thead = document.getElementById(tableHeadId);
+            if (!thead) return;
+            thead.innerHTML = `<tr class="bg-slate-100 text-slate-700">${cols.map(c => `<th class="p-2 border border-slate-300 whitespace-nowrap">${safeHtml(c)}</th>`).join('')}</tr>`;
+        }
+
+        function fillTableBody(tbodyId, rows, cols, emptyText = 'No hay registros para mostrar.') {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            if (!rows.length) {
+                tbody.innerHTML = `<tr><td colspan="${cols.length}" class="p-5 text-center text-slate-400 italic">${safeHtml(emptyText)}</td></tr>`;
+                return;
+            }
+            tbody.innerHTML = rows.map(r => `<tr class="hover:bg-slate-50">${cols.map(c => `<td class="p-2 border border-slate-200 align-top">${safeHtml(r[c] ?? '')}</td>`).join('')}</tr>`).join('');
+        }
+
+        function fillTableBodyWithTotals(tbodyId, rows, cols, totalColumns, emptyText) {
+            fillTableBody(tbodyId, rows, cols, emptyText);
+            if (!rows.length) return;
+            const tbody = document.getElementById(tbodyId);
+            const tr = document.createElement('tr');
+            tr.className = 'bg-slate-100 font-bold border-t-2 border-slate-400';
+            tr.innerHTML = cols.map((c, i) => {
+                if (i === 0) return `<td class="p-2 border border-slate-300">TOTAL GENERAL</td>`;
+                if (totalColumns.includes(c)) {
+                    const total = rows.reduce((sum, r) => sum + numberVal(r[c]), 0);
+                    return `<td class="p-2 border border-slate-300 text-right">${fmtInt(total)} CA</td>`;
+                }
+                return `<td class="p-2 border border-slate-300"></td>`;
+            }).join('');
+            tbody.appendChild(tr);
+        }
+
+        function buildMotivosConsolidado() {
+            if (!rawPedidos.length || !rawMotivos.length) {
+                alert('Para generar Motivos debe cargar Bajada de pedidos y Bajada de pendientes (4211).');
+                return false;
+            }
+            const { all, pendingRows } = joinOrderSources();
+            const byKey = new Map(all.map(x => [x.key, x]));
+            const resumenMap = new Map();
+            const detalle = [];
+
+            rawPedidos.forEach(orderRow => {
+                const line = buildOrderLine(orderRow, 'orders');
+                if (!line.order || !line.sku) return;
+                const matched = byKey.get(line.key);
+                if (!matched || !matched.pendingLine) return;
+                const shipment = matched.shipments;
+                const row = {
+                    'Desc región': textVal(getField(orderRow, ['Desc región', 'Descripcion región', 'Región'])),
+                    'Ciudad': textVal(getField(orderRow, ['Ciudad', 'Localidad'])),
+                    'Nombre de cliente': textVal(getField(orderRow, ['Nombre de cliente', 'Nombre cliente'])),
+                    'Desc Vendedor': textVal(getField(orderRow, ['Desc Vendedor', 'Vendedor'])),
+                    'Fecha de la orden': formatExcelDate(getField(orderRow, ['Fecha de la orden', 'Fecha orden'])),
+                    'OC del cliente': textVal(getField(orderRow, ['OC del cliente', 'OC cliente'])),
+                    'Cod de cliente': textVal(getField(orderRow, ['Cod de cliente', 'Código de cliente', 'Cod cliente'])),
+                    'Estado Pedido': textVal(getField(orderRow, ['Estado Pedido', 'Estado del pedido'])),
+                    'Tipo de orden': line.type,
+                    'Nro de orden': line.order,
+                    'Depósito/Planta': textVal(getField(orderRow, ['Depósito/Planta', 'Deposito/Planta', 'Depósito', 'Planta'])) || textVal(getField(matched.pendingLine.rows[0], ['Suc/planta', 'Sucursal/planta'])),
+                    'Cod de item largo': line.sku,
+                    'Descripción de línea': line.desc || matched.desc,
+                    'Cajas': line.qty,
+                    'Peso': textVal(getField(orderRow, ['Peso'])),
+                    'envio': shipment
+                };
+                detalle.push(row);
+
+                const codZona = textVal(getField(orderRow, ['Desc región', 'Desc region']));
+                const localidad = row['Ciudad'];
+                const codCliente = row['Cod de cliente'];
+                const nombreCliente = row['Nombre de cliente'];
+                const nroOrden = row['Nro de orden'];
+                const tipoOrden = row['Tipo de orden'];
+                const oc = row['OC del cliente'];
+                const deposito = row['Depósito/Planta'];
+                const fechaOrden = row['Fecha de la orden'];
+                const envios = shipment;
+                const groupKey = [codZona, localidad, codCliente, nroOrden, tipoOrden, oc, deposito, fechaOrden, envios].join('|');
+                if (!resumenMap.has(groupKey)) resumenMap.set(groupKey, {
+                    'Cod zona': codZona, 'Localidad': localidad, 'Cod de cliente': codCliente,
+                    'Nombre Cliente': nombreCliente, 'Nro de orden': nroOrden, 'Tipo de orden': tipoOrden,
+                    'OC del cliente': oc, 'Depósito/Planta': deposito, 'Fecha de la orden': fechaOrden,
+                    'Fecha 1er envio': todayAR(), 'Envio': envios, 'Fecha de entrega': '', 'Total': 0
+                });
+                resumenMap.get(groupKey).Total += line.qty;
+            });
+
+            const diferencias = [];
+            const orderTotals = new Map();
+            rawPedidos.forEach(row => {
+                const type = textVal(getField(row, ['Tipo de orden','Tipo orden']));
+                const order = textVal(getField(row, ['Nro de orden','Nro orden']));
+                if (!order) return;
+                const key = `${idNorm(type)}|${idNorm(order)}`;
+                if (!orderTotals.has(key)) orderTotals.set(key, {type, order, qty:0, row});
+                orderTotals.get(key).qty += numberVal(getField(row, ['Cajas']));
+            });
+            const pendingTotals = new Map();
+            pendingRows.forEach(row => {
+                const type = textVal(getField(row, ['Tp ord','Tipo de orden','Tipo orden']));
+                const order = textVal(getField(row, ['Número orden','Numero orden','Nro de orden']));
+                if (!order) return;
+                const key = `${idNorm(type)}|${idNorm(order)}`;
+                if (!pendingTotals.has(key)) pendingTotals.set(key, {type, order, qty:0, row, shipments:new Set()});
+                const item = pendingTotals.get(key);
+                const q = getField(row, ['Cant órdenes pendientes','Cant ordenes pendientes']);
+                item.qty += textVal(q) !== '' ? numberVal(q) : numberVal(getField(row, ['Cantidad']));
+                const ship = textVal(getField(row, ['Número envío','Numero envio'])); if (ship) item.shipments.add(ship);
+            });
+            const orderKeys = new Set([...orderTotals.keys(), ...pendingTotals.keys()]);
+            orderKeys.forEach(key => {
+                const o = orderTotals.get(key), p = pendingTotals.get(key);
+                const qOrder = o ? o.qty : 0, qPending = p ? p.qty : 0, delta = qPending - qOrder;
+                if (Math.abs(delta) < 0.000001) return;
+                const sourceRow = (o && o.row) || (p && p.row) || {};
+                diferencias.push({
+                    'Diferencia': !o ? 'SOBRA EN 4211' : (!p ? 'FALTA EN 4211' : (delta > 0 ? 'SOBRANTE 4211' : 'FALTANTE 4211')),
+                    'Nro de orden': (o || p).order, 'Tipo de orden': (o || p).type,
+                    'Cod de cliente': textVal(getField(sourceRow, ['Cod de cliente','Venta'])),
+                    'Nombre de cliente': textVal(getField(sourceRow, ['Nombre de cliente','Nombre venta'])),
+                    'Cajas Bajada pedidos': qOrder, 'Cajas pendientes 4211': qPending,
+                    'Diferencia de cajas (4211 - Pedido)': delta,
+                    'Envio': p ? Array.from(p.shipments).join(', ') : ''
+                });
+            });
+
+            motivosDataStore = { resumen: Array.from(resumenMap.values()), detalle, diferencias };
+            const summaryCols = ['Cod zona','Localidad','Cod de cliente','Nombre Cliente','Nro de orden','Tipo de orden','OC del cliente','Depósito/Planta','Fecha de la orden','Fecha 1er envio','Envio','Fecha de entrega','Total'];
+            const detailCols = ['Desc región','Ciudad','Nombre de cliente','Desc Vendedor','Fecha de la orden','OC del cliente','Cod de cliente','Estado Pedido','Tipo de orden','Nro de orden','Depósito/Planta','Cod de item largo','Descripción de línea','Cajas','Peso','envio'];
+            const diffCols = ['Diferencia','Nro de orden','Tipo de orden','Cod de cliente','Nombre de cliente','Cajas Bajada pedidos','Cajas pendientes 4211','Diferencia de cajas (4211 - Pedido)','Envio'];
+            createTableHead('thead-motivos', summaryCols);
+            createTableHead('thead-motivos-detalle', detailCols);
+            createTableHead('thead-motivos-diferencias', diffCols);
+            fillTableBodyWithTotals('tbody-resumen-motivos', motivosDataStore.resumen, summaryCols, ['Total'], 'No hay líneas coincidentes entre los dos archivos.');
+            fillTableBodyWithTotals('tbody-motivos-detalle', motivosDataStore.detalle, detailCols, ['Cajas'], 'No hay líneas coincidentes entre los dos archivos.');
+            fillTableBodyWithTotals('tbody-motivos-diferencias', motivosDataStore.diferencias, diffCols, ['Cajas Bajada pedidos','Cajas pendientes 4211','Diferencia de cajas (4211 - Pedido)'], 'No se detectaron diferencias de artículos o cantidades.');
+            const exactMatches = all.filter(x => x.orderLine && x.pendingLine && Math.abs(x.qtyPending-x.qtyOrder) < 0.000001).length;
+            document.getElementById('motivos-consolidacion-status').textContent = `${pendingRows.length} filas 4211 en estado 545 · ${motivosDataStore.detalle.length} líneas coincidentes · ${exactMatches} líneas con cantidades iguales · ${motivosDataStore.diferencias.length} diferencias.`;
+            return true;
+        }
+
+        function setMotivosTab(tab) {
+            motivosActiveTab = tab;
+            const panels = { motivos: 'panel-motivos-resumen', detalle: 'panel-motivos-detalle', diferencias: 'panel-motivos-diferencias' };
+            Object.entries(panels).forEach(([key,id]) => document.getElementById(id).classList.toggle('hidden', key !== tab));
+            document.querySelectorAll('.motivos-tab-btn').forEach(btn => {
+                const active = btn.dataset.tab === tab;
+                btn.classList.toggle('bg-indigo-600', active); btn.classList.toggle('text-white', active);
+                btn.classList.toggle('bg-slate-200', !active); btn.classList.toggle('text-slate-700', !active);
+            });
+        }
+
+        document.querySelectorAll('.motivos-tab-btn').forEach(btn => btn.addEventListener('click', () => setMotivosTab(btn.dataset.tab)));
         document.getElementById('btn-action-resumen-motivos').addEventListener('click', () => {
             showView('view-resumen-motivos');
-            if (rawMotivos.length === 0) {
-                alert("Por favor cargue primero la Bajada de Motivos.");
-                return;
-            }
-
-            const agrupadoMotivos = {};
-
-            rawMotivos.forEach(row => {
-                let keys = Object.keys(row);
-
-                let kCodCliente = keys[2] || keys.find(k => norm(k).includes('cod de cliente'));
-                let kNomCliente = keys[3] || keys.find(k => norm(k).includes('nombre cliente') || norm(k).includes('nombre'));
-                let kOcCliente = keys[6] || keys.find(k => norm(k).includes('oc del cliente') || norm(k) === 'oc');
-                let kFechaEntrega = keys[12] || keys.find(k => norm(k).includes('fecha de entrega') || norm(k).includes('entrega'));
-                let kTurno = keys[10] || keys.find(k => norm(k).includes('turno'));
-                let kTotalCa = keys[13] || keys.find(k => norm(k).includes('total (ca)') || norm(k) === 'total' || norm(k).includes('cajas'));
-
-                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
-                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
-                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
-                let fechaEntrega = kFechaEntrega ? String(row[kFechaEntrega]).trim() : '';
-                let turno = kTurno ? String(row[kTurno]).trim() : '';
-                let totalCA = kTotalCa ? parseFloat(row[kTotalCa]) || 0 : 0;
-
-                if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general')) return;
-
-                let keyGroup = `${codCliente}_${ocCliente}_${fechaEntrega}_${turno}`;
-                if (!agrupadoMotivos[keyGroup]) {
-                    agrupadoMotivos[keyGroup] = { codCliente, nomCliente, ocCliente, fechaEntrega, turno, totalCajas: 0 };
-                }
-                agrupadoMotivos[keyGroup].totalCajas += totalCA;
-            });
-
-            const tbody = document.getElementById('tbody-resumen-motivos');
-            tbody.innerHTML = '';
-
-            let grandTotal = 0;
-            const rows = Object.values(agrupadoMotivos);
-
-            if (rows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="6" class="p-4 text-center text-slate-400">No se encontraron registros válidos de motivos.</td></tr>`;
-                return;
-            }
-
-            rows.forEach(item => {
-                grandTotal += item.totalCajas;
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.codCliente}</td>
-                    <td class="p-2.5 border border-slate-300">${item.nomCliente}</td>
-                    <td class="p-2.5 border border-slate-300">${item.ocCliente}</td>
-                    <td class="p-2.5 border border-slate-300">${item.fechaEntrega}</td>
-                    <td class="p-2.5 border border-slate-300">${item.turno}</td>
-                    <td class="p-2.5 border border-slate-300 text-right font-bold text-indigo-700">${fmtInt(item.totalCajas)} CA</td>
-                `;
-                tbody.appendChild(tr);
-            });
-
-            let trTotal = document.createElement('tr');
-            trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
-            trTotal.innerHTML = `
-                <td colspan="5" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total General:</td>
-                <td class="p-2.5 border border-slate-300 text-right text-indigo-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
-            `;
-            tbody.appendChild(trTotal);
+            if (buildMotivosConsolidado()) setMotivosTab('motivos');
         });
-
         document.getElementById('btn-copiar-resumen-motivos').addEventListener('click', () => {
-            const customVal = document.getElementById('motivos-custom-text').value.trim();
-            const titleText = document.getElementById('motivos-table-title').innerText;
-            const tbody = document.getElementById('tbody-resumen-motivos').cloneNode(true);
-            
-            let tableStyled = `
-                <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
-                    <thead>
-                        <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Cod de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Nombre de cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">OC del cliente</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Fecha de entrega</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Turno</th>
-                            <th style="border: 1px solid #cbd5e1; padding: 6px; text-align: right; font-family: 'Aptos', 'Calibri', sans-serif;">Total Cajas</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-            `;
+            const tableId = motivosActiveTab === 'detalle' ? 'tabla-motivos-detalle' : (motivosActiveTab === 'diferencias' ? 'tabla-motivos-diferencias' : 'tabla-motivos-export');
+            copyTableById(tableId);
+        });
 
-            Array.from(tbody.querySelectorAll('tr')).forEach(tr => {
-                let isTotal = tr.innerText.includes('Total General');
-                let rowBg = isTotal ? 'background-color: #f1f5f9; font-weight: bold;' : '';
-                tableStyled += `<tr style="${rowBg}">`;
+        // ==========================================
+        // ACCIÓN 3: CRUCES
+        // ==========================================
+        function setCruceTab(tab) {
+            cruceActiveTab = tab;
+            document.getElementById('panel-cruce-st-ot').classList.toggle('hidden', tab !== 'stot');
+            document.getElementById('panel-cruce-st-pedido').classList.toggle('hidden', tab !== 'stpedido');
+            document.querySelectorAll('.cruce-tab-btn').forEach(btn => {
+                const active = btn.dataset.tab === tab;
+                btn.classList.toggle('bg-emerald-600', active); btn.classList.toggle('text-white', active);
+                btn.classList.toggle('bg-slate-200', !active); btn.classList.toggle('text-slate-700', !active);
+            });
+            if (tab === 'stot') processCruceSTOT(); else processCruceSTPedido();
+        }
+
+        document.querySelectorAll('.cruce-tab-btn').forEach(btn => btn.addEventListener('click', () => setCruceTab(btn.dataset.tab)));
+        document.getElementById('btn-action-sugerencia-pk').addEventListener('click', () => {
+            showView('view-sugerencia-pk');
+            setCruceTab('stot');
+        });
+
+        function processCruceSTOT() {
+            if (!rawCardex.length) {
+                document.getElementById('status-cruce-st-ot').textContent = 'Cargue la Bajada del Cardex con selección.';
+                cruceSTOTData = [];
+                return;
+            }
+            const map = new Map();
+            const detailRows = [];
+            let stLines = 0, otLines = 0, ignored = 0;
+
+            rawCardex.forEach(row => {
+                const rowString = Object.values(row).join(' ').toUpperCase();
+                const tp = textVal(getField(row, ['Tp or','Tipo orden','Tipo de orden','Tipo','Tp']));
+                const td = textVal(getField(row, ['Tipo doc','Tipo documento','Doc','Documento','TD']));
+                const sku = textVal(getField(row, ['2º número de artículo','2o numero de articulo','2º nº artículo','2o nro articulo','Artículo','Articulo','SKU','Cod de item largo']));
                 
-                Array.from(tr.querySelectorAll('td')).forEach(td => {
-                    let align = td.classList.contains('text-right') ? 'text-align: right;' : 'text-align: left;';
-                    let colspan = td.getAttribute('colspan') ? `colspan="${td.getAttribute('colspan')}"` : '';
-                    tableStyled += `<td ${colspan} style="border: 1px solid #cbd5e1; padding: 6px; ${align} font-family: 'Aptos', 'Calibri', sans-serif;">${td.innerHTML}</td>`;
-                });
+                if (!sku) { ignored++; return; }
+
+                let side = '';
+                const tokens = `${tp} ${td} ${rowString}`.toUpperCase().match(/[A-Z0-9]+/g) || [];
                 
-                tableStyled += `</tr>`;
+                if (tokens.includes('ST') || tokens.some(t => t.startsWith('ST'))) {
+                    side = 'ST';
+                } else if (tokens.includes('OT') || tokens.some(t => t.startsWith('OT'))) {
+                    side = 'OT';
+                }
+
+                if (!side) { ignored++; return; }
+
+                const qtyRaw = getField(row, ['Cantidad de la transacción','Cantidad de transaccion','Cantidad','Cant.','Qty']);
+                const qty = textVal(qtyRaw) === '' ? 0 : numberVal(qtyRaw);
+                const uom = textVal(getField(row, ['UM de trans','UM','Unidad de medida'])) || 'CA';
+                const desc = textVal(getField(row, ['Descripción','Descripcion','Descripción 1','Descripcion de linea'])) || '';
+                
+                const key = `${idNorm(sku)}|${idNorm(uom)}`;
+                if (!map.has(key)) {
+                    map.set(key, {sku, desc, uom, stSigned:0, otSigned:0, stLines:0, otLines:0, stDetails:[], otDetails:[]});
+                }
+                const item = map.get(key);
+                if (side === 'ST') { 
+                    item.stSigned += qty; 
+                    item.stLines++; 
+                    stLines++; 
+                    item.stDetails.push(row); 
+                } else { 
+                    item.otSigned += qty; 
+                    item.otLines++; 
+                    otLines++; 
+                    item.otDetails.push(row); 
+                }
+                detailRows.push({...row, 'Lado detectado': side, 'Cantidad interpretada': qty});
             });
 
-            tableStyled += `</tbody></table>`;
+            const cols = ['Artículo','Descripción','UM de trans','Líneas ST','Cantidad ST neta','Líneas OT','Cantidad OT neta','Diferencia (OT - ST)','Resultado'];
+            cruceSTOTData = Array.from(map.values()).map(x => {
+                const st = Math.abs(x.stSigned), ot = Math.abs(x.otSigned), delta = ot - st;
+                return {
+                    'Artículo': x.sku,
+                    'Descripción': x.desc,
+                    'UM de trans': x.uom,
+                    'Líneas ST': x.stLines,
+                    'Cantidad ST neta': st,
+                    'Líneas OT': x.otLines,
+                    'Cantidad OT neta': ot,
+                    'Diferencia (OT - ST)': delta,
+                    'Resultado': Math.abs(delta) < 0.000001 ? 'OK' : (delta > 0 ? 'SOBRANTE EN OT' : 'FALTANTE EN OT')
+                };
+            }).sort((a,b) => a['Artículo'].localeCompare(b['Artículo'], undefined, {numeric: true}));
 
-            const fullHtml = `<div style="font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; color: #000; line-height: 1.3;">Estimados,<br>adjunto los motivos correspondientes a ${customVal || 'xxxxx'}.<br><br><b>${titleText}</b><br>${tableStyled}Saludos</div>`;
+            const diffs = cruceSTOTData.filter(x => x.Resultado !== 'OK');
+            
+            createTableHead('thead-cruce-st-ot', cols); 
+            fillTableBody('tbody-cruce-st-ot', cruceSTOTData, cols, 'No se detectaron diferencias.');
+            
+            createTableHead('thead-diferencias-st-ot', cols); 
+            fillTableBody('tbody-diferencias-st-ot', diffs, cols, 'No se detectaron diferencias entre ST y OT.');
+            
+            const rawCols = Object.keys(rawCardex[0] || {});
+            if (!rawCols.includes('Lado detectado')) rawCols.push('Lado detectado', 'Cantidad interpretada');
+            
+            createTableHead('thead-detalle-cardex', rawCols); 
+            fillTableBody('tbody-detalle-cardex', detailRows, rawCols, 'No hay movimientos ST u OT en el archivo.');
+            
+            const totalST = cruceSTOTData.reduce((a,x) => a + numberVal(x['Cantidad ST neta']), 0);
+            const totalOT = cruceSTOTData.reduce((a,x) => a + numberVal(x['Cantidad OT neta']), 0);
+            
+            const msg = diffs.length ? 
+                `${stLines} líneas ST y ${otLines} líneas OT analizadas · ${diffs.length} diferencias · Total ST: ${fmtInt(totalST)} CA · Total OT: ${fmtInt(totalOT)} CA · ${ignored} filas no clasificadas/ignoradas.` : 
+                `Se analizaron ${stLines} líneas ST y ${otlines = otLines} líneas OT y no se encontraron diferencias. Total ST: ${fmtInt(totalST)} CA · Total OT: ${fmtInt(totalOT)} CA.`;
+            
+            document.getElementById('status-cruce-st-ot').textContent = msg;
+        }
 
-            navigator.clipboard.write([
-                new ClipboardItem({
-                    'text/html': new Blob([fullHtml], { type: 'text/html' }),
-                    'text/plain': new Blob([`Estimados,\nadjunto los motivos correspondientes a ${customVal || 'xxxxx'}.\n\n${titleText}\n\n[Tabla Motivos]\n\nSaludos`], { type: 'text/plain' })
-                })
-            ]).then(() => {
-                showToast("¡Resumen de Motivos copiado correctamente en fuente Aptos!");
-            }).catch(err => alert("Error al copiar: " + err));
-        });
+        function processCruceSTPedido() {
+            if (!rawPedidos.length || !rawMotivos.length) {
+                document.getElementById('status-cruce-st-pedido').textContent = 'Cargue Bajada de pedidos y Bajada de pendientes (4211).';
+                cruceSTPedidoData = []; return;
+            }
+            // El cruce de ST contra pedido es por artículo global: una ST consolidada puede reunir varios pedidos.
+            const pedidoMap = new Map(), stMap = new Map();
+            const stRows = getPending4211Rows();
+            rawPedidos.forEach(row => {
+                const sku = textVal(getField(row,['Cod de item largo','Código de item largo','Cod item largo']));
+                if (!sku) return;
+                const k=idNorm(sku); if(!pedidoMap.has(k)) pedidoMap.set(k,{sku,desc:textVal(getField(row,['Descripción de línea','Descripcion de linea'])),qty:0,lines:0});
+                const x=pedidoMap.get(k); x.qty += numberVal(getField(row,['Cajas'])); x.lines++;
+            });
+            stRows.forEach(row => {
+                const sku = textVal(getField(row,['2º nº artículo','2o nro articulo','2º número de artículo','2o numero de articulo']));
+                if (!sku) return;
+                const k=idNorm(sku); if(!stMap.has(k)) stMap.set(k,{sku,desc:textVal(getField(row,['Descripción 1','Descripcion 1'])),qty:0,lines:0});
+                const x=stMap.get(k); x.qty += numberVal(getField(row,['Cantidad'])); x.lines++;
+            });
+            const keys=new Set([...pedidoMap.keys(),...stMap.keys()]);
+            const cols=['Resultado','Artículo','Descripción','Líneas pedido','Cajas pedido','Líneas ST / 4211','Cajas ST / 4211','Diferencia ST - Pedido'];
+            cruceSTPedidoData=Array.from(keys).map(k=>{
+                const p=pedidoMap.get(k), st=stMap.get(k), qp=p?p.qty:0, qs=st?st.qty:0, delta=qs-qp;
+                return {'Resultado':!p?'SOBRA EN ST / FALTA PEDIDO':(!st?'FALTA EN ST':(Math.abs(delta)<0.000001?'OK':(delta>0?'SOBRANTE EN ST':'FALTANTE EN ST'))), 'Artículo':(p||st).sku,'Descripción':(p&&p.desc)||(st&&st.desc)||'','Líneas pedido':p?p.lines:0,'Cajas pedido':qp,'Líneas ST / 4211':st?st.lines:0,'Cajas ST / 4211':qs,'Diferencia ST - Pedido':delta};
+            }).sort((a,b)=>a['Artículo'].localeCompare(b['Artículo'],undefined,{numeric:true}));
+            const diffs=cruceSTPedidoData.filter(x=>x.Resultado!=='OK');
+            createTableHead('thead-cruce-st-pedido',cols); fillTableBody('tbody-cruce-st-pedido',cruceSTPedidoData,cols,'No hay artículos para cruzar.');
+            createTableHead('thead-diferencias-st-pedido',cols); fillTableBody('tbody-diferencias-st-pedido',diffs,cols,'No se detectaron diferencias entre pedidos y ST.');
+            const pedCols=Object.keys(rawPedidos[0]||{}), stCols=Object.keys((stRows[0]||rawMotivos[0]||{}));
+            createTableHead('thead-detalle-pedidos-cruce',pedCols); fillTableBody('tbody-detalle-pedidos-cruce',rawPedidos,pedCols,'Sin filas en Bajada de pedidos.');
+            createTableHead('thead-detalle-4211-cruce',stCols); fillTableBody('tbody-detalle-4211-cruce',stRows,stCols,'Sin filas 4211 con Estado sig. 545.');
+            const totalP=cruceSTPedidoData.reduce((a,x)=>a+numberVal(x['Cajas pedido']),0), totalS=cruceSTPedidoData.reduce((a,x)=>a+numberVal(x['Cajas ST / 4211']),0);
+            document.getElementById('status-cruce-st-pedido').textContent=diffs.length?`${rawPedidos.length} filas de pedidos · ${stRows.length} filas 4211 con Estado sig. 545 analizadas · ${cruceSTPedidoData.length} artículos comparados globalmente · ${diffs.length} diferencias · Total pedidos: ${fmtInt(totalP)} CA · Total ST: ${fmtInt(totalS)} CA.`:`Se analizaron ${rawPedidos.length} filas de pedidos y ${stRows.length} filas 4211 con Estado sig. 545; se compararon ${cruceSTPedidoData.length} artículos y no se encontraron diferencias. Total pedidos: ${fmtInt(totalP)} CA · Total ST: ${fmtInt(totalS)} CA.`;
+        }
+
+        document.getElementById('btn-copiar-cruce-st-ot').addEventListener('click', () => copyTableById('tabla-cruce-st-ot'));
+        document.getElementById('btn-copiar-diferencias-st-ot').addEventListener('click', () => copyTableById('tabla-diferencias-st-ot'));
+        document.getElementById('btn-copiar-cruce-st-pedido').addEventListener('click', () => copyTableById('tabla-cruce-st-pedido'));
+        document.getElementById('btn-copiar-diferencias-st-pedido').addEventListener('click', () => copyTableById('tabla-diferencias-st-pedido'));
+        document.getElementById('btn-copiar-detalle-cardex').addEventListener('click', () => copyTableById('tabla-detalle-cardex'));
+        document.getElementById('btn-copiar-detalle-pedidos-cruce').addEventListener('click', () => copyTableById('tabla-detalle-pedidos-cruce'));
+        document.getElementById('btn-copiar-detalle-4211-cruce').addEventListener('click', () => copyTableById('tabla-detalle-4211-cruce'));
+
+        // Copia HTML y texto tabulado: pega como tabla en Outlook, Teams o Excel.
+        async function copyTableById(tableId) {
+            const table = document.getElementById(tableId);
+            if (!table) { alert('No se encontró la tabla para copiar.'); return; }
+            const clone = table.cloneNode(true);
+            clone.querySelectorAll('.no-print, button').forEach(el => el.remove());
+            const html = `<html><body>${clone.outerHTML}</body></html>`;
+            const text = Array.from(clone.querySelectorAll('tr')).map(tr => Array.from(tr.querySelectorAll('th,td')).map(td => td.innerText.replace(/\t/g,' ').replace(/\n/g,' ')).join('\t')).join('\n');
+            try {
+                if (navigator.clipboard && window.ClipboardItem) {
+                    await navigator.clipboard.write([new ClipboardItem({ 'text/html': new Blob([html], {type:'text/html'}), 'text/plain': new Blob([text], {type:'text/plain'}) })]);
+                } else {
+                    const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove();
+                }
+                showToast('Tabla copiada. Ya puede pegarla en Excel, Outlook o Teams.');
+            } catch (err) {
+                try { const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta); ta.select(); document.execCommand('copy'); ta.remove(); showToast('Tabla copiada como texto tabulado.'); }
+                catch (e) { alert('No se pudo copiar la tabla: ' + err.message); }
+            }
+        }
 
         // ==========================================
         // ACCIÓN 3: SUGERENCIA PK (PICKING AVANZADO)
@@ -845,200 +1254,6 @@
         }
 
         document.getElementById('btn-sync-sheet').addEventListener('click', fetchGoogleSheetPositions);
-
-        document.getElementById('btn-action-sugerencia-pk').addEventListener('click', async () => {
-            showView('view-sugerencia-pk');
-
-            if (googleSheetPositions.length === 0) {
-                await fetchGoogleSheetPositions();
-            }
-
-            if (rawPedidos.length === 0) {
-                alert("Por favor cargue el archivo de Pedidos para generar las hojas de picking.");
-                return;
-            }
-
-            const agrupadoPicking = {};
-
-            rawPedidos.forEach(row => {
-                let keys = Object.keys(row);
-
-                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente' || norm(k).includes('cod de cliente'));
-                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
-                let kOcCliente = keys.find(k => norm(k) === 'oc del cliente' || norm(k).includes('oc del cliente'));
-                let kTipoOrden = keys.find(k => norm(k) === 'tipo de orden' || norm(k).includes('tipo de orden'));
-                let kNroOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k).includes('nro de orden'));
-                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
-                let kDesc = keys.find(k => norm(k).includes('descripcion'));
-                let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('cantidad'));
-
-                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
-                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
-                let ocCliente = kOcCliente ? String(row[kOcCliente]).trim() : '';
-                let tipoOrden = kTipoOrden ? String(row[kTipoOrden]).trim() : '';
-                let nroOrden = kNroOrden ? String(row[kNroOrden]).trim() : '';
-                let sku = kSku ? String(row[kSku]).trim() : '';
-                let desc = kDesc ? String(row[kDesc]).trim() : '';
-                let cajasPedidas = kCajas ? parseFloat(row[kCajas]) || 0 : 0;
-
-                if (!codCliente || norm(codCliente).includes('cod de cliente') || !sku || cajasPedidas <= 0) return;
-
-                let keyGroup = `${codCliente}_${ocCliente}`;
-                if (!agrupadoPicking[keyGroup]) {
-                    agrupadoPicking[keyGroup] = {
-                        codCliente,
-                        nomCliente,
-                        ocCliente,
-                        ordenesConTipo: new Set(),
-                        skus: {}
-                    };
-                }
-
-                if (nroOrden) {
-                    let ordenCompleta = tipoOrden ? `${nroOrden} (${tipoOrden})` : nroOrden;
-                    agrupadoPicking[keyGroup].ordenesConTipo.add(ordenCompleta);
-                }
-
-                if (!agrupadoPicking[keyGroup].skus[sku]) {
-                    agrupadoPicking[keyGroup].skus[sku] = {
-                        sku,
-                        desc,
-                        totalCajasPedidas: 0
-                    };
-                }
-                agrupadoPicking[keyGroup].skus[sku].totalCajasPedidas += cajasPedidas;
-            });
-
-            globalPickingDataStore = [];
-            const cardsContainer = document.getElementById('pk-cards-container');
-            cardsContainer.innerHTML = '';
-
-            let totalFichasGeneradas = 0;
-            const currentCP = getCartaDePorteGlobal();
-
-            Object.values(agrupadoPicking).forEach((grupo, cardIdx) => {
-                let itemsPicking = [];
-
-                Object.values(grupo.skus).forEach(item => {
-                    let matchPosiciones = googleSheetPositions.filter(p => p.sku === item.sku);
-                    let palletizado = matchPosiciones.length > 0 ? matchPosiciones[0].palletizado : 0;
-
-                    let cajasPicking = 0;
-                    if (palletizado > 0) {
-                        cajasPicking = item.totalCajasPedidas % palletizado;
-                    } else {
-                        cajasPicking = item.totalCajasPedidas;
-                    }
-
-                    if (cajasPicking > 0) {
-                        let sectorElegido = 'S/D';
-                        let ubiMatch = matchPosiciones.find(p => p.cantPosicion > 0 && (p.cantPosicion % p.palletizado !== 0));
-                        if (ubiMatch) {
-                            sectorElegido = ubiMatch.ubicacion;
-                        } else if (matchPosiciones.length > 0) {
-                            sectorElegido = matchPosiciones[0].ubicacion;
-                        }
-
-                        itemsPicking.push({
-                            sector: sectorElegido,
-                            sku: item.sku,
-                            desc: item.desc || (matchPosiciones[0] ? matchPosiciones[0].descripcion : ''),
-                            cajasPk: cajasPicking
-                        });
-                    }
-                });
-
-                itemsPicking.sort((a, b) => a.sector.localeCompare(b.sector, undefined, {numeric: true, sensitivity: 'base'}));
-
-                if (itemsPicking.length > 0) {
-                    totalFichasGeneradas++;
-                    let listOrdenesStr = Array.from(grupo.ordenesConTipo).join(', ');
-                    let sheetTabTitle = `${grupo.codCliente}(OC ${grupo.ocCliente})`.replace(/[/\\?*[:\]]/g, '').substring(0, 30);
-
-                    globalPickingDataStore.push({
-                        sheetTabTitle: sheetTabTitle,
-                        codCliente: grupo.codCliente,
-                        nomCliente: grupo.nomCliente,
-                        ocCliente: grupo.ocCliente,
-                        ordenes: listOrdenesStr,
-                        items: itemsPicking
-                    });
-
-                    let cardHtml = `
-                        <div class="card-pk-page font-aptos" id="card-pk-${cardIdx}">
-                            <table style="width: 100%; border-collapse: collapse; margin-bottom: 8px; border-bottom: 2px solid #0f172a;">
-                                <tr>
-                                    <td style="font-size: 12pt; font-weight: bold; color: #0f172a; text-transform: uppercase; padding-bottom: 4px;">
-                                        HOJA DE ARMADO DE PICKING
-                                    </td>
-                                    <td style="text-align: right; font-size: 10pt; font-weight: bold; color: #1e3a8a; padding-bottom: 4px;">
-                                        Carta de Porte N°: <span class="carta-porte-display">${currentCP}</span>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table style="width: 100%; border-collapse: collapse; font-size: 9pt; margin-bottom: 8px; background-color: #f8fafc; border: 1px solid #e2e8f0;">
-                                <tr>
-                                    <td style="padding: 5px 8px; width: 50%; vertical-align: top; border-right: 1px solid #e2e8f0; border-bottom: 1px solid #e2e8f0;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">Cod / Nombre Cliente:</span>
-                                        <span style="font-weight: bold; color: #0f172a; font-size: 9.5pt;">${grupo.codCliente} - ${grupo.nomCliente}</span>
-                                    </td>
-                                    <td style="padding: 5px 8px; width: 50%; vertical-align: top; border-bottom: 1px solid #e2e8f0;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">OC del Cliente:</span>
-                                        <span style="font-weight: bold; color: #0f172a; font-size: 9.5pt;">${grupo.ocCliente}</span>
-                                    </td>
-                                </tr>
-                                <tr>
-                                    <td colspan="2" style="padding: 5px 8px; vertical-align: top;">
-                                        <span style="font-weight: bold; color: #64748b; text-transform: uppercase; font-size: 7.5pt; display: block;">N° de Orden(es):</span>
-                                        <span style="font-weight: bold; color: #0f172a; font-size: 9pt;">${listOrdenesStr}</span>
-                                    </td>
-                                </tr>
-                            </table>
-
-                            <table class="table-pk">
-                                <thead>
-                                    <tr>
-                                        <th style="width: 22%;">Sector / Ubicación</th>
-                                        <th style="width: 20%;">Cod SKU</th>
-                                        <th style="width: 44%;">Descripción</th>
-                                        <th style="width: 14%; text-align: right;">Total Cajas PK</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                    `;
-
-                    let subtotalPk = 0;
-                    itemsPicking.forEach(rowPk => {
-                        subtotalPk += rowPk.cajasPk;
-                        cardHtml += `
-                            <tr>
-                                <td style="font-family: monospace; font-weight: bold; color: #1e40af;">${rowPk.sector}</td>
-                                <td style="font-family: monospace; font-weight: bold;">${rowPk.sku}</td>
-                                <td>${rowPk.desc}</td>
-                                <td style="text-align: right; font-weight: bold; color: #065f46;">${fmtInt(rowPk.cajasPk)} CA</td>
-                            </tr>
-                        `;
-                    });
-
-                    cardHtml += `
-                                    <tr style="background-color: #f8fafc; font-weight: bold;">
-                                        <td colspan="3" style="text-align: left; text-transform: uppercase; border-top: 2px solid #cbd5e1;">TOTAL CAJAS DE PICKING:</td>
-                                        <td style="text-align: right; color: #065f46; font-size: 10pt; border-top: 2px solid #cbd5e1;">${fmtInt(subtotalPk)} CA</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-                    `;
-
-                    cardsContainer.insertAdjacentHTML('beforeend', cardHtml);
-                }
-            });
-
-            if (totalFichasGeneradas === 0) {
-                cardsContainer.innerHTML = `<div class="p-8 bg-white rounded-xl border border-slate-200 text-center text-slate-500 italic">Todos los pedidos corresponden a pallets completos. No se requirió armado de picking.</div>`;
-            }
-        });
 
         document.getElementById('btn-export-excel-pk').addEventListener('click', () => {
             if (globalPickingDataStore.length === 0) {
@@ -1271,121 +1486,78 @@
         // ==========================================
         document.getElementById('btn-action-split-lineas').addEventListener('click', () => {
             showView('view-split-lineas');
-            if (rawStock.length === 0 || rawPedidos.length === 0) {
-                alert("Para la función de Split Líneas debe cargar el archivo de Stock y el de Pedidos.");
+            if (rawStock.length === 0 || rawMotivos.length === 0) {
+                alert('Para Split Líneas debe cargar Stock y Bajada de pendientes (4211).');
                 return;
             }
 
             const stockMap = {};
             rawStock.forEach(row => {
-                let keys = Object.keys(row);
-                let kArt = keys.find(k => norm(k).includes('articulo') && !norm(k).includes('2'));
-                let kDisp = keys.find(k => norm(k).includes('disponible'));
-                let kEst = keys.find(k => norm(k).includes('estado') || norm(k).includes('codigo'));
-                let kLote = keys.find(k => norm(k).includes('lote') || norm(k).includes('serie'));
-                let kUbi = keys.find(k => norm(k).includes('ubicacion'));
-
+                let kArt = getFieldKey(row, ['2º nº artículo', '2o nro articulo', 'Artículo', 'Articulo', 'SKU']);
+                let kDisp = getFieldKey(row, ['Disponible', 'Cantidad disponible', 'Cant. disponible', 'Cantidad en mano']);
+                let kEst = getFieldKey(row, ['Estado', 'Código estado', 'Codigo estado']);
+                let kLote = getFieldKey(row, ['Lote', 'Nº lote/serie', 'Nro lote/serie', 'Serie']);
+                let kUbi = getFieldKey(row, ['Ubicación', 'Ubicacion']);
                 if (!kArt || !kDisp) return;
-
-                let sku = String(row[kArt]).trim();
-                let dispCajas = parseFloat(row[kDisp]) || 0;
-                let estado = kEst ? String(row[kEst]).trim() : "";
-                let lote = kLote ? String(row[kLote]).trim() : "S/L";
-                let ubicacion = kUbi ? String(row[kUbi]).trim() : "S/U";
-
-                if (estado !== "") return;
-                if (dispCajas <= 0) return;
-
+                let sku = textVal(row[kArt]);
+                let dispCajas = numberVal(row[kDisp]);
+                let estado = kEst ? textVal(row[kEst]) : '';
+                let lote = kLote ? textVal(row[kLote]) : 'S/L';
+                let ubicacion = kUbi ? textVal(row[kUbi]) : 'S/U';
+                if (estado !== '' || dispCajas <= 0) return;
                 if (!stockMap[sku]) stockMap[sku] = [];
                 stockMap[sku].push({ lote, ubicacion, disponibleCajas: dispCajas });
             });
 
             splitsResult = [];
             let countOk = 0, countSplit = 0, countMissing = 0;
-
-            rawPedidos.forEach((row) => {
-                let keys = Object.keys(row);
-
-                let kOrden = keys.find(k => norm(k) === 'nro de orden' || norm(k) === 'nro orden');
-                let kTp = keys.find(k => norm(k) === 'tipo de orden' || norm(k) === 'tipo orden');
-                let kCodCliente = keys.find(k => norm(k) === 'cod de cliente');
-                let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
-                let kSku = keys.find(k => norm(k).includes('cod de item largo') || norm(k).includes('sku') || norm(k).includes('articulo'));
-                let kDesc = keys.find(k => norm(k).includes('descripcion de linea') || norm(k).includes('descripcion'));
-                let kCant = keys.find(k => norm(k).toLowerCase() === 'cajas' || norm(k).includes('cantidad'));
-
-                let orden = kOrden ? row[kOrden] : "";
-                let tpOrd = kTp ? row[kTp] : "";
-                let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : "";
-                let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : "";
-                let sku = kSku ? String(row[kSku]).trim() : "";
-                let desc = kDesc ? String(row[kDesc]) : "";
-                let cajasPedidas = kCant ? parseFloat(row[kCant]) || 0 : 0;
-
+            const pendingRows = getPending4211Rows();
+            pendingRows.forEach(row => {
+                let order = getField(row, ['Número orden', 'Numero orden', 'Nro de orden', 'Nro orden']);
+                let tpOrd = getField(row, ['Tp ord', 'Tipo de orden', 'Tipo orden']);
+                let codCliente = getField(row, ['Venta', 'Cod de cliente', 'Código de cliente']);
+                let nomCliente = getField(row, ['Nombre venta', 'Nombre de cliente', 'Nombre cliente']);
+                let sku = textVal(getField(row, ['2º nº artículo', '2o nro articulo', '2º número de artículo', '2o numero de articulo', 'Artículo', 'Articulo']));
+                let desc = textVal(getField(row, ['Descripción 1', 'Descripción', 'Descripcion']));
+                let qtyPendingKey = getFieldKey(row, ['Cant órdenes pendientes', 'Cant ordenes pendientes', 'Cantidad pendiente']);
+                let cajasPedidas = qtyPendingKey && textVal(row[qtyPendingKey]) !== '' ? numberVal(row[qtyPendingKey]) : numberVal(getField(row, ['Cantidad']));
                 if (!sku || cajasPedidas <= 0) return;
 
                 let lotesDisponibles = stockMap[sku] || [];
                 let stockTotalActualCA = lotesDisponibles.reduce((a, b) => a + b.disponibleCajas, 0);
-
-                let estadoItem = "";
+                let estadoItem = '';
                 let detalleSplit = [];
 
-                if (stockTotalActualCA < cajasPedidas) {
-                    estadoItem = "Falta Stock";
-                    countMissing++;
-                    detalleSplit.push({ 
-                        texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA dispon. vs ${cajasPedidas} CA pedidas)`, 
-                        clase: "text-red-600 font-semibold" 
-                    });
+                if (stockTotalActualCA + 0.000001 < cajasPedidas) {
+                    estadoItem = 'Falta Stock'; countMissing++;
+                    detalleSplit.push({ texto: `Stock insuficiente (${stockTotalActualCA.toFixed(2)} CA disponibles vs ${cajasPedidas} CA pendientes)`, clase: 'text-red-600 font-semibold' });
                 } else {
                     let loteUnico = lotesDisponibles.find(l => l.disponibleCajas >= cajasPedidas);
                     if (loteUnico) {
-                        estadoItem = "OK";
-                        countOk++;
-                        loteUnico.disponibleCajas -= cajasPedidas;
-                        detalleSplit.push({ 
-                            texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, 
-                            clase: "text-green-600 font-medium" 
-                        });
+                        estadoItem = 'OK'; countOk++; loteUnico.disponibleCajas -= cajasPedidas;
+                        detalleSplit.push({ texto: `Cubre en 1 solo lote (Lote: ${loteUnico.lote} | Ubic: ${loteUnico.ubicacion} | Restante: ${loteUnico.disponibleCajas.toFixed(2)} CA)`, clase: 'text-green-600 font-medium' });
                     } else {
-                        estadoItem = "Requiere Split";
-                        countSplit++;
-                        let restoRequerido = cajasPedidas;
-                        let subIndex = 1;
-
+                        estadoItem = 'Requiere Split'; countSplit++;
+                        let restoRequerido = cajasPedidas; let subIndex = 1;
                         for (let i = 0; i < lotesDisponibles.length; i++) {
                             if (restoRequerido <= 0) break;
-                            let l = lotesDisponibles[i];
-                            if (l.disponibleCajas <= 0) continue;
-
-                            let tomarCajas = Math.min(restoRequerido, l.disponibleCajas);
-                            l.disponibleCajas -= tomarCajas;
-
-                            let notaAgotamiento = (l.disponibleCajas === 0) 
-                                ? " <span class='text-xs font-bold text-blue-600'>(Agota Lote Completo)</span>" 
-                                : ` <span class='text-xs text-slate-500'>(Quedan ${l.disponibleCajas.toFixed(2)} CA)</span>`;
-
-                            detalleSplit.push({
-                                texto: `Sublínea ${subIndex}: Tomar <b>${tomarCajas.toFixed(2)} CA</b> (Lote: ${l.lote} | Ubic: ${l.ubicacion})${notaAgotamiento}`,
-                                clase: "text-amber-700 font-medium"
-                            });
-                            restoRequerido -= tomarCajas;
-                            subIndex++;
+                            let l = lotesDisponibles[i]; if (l.disponibleCajas <= 0) continue;
+                            let tomarCajas = Math.min(restoRequerido, l.disponibleCajas); l.disponibleCajas -= tomarCajas;
+                            const nota = l.disponibleCajas === 0 ? ' (Agota lote completo)' : ` (Quedan ${l.disponibleCajas.toFixed(2)} CA)`;
+                            detalleSplit.push({ texto: `Sublínea ${subIndex}: tomar ${tomarCajas.toFixed(2)} CA (Lote: ${l.lote} | Ubic: ${l.ubicacion})${nota}`, clase: 'text-amber-700 font-medium' });
+                            restoRequerido -= tomarCajas; subIndex++;
                         }
                     }
                 }
-
-                splitsResult.push({ 
-                    orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit 
-                });
+                splitsResult.push({ orden, tpOrd, cliente: `${codCliente} - ${nomCliente}`, sku, desc, cajasPedidas, estadoItem, detalleSplit });
             });
 
             document.getElementById('kpi-total').textContent = splitsResult.length;
             document.getElementById('kpi-ok').textContent = countOk;
             document.getElementById('kpi-split').textContent = countSplit;
             document.getElementById('kpi-faltantes').textContent = countMissing;
-
             renderTablaSplits(splitsResult);
+            showToast(`Split calculado sobre ${pendingRows.length} filas 4211 con Estado sig. 545.`);
         });
 
         function renderTablaSplits(datos, filtro = 'all') {
@@ -1452,6 +1624,10 @@
             XLSX.utils.book_append_sheet(wb, ws, "Splits JDE Consumido");
             XLSX.writeFile(wb, "Reporte_Splits_JDE.xlsx");
         });
+
+        document.getElementById('btn-copiar-tabla-asignacion').addEventListener('click', () => copyTableById('tabla-asignacion-export'));
+        document.getElementById('btn-copiar-splits').addEventListener('click', () => copyTableById('tabla-splits'));
+
     </script>
 </body>
 </html>
