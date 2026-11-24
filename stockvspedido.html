@@ -219,6 +219,8 @@
                         <table class="w-full text-left border-collapse font-aptos" id="tabla-pedidos-export" style="border-collapse: collapse; width: 100%;">
                             <thead>
                                 <tr class="bg-slate-100 text-slate-700 font-semibold">
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Desc región</th>
+                                    <th class="p-2.5 border border-slate-300 bg-slate-100">Ciudad</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100">Cod de cliente</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100">Nombre de cliente</th>
                                     <th class="p-2.5 border border-slate-300 bg-slate-100">Desc Vendedor</th>
@@ -228,7 +230,7 @@
                             </thead>
                             <tbody id="tbody-resumen-pedidos" class="divide-y divide-slate-200 text-slate-700">
                                 <tr>
-                                    <td colspan="5" class="p-6 text-center text-slate-400 italic">Cargue el archivo de Pedidos y presione "1. Resumen Pedidos".</td>
+                                    <td colspan="7" class="p-6 text-center text-slate-400 italic">Cargue el archivo de Pedidos y presione "1. Resumen Pedidos".</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -678,12 +680,16 @@
             rawPedidos.forEach(row => {
                 let keys = Object.keys(row);
 
+                let kDescRegion = keys.find(k => norm(k) === 'desc region' || norm(k).includes('desc region') || norm(k).includes('region'));
+                let kCiudad = keys.find(k => norm(k) === 'ciudad' || norm(k).includes('ciudad'));
                 let kCodCliente = keys.find(k => norm(k) === 'cod de cliente' || norm(k).includes('cod de cliente'));
                 let kNomCliente = keys.find(k => norm(k).includes('nombre de cliente') || norm(k).includes('nombre cliente'));
                 let kDescVendedor = keys.find(k => norm(k).includes('desc vendedor') || norm(k).includes('vendedor'));
                 let kOcCliente = keys.find(k => norm(k) === 'oc del cliente' || norm(k).includes('oc del cliente'));
                 let kCajas = keys.find(k => norm(k) === 'cajas' || norm(k).includes('cajas') || norm(k).includes('total cajas') || norm(k).includes('cantidad'));
 
+                let descRegion = kDescRegion ? String(row[kDescRegion]).trim() : '';
+                let ciudad = kCiudad ? String(row[kCiudad]).trim() : '';
                 let codCliente = kCodCliente ? String(row[kCodCliente]).trim() : '';
                 let nomCliente = kNomCliente ? String(row[kNomCliente]).trim() : '';
                 let descVendedor = kDescVendedor ? String(row[kDescVendedor]).trim() : '';
@@ -692,9 +698,9 @@
 
                 if (!codCliente || norm(codCliente).includes('cod de cliente') || norm(codCliente).includes('total general')) return;
 
-                let keyGroup = `${codCliente}_${ocCliente}_${descVendedor}`;
+                let keyGroup = `${descRegion}_${ciudad}_${codCliente}_${ocCliente}_${descVendedor}`;
                 if (!agrupado[keyGroup]) {
-                    agrupado[keyGroup] = { codCliente, nomCliente, descVendedor, ocCliente, totalCajas: 0 };
+                    agrupado[keyGroup] = { descRegion, ciudad, codCliente, nomCliente, descVendedor, ocCliente, totalCajas: 0 };
                 }
                 agrupado[keyGroup].totalCajas += cajas;
             });
@@ -706,7 +712,7 @@
             const rows = Object.values(agrupado);
 
             if (rows.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-400">No se encontraron registros válidos de pedidos.</td></tr>`;
+                tbody.innerHTML = `<tr><td colspan="7" class="p-4 text-center text-slate-400">No se encontraron registros válidos de pedidos.</td></tr>`;
                 return;
             }
 
@@ -714,6 +720,8 @@
                 grandTotal += item.totalCajas;
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
+                    <td class="p-2.5 border border-slate-300">${item.descRegion}</td>
+                    <td class="p-2.5 border border-slate-300">${item.ciudad}</td>
                     <td class="p-2.5 border border-slate-300 font-mono font-bold">${item.codCliente}</td>
                     <td class="p-2.5 border border-slate-300">${item.nomCliente}</td>
                     <td class="p-2.5 border border-slate-300">${item.descVendedor}</td>
@@ -726,7 +734,7 @@
             let trTotal = document.createElement('tr');
             trTotal.className = "bg-slate-100 font-bold border-t-2 border-slate-400";
             trTotal.innerHTML = `
-                <td colspan="4" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total General:</td>
+                <td colspan="6" class="p-2.5 border border-slate-300 text-left uppercase bg-slate-100 font-bold">Total General:</td>
                 <td class="p-2.5 border border-slate-300 text-right text-blue-900 text-sm font-bold bg-slate-100">${fmtInt(grandTotal)} CA</td>
             `;
             tbody.appendChild(trTotal);
@@ -740,6 +748,8 @@
                 <table border="1" cellpadding="6" cellspacing="0" style="border-collapse: collapse; font-family: 'Aptos', 'Calibri', sans-serif; font-size: 11pt; width: 100%; border: 1px solid #cbd5e1; margin-top: 8px; margin-bottom: 8px;">
                     <thead>
                         <tr style="background-color: #f1f5f9; color: #1e293b; font-weight: bold; text-align: left;">
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Desc región</th>
+                            <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Ciudad</th>
                             <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Cod de cliente</th>
                             <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Nombre de cliente</th>
                             <th style="border: 1px solid #cbd5e1; padding: 6px; font-family: 'Aptos', 'Calibri', sans-serif;">Desc Vendedor</th>
@@ -1038,6 +1048,8 @@
                 // Cod zona se toma de la columna Numero zona (CA) de la Bajada de pendientes 4211.
                 const pendingForZone = matched.pendingLine && matched.pendingLine.rows ? matched.pendingLine.rows[0] : null;
                 const codZona = pendingForZone ? textVal(getField(pendingForZone, ['Numero zona', 'Número zona', 'Nro zona'])) : '';
+                const descRegion = row['Desc región'];
+                const ciudad = row['Ciudad'];
                 const localidad = row['Ciudad'];
                 const codCliente = row['Cod de cliente'];
                 const nombreCliente = row['Nombre de cliente'];
@@ -1047,8 +1059,9 @@
                 const deposito = row['Depósito/Planta'];
                 const fechaOrden = row['Fecha de la orden'];
                 const envios = shipment;
-                const groupKey = [codZona, localidad, codCliente, nroOrden, tipoOrden, oc, deposito, fechaOrden, envios].join('|');
+                const groupKey = [descRegion, ciudad, codZona, localidad, codCliente, nroOrden, tipoOrden, oc, deposito, fechaOrden, envios].join('|');
                 if (!resumenMap.has(groupKey)) resumenMap.set(groupKey, {
+                    'Desc región': descRegion, 'Ciudad': ciudad,
                     'Cod zona': codZona, 'Localidad': localidad, 'Cod de cliente': codCliente,
                     'Nombre Cliente': nombreCliente, 'Nro de orden': nroOrden, 'Tipo de orden': tipoOrden,
                     'OC del cliente': oc, 'Depósito/Planta': deposito, 'Fecha de la orden': fechaOrden,
@@ -1086,6 +1099,8 @@
                 if (Math.abs(delta) < 0.000001) return;
                 const sourceRow = (o && o.row) || (p && p.row) || {};
                 diferencias.push({
+                    'Desc región': textVal(getField(sourceRow, ['Desc región', 'Desc region', 'Región'])),
+                    'Ciudad': textVal(getField(sourceRow, ['Ciudad', 'Localidad'])),
                     'Diferencia': !o ? 'SOBRA EN 4211' : (!p ? 'FALTA EN 4211' : (delta > 0 ? 'SOBRANTE 4211' : 'FALTANTE 4211')),
                     'Nro de orden': (o || p).order, 'Tipo de orden': (o || p).type,
                     'Cod de cliente': textVal(getField(sourceRow, ['Cod de cliente','Venta'])),
@@ -1097,9 +1112,9 @@
             });
 
             motivosDataStore = { resumen: Array.from(resumenMap.values()), detalle, diferencias };
-            const summaryCols = ['Cod zona','Localidad','Cod de cliente','Nombre Cliente','Nro de orden','Tipo de orden','OC del cliente','Depósito/Planta','Fecha de la orden','Fecha 1er envio','Envio','Fecha de entrega','Total'];
+            const summaryCols = ['Desc región','Ciudad','Cod zona','Localidad','Cod de cliente','Nombre Cliente','Nro de orden','Tipo de orden','OC del cliente','Depósito/Planta','Fecha de la orden','Fecha 1er envio','Envio','Fecha de entrega','Total'];
             const detailCols = ['Desc región','Ciudad','Nombre de cliente','Desc Vendedor','Fecha de la orden','OC del cliente','Cod de cliente','Estado Pedido','Tipo de orden','Nro de orden','Depósito/Planta','Cod de item largo','Descripción de línea','Cajas','Peso','envio'];
-            const diffCols = ['Diferencia','Nro de orden','Tipo de orden','Cod de cliente','Nombre de cliente','Cajas Bajada pedidos','Cajas pendientes 4211','Diferencia de cajas (4211 - Pedido)','Envio'];
+            const diffCols = ['Desc región','Ciudad','Diferencia','Nro de orden','Tipo de orden','Cod de cliente','Nombre de cliente','Cajas Bajada pedidos','Cajas pendientes 4211','Diferencia de cajas (4211 - Pedido)','Envio'];
             createTableHead('thead-motivos', summaryCols);
             createTableHead('thead-motivos-detalle', detailCols);
             createTableHead('thead-motivos-diferencias', diffCols);
